@@ -1,0 +1,4 @@
+interface:
+  display_name: "提示词优化与需求深析"
+  short_description: "支持仅优化与深度需求剖析两种模式，生成可直接使用的结构化提示词"
+  default_prompt: "Use $refine-prompts to either return only an optimized prompt or deeply analyze the need before refining it."
