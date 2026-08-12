@@ -108,5 +108,7 @@ For a real change, exercise the success path and failure behavior with represent
 - Packages are versioned together but invoked independently.
 - Python dependencies apply to the spritesheet tools, not to the documentation-only skills.
 - No repository-wide test runner or dependency manifest is currently configured.
-- No license file is currently included; review that status before redistributing the repository or its packages.
 
+## License
+
+This repository and its skill packages are available under the [MIT License](./LICENSE).
