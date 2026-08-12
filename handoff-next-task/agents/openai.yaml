@@ -1,4 +1,4 @@
 interface:
   display_name: "Handoff and Start Next Task"
-  short_description: "Create and confirm one non-review Codex task"
+  short_description: "Create or fork one non-review task and confirm startup"
   default_prompt: "Use $handoff-next-task to package the current work into a verified, self-contained prompt and start one non-review Codex task."
