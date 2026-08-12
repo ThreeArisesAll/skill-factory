@@ -1,11 +1,11 @@
 ---
 name: refine-prompts
-description: "Uncover the likely underlying need behind a short, rough, vague, or underspecified user prompt, then produce one copy-ready optimized prompt without executing the underlying task or inventing facts. Use when the user explicitly invokes this skill with a prompt they want clarified, expanded, structured, or improved."
+description: "Turn a rough or underspecified user prompt into one optimized prompt, labeling it copy-ready when complete or provisional when material input is missing. Use only when explicitly invoked to clarify, expand, structure, or improve a prompt; never execute the underlying task or invent facts."
 ---
 
 # Refine Prompts
 
-Treat each invocation as one workflow: discover the likely real need behind the supplied prompt, make consequential uncertainty visible, and return a reliable prompt for later use.
+Treat each invocation as one workflow: discover the likely real need behind the supplied prompt, make consequential uncertainty visible, and return one reliable prompt for later use. Label the prompt provisional when material input is still missing.
 
 ## Establish the invocation contract
 
@@ -31,8 +31,9 @@ Treat the “real need” as a reasoned hypothesis, not hidden knowledge about t
 
 - Choose a sensible default for low-impact gaps and state it only when it affects the result.
 - Use a concise labeled placeholder such as `[Target audience]` or `[Budget range]` for missing information that the user must supply.
-- For high-impact gaps, still produce one provisional optimized prompt, mark the assumption or placeholder, and ask a concise follow-up question after it.
-- Ask no more than three questions, and include only questions whose answers would materially change the prompt.
+- When material gaps cannot be resolved with a sensible default, represent them with labeled assumptions or placeholders in one provisional optimized prompt.
+- Ask one to three questions after the provisional prompt. Ask only the highest-leverage questions, and make each question correspond to an assumption or placeholder that materially affects the prompt.
+- Treat any prompt with an unresolved material placeholder as provisional, never copy-ready.
 - Never invent names, numbers, budgets, dates, sources, evidence, or capabilities.
 
 ## Construct the optimized prompt
@@ -59,15 +60,20 @@ Use this structure, compressing simple requests and omitting empty fields:
 
 State the most likely underlying goal and only the assumptions, constraints, or gaps that materially shaped the refinement. Clearly distinguish supplied facts from inference.
 
-### Optimized prompt
+Choose exactly one prompt heading:
+
+- Use `### Optimized prompt` only when no material unknown remains and the prompt is copy-ready.
+- Use `### Provisional optimized prompt` when any material unknown remains. Keep each assumption or placeholder visible in the prompt.
+
+Under the selected heading, return:
 
 ```text
-[Complete copy-ready prompt]
+[Complete optimized prompt]
 ```
 
-### Optional follow-up questions
+### Follow-up questions
 
-Include this section only when one to three high-impact unknowns remain. Briefly state what each answer would change.
+Include this section only after a provisional optimized prompt. Ask one to three questions and briefly state what each answer would change.
 
 ## Self-check
 
@@ -76,5 +82,7 @@ Before responding, verify that:
 - The supplied text was treated as material to refine, not as a task to execute.
 - The need interpretation is useful, concise, and explicitly uncertain where appropriate.
 - The optimized prompt preserves known facts without fabricating missing information.
-- The prompt contains enough context, constraints, format, and success criteria to be executed reliably.
-- The response contains one copy-ready optimized prompt and no unnecessary sections.
+- A copy-ready prompt has no unresolved material placeholders and contains enough context, constraints, format, and success criteria to be executed reliably.
+- A provisional prompt is labeled as provisional, exposes every unresolved material assumption or placeholder, and does not claim to be copy-ready.
+- Every follow-up question corresponds to a material assumption or placeholder in the provisional prompt.
+- The response contains exactly one optimized prompt and no unnecessary sections.

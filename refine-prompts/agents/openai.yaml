@@ -1,7 +1,7 @@
 interface:
   display_name: "Refine Prompts"
-  short_description: "Turn rough requests into reliable, ready-to-use prompts"
-  default_prompt: "Use $refine-prompts to uncover the need behind this rough prompt and return one ready-to-use optimized prompt:"
+  short_description: "Turn rough requests into reliable prompts with clear unknowns"
+  default_prompt: "Use $refine-prompts to uncover the need, expose material unknowns, and return one optimized prompt:"
 
 policy:
   allow_implicit_invocation: false
