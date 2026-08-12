@@ -51,8 +51,6 @@ Use $create-better-spritesheet to create a contract-matched walk cycle from thes
 └── assets/               # Optional source or reference material
 ```
 
-`SKILL.md` is the source of truth. Detailed material stays behind relative links, while package-specific implementation remains inside its owning directory.
-
 ## License
 
 This repository and its skill packages are available under the [MIT License](./LICENSE).
