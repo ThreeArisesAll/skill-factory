@@ -1,14 +1,14 @@
 # Deterministic Silhouette Outline
 
-Use this workflow only after the target-size static frame is approved, the project art treatment requires an outer outline, and animation production has not begun. Generate the outer outline by dilating Alpha while locking identity and interior detail.
+Use this workflow while generating a canonical master when the project art treatment requires an outer outline. Resolve the outline contract before master approval and animation production. Treat the unoutlined high-resolution image as a temporary source and the outlined output as the canonical master.
 
 ## Outline contract
 
 1. Measure the target-size outer-outline width and color from the art rules or neighboring production assets.
-2. Convert the script parameter with `working-resolution radius = target-pixel radius × working-scale`.
+2. Convert the script parameter with `master radius = round(target-pixel radius × 512 / target short side)`.
 3. Place the outline behind the character layer so every nontransparent source pixel remains byte-identical.
 4. Use the added width only to improve silhouette recognition; keep internal structure lines at their original weight.
-5. Generate animation from the outlined high-resolution master so outline and body deformation share one pixel source.
+5. Lock the outlined output as the canonical master so outline and body deformation share one pixel source.
 
 Color and width must come from the current project contract. When evidence is missing, create a static comparison and ask the user to approve it. Do not import another project's default style.
 
@@ -18,18 +18,17 @@ Use a fresh output directory. Square frames may continue to use the `--frame-siz
 
 ```bash
 <python> <skill-dir>/scripts/add_silhouette_outline.py \
-  --master <absolute-approved-working-size-mother.png> \
+  --source <absolute-working-size-pre-master-source.png> \
   --output-dir <absolute-fresh-output-directory> \
   --name <character-outline> \
   --frame-width <contract-frame-width> \
   --frame-height <contract-frame-height> \
-  --working-scale <working-scale> \
-  --outline-radius <contract-working-resolution-radius> \
+  --outline-radius <contract-master-radius> \
   --outline-color '<contract-rrggbb>' \
   --safe-margin <contract-safe-margin>
 ```
 
-The script requires master dimensions exactly equal to target dimensions multiplied by the working scale. It emits the outlined master, target frame, source comparison, and metrics JSON, and refuses to overwrite a nonempty directory.
+The input dimensions must match the fixed master dimensions derived from the target frame: the short side is exactly `512 px`, and the proportional long side is rounded to the nearest whole pixel. The script emits the outlined canonical master, target frame, source comparison, and metrics JSON, and refuses to overwrite a nonempty directory.
 
 ## Accept
 

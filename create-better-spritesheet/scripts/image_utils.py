@@ -6,6 +6,8 @@ from __future__ import annotations
 import numpy as np
 from PIL import Image
 
+MASTER_SHORT_SIDE = 512
+
 
 def alpha_bbox(image: Image.Image, threshold: int = 8) -> tuple[int, int, int, int]:
     alpha = np.asarray(image.getchannel("A"))
@@ -65,3 +67,19 @@ def resolve_frame_dimensions(
     if frame_width < 1 or frame_height < 1:
         raise ValueError("frame dimensions must be positive")
     return frame_width, frame_height
+
+
+def resolve_master_dimensions(
+    frame_width: int,
+    frame_height: int,
+) -> tuple[tuple[int, int], float]:
+    if frame_width < 1 or frame_height < 1:
+        raise ValueError("frame dimensions must be positive")
+    master_scale = MASTER_SHORT_SIDE / min(frame_width, frame_height)
+    master_size = (
+        round(frame_width * master_scale),
+        round(frame_height * master_scale),
+    )
+    if min(master_size) != MASTER_SHORT_SIDE:
+        raise ValueError("canonical master shortest side must equal 512px")
+    return master_size, master_scale

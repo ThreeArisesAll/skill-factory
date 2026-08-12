@@ -31,17 +31,17 @@ Build the smallest source pack that supports the requested motion:
 - Add approved action key poses when articulation, foreshortening, occlusion, or effects cannot be derived faithfully from the neutral frame.
 - Separate parts or effect layers when local motion must remain independent.
 
-When suitable transparent sources do not exist, use ImageGen with the approved references to create one source or key pose at a time at least four times the target dimensions. Generate a coherent source pack rather than asking a model for a finished multi-frame sheet. Normalize every source to the declared canvas and coordinate system.
+When suitable transparent sources do not exist, use ImageGen with the approved references to create one source or key pose at a time. Generate a coherent source pack rather than asking a model for a finished multi-frame sheet.
 
-Complete this step only when identity, direction, visual scale, palette, equipment handedness, and anchor conventions agree across the source pack.
+Create every canonical master on a canvas whose shortest side is exactly `512 px`. Preserve the target frame aspect ratio: use `master scale = 512 / min(target frame width, target frame height)`, set the short side to `512`, and round the proportionally scaled long side to the nearest whole pixel. Normalize every source to this fixed canvas and the declared coordinate system.
+
+Decide whether the live art direction requires an outer silhouette outline before generating each canonical master. When it does, read [silhouette-outline.md](references/silhouette-outline.md), derive the width and color from current references, and create the outline as part of master generation. Treat the unoutlined high-resolution image as a temporary source; the outlined result is the canonical master from which frames are produced. When no outline is required, lock the unoutlined result as the canonical master.
+
+Complete this step only when every canonical master has a `512 px` short side and identity, direction, visual scale, palette, equipment handedness, anchor conventions, and outline treatment agree across the source pack.
 
 ### Pass the target-size readability gate
 
-Downsample representative sources and the most extreme key pose once to final size. Inspect at native `1×` and measure the occupied Alpha bounds. If identity or action silhouettes remain muddy despite a correct pipeline, read [optical-sizing.md](references/optical-sizing.md), prepare one bounded optical-size candidate, and obtain static approval before producing all frames.
-
-### Apply an optional silhouette outline
-
-Apply an outline only when the live art direction calls for one. Read [silhouette-outline.md](references/silhouette-outline.md), select width and color from current references, and apply the same contract to every approved source before frame production.
+Downsample representative canonical masters and the most extreme key pose once to final size. Inspect at native `1×` and measure the occupied Alpha bounds. Evaluate the final master treatment, including its outer outline when required. If identity or action silhouettes remain muddy despite a correct pipeline, read [optical-sizing.md](references/optical-sizing.md), prepare one bounded optical-size candidate, and obtain static approval before producing all frames.
 
 ## 3. Design the motion
 

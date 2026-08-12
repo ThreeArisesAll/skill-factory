@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Add a deterministic vector-like outline behind one canonical mother frame."""
+"""Create an outlined canonical master from one working-size RGBA source."""
 
 from __future__ import annotations
 
@@ -9,27 +9,38 @@ import re
 from pathlib import Path
 
 import numpy as np
+from image_utils import (
+    alpha_bbox,
+    clear_transparent_rgb,
+    resize_premultiplied,
+    resolve_frame_dimensions,
+    resolve_master_dimensions,
+)
 from PIL import Image, ImageFilter
-
-from image_utils import alpha_bbox, clear_transparent_rgb, resize_premultiplied, resolve_frame_dimensions
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Add a deterministic outer silhouette stroke without re-inking the character.",
     )
-    parser.add_argument("--master", required=True, type=Path, help="Approved canonical RGBA mother frame")
+    parser.add_argument(
+        "--source",
+        "--master",
+        dest="source",
+        required=True,
+        type=Path,
+        help="Working-size RGBA pre-master source; --master remains a compatibility alias",
+    )
     parser.add_argument("--output-dir", required=True, type=Path, help="Fresh output directory")
     parser.add_argument("--name", default="character-outline", help="Output filename prefix")
     parser.add_argument("--frame-size", type=int, help="Legacy shorthand for square frames")
     parser.add_argument("--frame-width", type=int)
     parser.add_argument("--frame-height", type=int)
-    parser.add_argument("--working-scale", type=int, default=4, help="Working resolution multiplier")
     parser.add_argument(
         "--outline-radius",
         type=int,
         required=True,
-        help="Contract outline radius in working-resolution pixels",
+        help="Contract outline radius in canonical-master pixels",
     )
     parser.add_argument(
         "--outline-color",
@@ -59,8 +70,7 @@ def validate_args(args: argparse.Namespace) -> tuple[int, int]:
         args.frame_width,
         args.frame_height,
     )
-    if args.working_scale < 2:
-        raise ValueError("--working-scale must be at least 2")
+    resolve_master_dimensions(frame_width, frame_height)
     if args.outline_radius < 1:
         raise ValueError("--outline-radius must be positive")
     if args.safe_margin < 1:
@@ -77,27 +87,30 @@ def prepare_output(output_dir: Path, overwrite: bool) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
 
-def load_master(path: Path, expected_size: tuple[int, int], threshold: int) -> Image.Image:
+def load_source(path: Path, expected_size: tuple[int, int], threshold: int) -> Image.Image:
     image = Image.open(path)
     if image.mode != "RGBA":
-        raise ValueError(f"mother frame must be RGBA, got {image.mode}")
+        raise ValueError(f"pre-master source must be RGBA, got {image.mode}")
     if image.size != expected_size:
         raise ValueError(
-            f"mother frame is {image.width}x{image.height}; expected {expected_size[0]}x{expected_size[1]}",
+            f"pre-master source is {image.width}x{image.height}; "
+            f"expected {expected_size[0]}x{expected_size[1]}",
         )
     alpha = np.asarray(image.getchannel("A"))
     corner_alpha = int(alpha[[0, 0, -1, -1], [0, -1, 0, -1]].max())
     if corner_alpha > threshold:
-        raise ValueError(f"mother frame corners are not transparent: maximum alpha={corner_alpha}")
+        raise ValueError(
+            f"pre-master source corners are not transparent: maximum alpha={corner_alpha}",
+        )
     alpha_bbox(image, threshold)
     return image.copy()
 
 
-def add_outline(master: Image.Image, radius: int, color: tuple[int, int, int]) -> Image.Image:
-    dilated_alpha = master.getchannel("A").filter(ImageFilter.MaxFilter(radius * 2 + 1))
-    stroke = Image.new("RGBA", master.size, (*color, 0))
+def add_outline(source: Image.Image, radius: int, color: tuple[int, int, int]) -> Image.Image:
+    dilated_alpha = source.getchannel("A").filter(ImageFilter.MaxFilter(radius * 2 + 1))
+    stroke = Image.new("RGBA", source.size, (*color, 0))
     stroke.putalpha(dilated_alpha)
-    return Image.alpha_composite(stroke, master)
+    return Image.alpha_composite(stroke, source)
 
 
 def transparent_rgb_max(image: Image.Image) -> int:
@@ -140,24 +153,24 @@ def main() -> int:
     frame_width, frame_height = validate_args(args)
     prepare_output(args.output_dir, args.overwrite)
 
-    working_size = (frame_width * args.working_scale, frame_height * args.working_scale)
-    master = load_master(args.master, working_size, args.alpha_threshold)
+    working_size, master_scale = resolve_master_dimensions(frame_width, frame_height)
+    source = load_source(args.source, working_size, args.alpha_threshold)
     color = parse_hex_color(args.outline_color)
-    outlined_master = clear_transparent_rgb(add_outline(master, args.outline_radius, color))
+    outlined_master = clear_transparent_rgb(add_outline(source, args.outline_radius, color))
     frame_size = (frame_width, frame_height)
-    original_frame = resize_premultiplied(master, frame_size)
+    original_frame = resize_premultiplied(source, frame_size)
     outlined_frame = clear_transparent_rgb(
         resize_premultiplied(outlined_master, frame_size),
     )
 
-    master_bbox = alpha_bbox(master, args.alpha_threshold)
+    master_bbox = alpha_bbox(source, args.alpha_threshold)
     outlined_master_bbox = alpha_bbox(outlined_master, args.alpha_threshold)
     frame_bbox = alpha_bbox(outlined_frame, args.alpha_threshold)
     margin = minimum_margin(frame_bbox, frame_size)
     if margin < args.safe_margin:
         raise ValueError(f"outlined target frame margin is {margin}px; required={args.safe_margin}px")
 
-    master_rgba = np.asarray(master)
+    master_rgba = np.asarray(source)
     outlined_rgba = np.asarray(outlined_master)
     opaque = master_rgba[..., 3] == 255
     interior_equal = bool(np.array_equal(master_rgba[opaque], outlined_rgba[opaque]))
@@ -182,7 +195,8 @@ def main() -> int:
         "working_size": list(working_size),
         "frame_size": list(frame_size),
         "outline_radius_working_pixels": args.outline_radius,
-        "outline_radius_target_pixels": args.outline_radius / args.working_scale,
+        "master_scale": master_scale,
+        "outline_radius_target_pixels": args.outline_radius / master_scale,
         "outline_color": args.outline_color.lower(),
         "original_master_bbox": list(master_bbox),
         "outlined_master_bbox": list(outlined_master_bbox),
@@ -197,7 +211,7 @@ def main() -> int:
     print(f"frame: {frame_path}")
     print(
         f"outline: {args.outline_radius}px at {working_size[0]}x{working_size[1]}, "
-        f"{args.outline_radius / args.working_scale:.2f}px at target",
+        f"{args.outline_radius / master_scale:.2f}px at target",
     )
     print(f"bboxes: original={master_bbox}, outlined={outlined_master_bbox}, target={frame_bbox}")
     print(f"minimum target margin: {margin}px")

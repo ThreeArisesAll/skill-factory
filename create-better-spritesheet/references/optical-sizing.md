@@ -59,11 +59,12 @@ Run in a fresh output directory. Square frames may continue to use the `--frame-
   --sharpened <absolute-optional-sharpened-target-frame> \
   --frame-width <contract-frame-width> \
   --frame-height <contract-frame-height> \
-  --working-scale <working-scale-at-least-4> \
   --margin <contract-safe-margin>
 ```
 
 When using a color key, also pass `--key-rgb R G B` to report the residual-color ratio. The script validates transparent boundaries, normalizes the candidate onto the working canvas in premultiplied Alpha, downsamples only once, and emits the master, target frame, metrics JSON, native-size comparison, and checkerboard-backed `4×` comparison. `--sharpened` is an optional control, not a production stage.
+
+When the live art direction requires an outer outline, treat the emitted unoutlined high-resolution file as a temporary source. Run the silhouette-outline workflow within this candidate's master-generation step, and present the outlined target frame for approval. Only the outlined output becomes the canonical master.
 
 Completion criteria: candidate and controls have identical dimensions, the candidate bounds retain comparable visual mass to the original, and every output derives from the same high-resolution candidate.
 

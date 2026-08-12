@@ -14,7 +14,7 @@ Prefer the project's frame count, rhythm, amplitude, and action reference. When 
 
 ## Build
 
-The master must use an exact square working canvas:
+The canonical master must use an exact `512×512` square canvas:
 
 ```bash
 <python> <skill-dir>/scripts/build_idle_spritesheet.py \
@@ -23,7 +23,6 @@ The master must use an exact square working canvas:
   --name <character-idle> \
   --frame-size <contract-frame-size> \
   --frame-count <contract-frame-count> \
-  --working-scale <working-scale-at-least-4> \
   --margin <contract-safe-margin> \
   --amplitude <contract-peak-travel> \
   --loop-duration-ms <contract-loop-duration>

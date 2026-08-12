@@ -8,10 +8,14 @@ import math
 from pathlib import Path
 
 import numpy as np
+from image_utils import (
+    alpha_bbox,
+    from_premultiplied,
+    resize_premultiplied,
+    resolve_master_dimensions,
+    to_premultiplied,
+)
 from PIL import Image
-
-from image_utils import alpha_bbox, from_premultiplied, resize_premultiplied, to_premultiplied
-
 
 BASE_PHASES = np.array(
     [0.0, -0.25, -0.625, -1.0, -0.875, -0.55, -0.2, 0.1, 0.3, 0.2, 0.05, 0.0],
@@ -33,7 +37,6 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Contract frame count including the repeated closing frame",
     )
-    parser.add_argument("--working-scale", type=int, default=4, help="Working resolution multiplier")
     parser.add_argument(
         "--margin",
         type=float,
@@ -76,8 +79,7 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--frame-size must be at least 32")
     if args.frame_count < 4:
         raise ValueError("--frame-count must be at least 4")
-    if args.working_scale < 2:
-        raise ValueError("--working-scale must be at least 2")
+    resolve_master_dimensions(args.frame_size, args.frame_size)
     if not 0.85 <= args.sole_lock_ratio <= 0.98:
         raise ValueError("--sole-lock-ratio must be between 0.85 and 0.98")
     if args.margin < args.amplitude + 2:
@@ -86,7 +88,7 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--loop-duration-ms must be at least --frame-count")
 
 
-def load_master(args: argparse.Namespace, working_size: int) -> Image.Image:
+def load_master(args: argparse.Namespace, working_size: int, master_scale: float) -> Image.Image:
     source = Image.open(args.master).convert("RGBA")
     corner_alpha = np.asarray(source.getchannel("A"))[[0, 0, -1, -1], [0, -1, 0, -1]]
     if int(corner_alpha.max()) > 8:
@@ -104,7 +106,7 @@ def load_master(args: argparse.Namespace, working_size: int) -> Image.Image:
         crop = source.crop((left, top, right, bottom))
         if max(crop.size) < args.frame_size * 2:
             raise ValueError("source is too small for a high-fidelity mother frame; regenerate it at high resolution")
-        margin = int(round(args.margin * args.working_scale))
+        margin = int(round(args.margin * master_scale))
         available = working_size - margin * 2
         scale = min(available / crop.width, available / crop.height)
         fitted_size = (max(1, round(crop.width * scale)), max(1, round(crop.height * scale)))
@@ -114,7 +116,7 @@ def load_master(args: argparse.Namespace, working_size: int) -> Image.Image:
         master.alpha_composite(fitted, position)
 
     left, top, right, bottom = alpha_bbox(master)
-    margin_work = int(round(args.margin * args.working_scale))
+    margin_work = int(round(args.margin * master_scale))
     if min(left, top, working_size - right, working_size - bottom) < margin_work - 2:
         raise ValueError("canonical mother frame does not meet the requested safe margin")
     return master
@@ -255,8 +257,8 @@ def save_animation(frames: list[Image.Image], output_dir: Path, name: str, loop_
 def main() -> int:
     args = parse_args()
     validate_args(args)
-    working_size = args.frame_size * args.working_scale
-    master = load_master(args, working_size)
+    (working_size, _), master_scale = resolve_master_dimensions(args.frame_size, args.frame_size)
+    master = load_master(args, working_size, master_scale)
     high_dir, final_dir = prepare_output(args.output_dir, args.overwrite)
     master_path = args.output_dir / f"{args.name}-master-{working_size}.png"
     master.save(master_path)
@@ -270,7 +272,7 @@ def main() -> int:
             master,
             bbox,
             float(phase),
-            args.amplitude * args.working_scale,
+            args.amplitude * master_scale,
             args.sole_lock_ratio,
         )
         final_frame = resize_premultiplied(high_frame, (args.frame_size, args.frame_size))

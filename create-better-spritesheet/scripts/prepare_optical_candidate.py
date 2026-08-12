@@ -8,9 +8,13 @@ import json
 from pathlib import Path
 
 import numpy as np
+from image_utils import (
+    alpha_bbox,
+    resize_premultiplied,
+    resolve_frame_dimensions,
+    resolve_master_dimensions,
+)
 from PIL import Image
-
-from image_utils import alpha_bbox, resize_premultiplied, resolve_frame_dimensions
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,7 +29,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--frame-size", type=int, help="Legacy shorthand for square frames")
     parser.add_argument("--frame-width", type=int)
     parser.add_argument("--frame-height", type=int)
-    parser.add_argument("--working-scale", type=int, default=4, help="Working resolution multiplier")
     parser.add_argument(
         "--margin",
         type=float,
@@ -51,8 +54,7 @@ def validate_args(args: argparse.Namespace) -> tuple[int, int]:
         args.frame_width,
         args.frame_height,
     )
-    if args.working_scale < 2:
-        raise ValueError("--working-scale must be at least 2")
+    resolve_master_dimensions(frame_width, frame_height)
     if args.margin < 2 or args.margin * 2 >= min(frame_width, frame_height):
         raise ValueError("--margin must leave a positive target-size content area")
     if not 0 <= args.alpha_threshold <= 254:
@@ -181,8 +183,8 @@ def main() -> int:
 
     source = load_rgba(args.source_alpha)
     source_bbox = validate_source(source, args.alpha_threshold)
-    working_size = (frame_width * args.working_scale, frame_height * args.working_scale)
-    margin_work = round(args.margin * args.working_scale)
+    working_size, master_scale = resolve_master_dimensions(frame_width, frame_height)
+    margin_work = round(args.margin * master_scale)
     master, fitted_size = normalize_candidate(source, source_bbox, working_size, margin_work)
     frame_size = (frame_width, frame_height)
     final = resize_premultiplied(master, frame_size)
@@ -198,6 +200,7 @@ def main() -> int:
         "source": image_metrics(source, args.alpha_threshold, key_rgb, args.key_distance),
         "master": image_metrics(master, args.alpha_threshold, key_rgb, args.key_distance),
         "final": image_metrics(final, args.alpha_threshold, key_rgb, args.key_distance),
+        "master_scale": master_scale,
         "normalized_content_size": list(fitted_size),
     }
     metrics_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

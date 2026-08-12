@@ -5,10 +5,10 @@
 - Live contract
 - Identity and art lock
 - Identity source pack
+- Canonical master contract
 - Target pixel budget
 - Time, space, and events
 - Directional consistency
-- Optional silhouette outline
 - Sampling and transparency
 - Assembly and metadata
 - Acceptance gates
@@ -23,6 +23,7 @@ Read the following fields from user material and the current repository. Activel
 - Loop, one-shot, terminal hold, or fallback behavior
 - Root motion, animation origin, anchor, baseline, and event hotspots
 - Frame width and height, frame count per clip, per-frame durations, sheet layout, and order
+- Working scale and canonical master width and height
 - Safe bounds, runtime scale, and visual mass of neighboring assets
 - Line treatment, value range, materials, silhouette, palette, and sampling method
 - Authorization boundary between review artifacts and production integration
@@ -54,6 +55,12 @@ Every key pose must share:
 
 Approve key poses before producing in-betweens.
 
+## Canonical master contract
+
+Create every canonical master with its shortest side fixed at exactly `512 px`. Scale the long side proportionally from the target frame aspect ratio and round it to the nearest whole pixel. Record the target dimensions, derived master scale, and resulting master dimensions as one traceable contract. Use the exact fixed-canvas rule in `SKILL.md` when a bundled script produces or consumes the master.
+
+Resolve the outer-outline requirement before master generation. When the art direction requires an outline, derive its target-size width and color from current references and generate it within the master-creation step. The outlined output is the canonical master; the unoutlined high-resolution input remains a temporary source. Produce every animation frame and key-pose derivative from a canonical master with the same locked outline treatment.
+
 ## Target pixel budget
 
 Use the target-size frame's Alpha bounds to calculate the pixels actually occupied by the character. Define clarity by identity and action-silhouette recognition at native `1×`, not by sharpening strength or edge contrast in an enlarged preview.
@@ -73,10 +80,6 @@ For loops, verify the transition from last frame to first. For one-shots, verify
 ## Directional consistency
 
 Multi-direction clips share phases, rhythm, visual mass, and event semantics. Validate near and far limbs, occlusion, equipment hand, emblems, hair part, and lighting separately. Approve mirrored reuse only when asymmetric details and gameplay hotspots are safe.
-
-## Optional silhouette outline
-
-Add an outer outline only when the live art direction requires it. Derive line width and color from the current art rules or neighboring assets. Expand deterministically behind the high-resolution Alpha while keeping solid interior RGBA unchanged. Apply one outline contract to every identity source and key pose.
 
 ## Sampling and transparency
 
@@ -106,6 +109,7 @@ When a fixed grid cannot express trimming, rotation, or per-frame pivots, use th
 Mechanical checks cover at minimum:
 
 - Image mode, dimensions, frame count, layout, order, and Alpha integrity
+- Canonical master scale, exact `512 px` short side, and outline timing
 - Declared loop closures, blank frames, safe bounds, and sampling thresholds
 - Action-specific contacts, root behavior, displacement, and event frames
 
