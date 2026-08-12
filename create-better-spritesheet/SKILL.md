@@ -5,136 +5,74 @@ description: "Create, rebuild, diagnose, or review high-fidelity 2D character sp
 
 # Create Better Spritesheet
 
-Produce project-faithful animation through one mandatory production lineage: high-resolution pre-master, resolved outline treatment, locked canonical master, multiple generated high-resolution keyframes, multiple generated high-resolution in-betweens, one downsample per approved high-resolution frame, target frames, and contract-driven assembly. Treat the target runtime as the final contract.
+Produce runtime-ready animation through one formal lineage:
 
-## 1. Inspect inputs and close gaps
+`ProductionSpec -> CanonicalReferenceSet -> ApprovedHighResolutionSequence -> deterministic target-cell rendering -> SpritesheetPackage`
 
-1. Read the user prompt, attachments, linked references, and repository evidence before asking questions. Locate the repository root when applicable, read its agent instructions, and preserve unrelated changes.
-2. Inspect design boards, model sheets, existing sprites, animation references, neighboring production assets, asset declarations, clip mappings, event timing, anchors, renderer settings, and visual tests that can answer the contract directly.
-3. Separate confirmed facts from missing values. Record the character, action set, directions, camera, loop or one-shot behavior, root-motion policy, frame dimensions, frame count, timing, grid layout, anchor, motion origin, safe bounds, sampling style, and integration scope.
-4. Classify the action-reference status as supplied, missing, unavailable, or explicitly declined. When it is missing, actively ask the user to provide one. Accept video, GIF, frame sequences, existing spritesheets, gameplay clips, pose sheets, or a named animation example. Explain that a reference with a similar action, camera, body type, and timing is most useful even when its art style differs.
-5. When the user explicitly states that no action reference is needed, record that statement as authorization to design motion from the written intent. Skip the action-reference request and Pinterest search, then present a provisional phase, keyframe, and timing plan for approval before generating frames.
-6. When the user says they cannot provide an action reference without declining references, read [reference-search.md](references/reference-search.md) and search Pinterest without asking for separate permission. Filter against the built-in walk-cycle clarity standard, present two to four useful candidates with links and a recommendation, and ask the user to approve one. For walk cycles, inspect the built-in reference and include it as the default candidate.
-7. Resolve both master-outline fields from either the user prompt or applicable authoritative repository rules before asking: whether to add an outer silhouette outline, and its width in target-size pixels. Keep every consistently specified field without restating it or asking for confirmation. Ask only for fields that remain missing, ambiguous, or conflicting across sources. Record the width as `none` when the resolved outline decision is disabled.
-8. Ask at most three concise, high-impact questions per round. Include only unresolved, ambiguous, or conflicting outline fields in the question set. For the remaining questions, prioritize the action reference; requested action, direction, loop or one-shot behavior, root motion, and gameplay event; then identity reference and technical output contract. Ask only for facts that cannot be reliably discovered from the supplied material or repository.
-9. Pause frame generation while a missing answer could materially change identity, motion, timing, direction, layout, or integration. If Pinterest yields no usable reference, report what was searched and ask the user to explicitly authorize motion design from the written intent; then present a provisional phase, keyframe, and timing plan for approval before generating frames.
-10. Use disclosed defaults only for low-impact gaps after material questions are resolved. Keep review artifacts in a fresh non-production output directory and production integration outside scope unless requested.
-
-Complete this step only when both outline fields are resolved from the user prompt, applicable authoritative repository rules, or direct user answers, and all other material gaps have user answers, explicit user delegation, or authoritative repository evidence. Read [quality-contract.md](references/quality-contract.md) before generating or reviewing frames. Read [runtime-integration.md](references/runtime-integration.md) only when integration is in scope.
-
-## 2. Lock the canonical master
-
-Use the approved references as the identity and art-direction source of truth. Preserve the project's anatomy, face, silhouette, hairstyle, outfit, palette, equipment, line treatment, materials, proportions, and identifying details across every action and direction.
-
-Build the smallest reference pack that can lock the character before animation generation:
-
-- Keep one high-resolution pre-master for each required camera or direction.
-- Use model sheets and directional views to resolve shapes and asymmetry that the pre-master must represent.
-- Keep action poses out of this stage; generate them only after the canonical master is locked.
-
-When a suitable transparent pre-master does not exist, use ImageGen with the approved identity and art references to create it. Do not ask a model for action frames or a finished multi-frame sheet at this stage.
-
-Create every canonical master on a canvas whose shortest side is exactly `512 px`. Preserve the target frame aspect ratio: use `master scale = 512 / min(target frame width, target frame height)`, set the short side to `512`, and round the proportionally scaled long side to the nearest whole pixel. Normalize every source to this fixed canvas and the declared coordinate system.
-
-Apply the resolved master-outline contract during canonical-master generation. When enabled, read [silhouette-outline.md](references/silhouette-outline.md), use the resolved target-size width, derive the color from current references, and add the outline to each fixed-size high-resolution pre-master. Treat the unoutlined pre-master as a temporary source and lock the outlined high-resolution result as the canonical master. When disabled with width `none`, lock the unoutlined result as the canonical master. Use the canonical master as the final identity and art-treatment reference for every later keyframe generation. Never animate, deform, rig, or split the canonical master into production frames, and never add, regenerate, thicken, sharpen, or repair its outline on generated frames or assembled sheets; return to the pre-master and rebuild the canonical master instead.
-
-Complete this step only when every canonical master has a `512 px` short side and its identity, direction, visual scale, palette, equipment handedness, anchor conventions, and outline treatment are locked for use as final generation references.
-
-## 3. Design the motion
-
-Read [motion-design.md](references/motion-design.md). For each clip:
-
-1. Define the readable action phases and keyframes.
-2. Mark contacts, root path, anticipation, action or apex, recovery, holds, impact or gameplay event frames, and transition endpoints that apply.
-3. Allocate frames and durations by perceptual importance rather than spacing every pose evenly.
-4. Decide whether the clip repeats, returns to another state, holds its terminal frame, or hands off through a transition.
-5. Assign multiple high-resolution keyframes and multiple high-resolution in-betweens to explicit frame indices.
-6. Check directional handedness, equipment arcs, camera consistency, perspective, depth order, and occlusion changes.
-
-Use the same production method for every clip: generate multiple high-resolution keyframes from the canonical master, then generate multiple high-resolution in-betweens from adjacent approved keyframes. Do not substitute deterministic deformation, part warping, layered rigging, skeletal animation, morphing, or direct target-size drawing for either generation stage.
-
-Complete this step only when every requested clip has an explicit phase, timing, transition, direction, event, keyframe-index, and in-between-index contract.
-
-## 4. Generate high-resolution keyframes
-
-Use the canonical master as the final identity, appearance, and outline reference for every keyframe. Use the approved action reference only for pose, perspective, depth, contacts, and timing. Generate each keyframe as a new high-resolution RGBA image on the canonical canvas; do not obtain it by warping, rotating, scaling, cutting apart, or otherwise deforming the canonical master.
-
-Generate at least two distinct high-resolution keyframes per clip and add every pose needed to cover articulation, foreshortening, volume rotation, newly visible surfaces, occlusion-order changes, effects, and gameplay events. Generate one keyframe at a time. Preserve the fixed canvas, coordinate system, camera, animation origin, art treatment, and canonical identity while allowing projection, visible area, and near-versus-far scale to change correctly with the pose.
-
-Present all high-resolution keyframes for the clip side by side and obtain approval before generating any in-betweens. Reject paper-doll articulation, flattened volume, incorrect joint projection, missing foreshortening, inconsistent perspective, impossible overlaps, and incorrect depth order.
-
-Complete this step only when every planned high-resolution keyframe exists, matches the canonical master as its final visual reference, passes the structural gate in [motion-design.md](references/motion-design.md), and is approved.
-
-## 5. Generate high-resolution in-betweens
-
-Generate each missing frame from its two adjacent approved high-resolution keyframes. Treat those bracketing keyframes as the motion and spatial endpoints; retain the canonical master as the final identity and art-treatment reference. Generate one high-resolution in-between at a time on the same canvas.
-
-Generate multiple high-resolution in-betweens for every clip. Preserve continuous three-dimensional volume, perspective, foreshortening, joint paths, near-versus-far scale, newly visible surfaces, and occlusion order between the bracketing keyframes. When an interval cannot be connected without inventing or changing important spatial information, promote the required intermediate pose to a new high-resolution keyframe, approve it, and regenerate that interval.
-
-Review the complete ordered high-resolution sequence before any resizing. Regenerate a high-resolution keyframe or in-between to correct structural or visual errors; never repair them after downsampling.
-
-Complete this step only when every planned high-resolution in-between exists, every frame is traceable to its bracketing approved keyframes, and the complete high-resolution sequence passes motion, volume, perspective, occlusion, identity, and timing review.
-
-## 6. Downsample and assemble
-
-Finalize Alpha and frame order at high resolution. For smooth raster art, keep premultiplied Alpha; for pixel art, preserve the project's discrete palette and pixel-cluster rules. Downsample each approved high-resolution keyframe and in-between exactly once to the target frame dimensions. The resulting target frames are terminal derivatives: do not redraw, deform, outline, sharpen, resize, or structurally edit them.
-
-Export contract-ordered RGBA frames with zero-padded filenames. Verify each frame's exact dimensions, anchor coordinate, Alpha cleanup, and sampling before assembly.
-
-Create and maintain the lineage manifest described in [lineage-evidence.md](references/lineage-evidence.md). Record content-addressed pre-masters, canonical masters, high-resolution keyframes, high-resolution in-betweens, target frames, sheet, declared relations and downsample operations, approval evidence, clip indices, and assembly order. Review contact sheets and in-memory target-size controls are evidence only and must never appear as production target-frame artifacts.
-
-Assemble rectangular frames into a horizontal, vertical, or grid sheet:
+The only production entry point is:
 
 ```bash
-<python> <skill-dir>/scripts/assemble_spritesheet.py \
-  --frames-dir <absolute-ordered-frames-directory> \
-  --pattern '<contract-frame-glob>' \
-  --output <absolute-spritesheet.png> \
-  --frame-width <contract-frame-width> \
-  --frame-height <contract-frame-height> \
-  --frame-count <contract-frame-count> \
-  --columns <contract-column-count> \
-  --order <row-major-or-column-major> \
-  --clip <action-direction>:<1-based-start>:<count>
+<python> <skill-dir>/scripts/spritesheet_pipeline.py prepare-canonical|build-package|verify-package
 ```
 
-Repeat `--clip` for every clip in a combined sheet and preserve the emitted metadata as assembly evidence. Add the final sheet and assembly metadata to the lineage manifest. The mandatory lineage ends in an untrimmed, unrotated fixed-grid spritesheet; do not replace it with a trimmed or rotated atlas.
+Use the CLI help and tests as the executable source of truth for request fields and file layout. Use [lineage-evidence.md](references/lineage-evidence.md) for the package contract and evidence boundaries.
 
-Complete this step only when sheet dimensions, cell order, unused cells, clip ranges, metadata, and the recorded artifact graph match the live contract.
+## 1. Establish the production spec
 
-## 7. Validate mechanically and visually
+1. Read the prompt, attachments, repository instructions, asset declarations, existing sprites, animation mappings, renderer settings, and visual tests before asking questions.
+2. Record the character, actions, directions, camera, loop or one-shot behavior, root motion, frame dimensions, frame count, durations, grid layout, anchor, safe bounds, event frames, sampling style, outline contract, and integration scope. Keep character identity evidence, art direction, fallback policy, runtime scale, and integration scope in the working plan when they are not fields of the package request.
+3. Resolve the action reference by following [motion-design.md](references/motion-design.md). Ask at most three material questions per round and pause generation while an answer could change identity, motion, timing, layout, or integration.
+4. Preserve an outline decision and `target_width` when the prompt or authoritative repository rules already determine both consistently. Ask only when either value is missing, ambiguous, or conflicting.
+5. Require each target shortest side to be less than `512 px`, each target longest side to be at most `4096 px`, and the derived high-resolution longest side to be at most `16384 px`.
 
-Validate the lineage evidence first:
+Complete this step when every material field has an authoritative value, a user answer, or explicit user delegation, and the package-build subset can be serialized as `spritesheet-production-request/v2`. The broader working plan remains review evidence rather than an extension of the closed package schema. Read [quality-contract.md](references/quality-contract.md) before producing images. Read [runtime-integration.md](references/runtime-integration.md) only when integration is requested.
 
-```bash
-<python> <skill-dir>/scripts/validate_lineage.py \
-  --lineage <absolute-lineage-manifest.json>
-```
+## 2. Author and approve canonical references
 
-Treat `MACHINE-VERIFIED` as machine-checked evidence-package structure and artifact consistency. Treat `DECLARED` and `REVIEWED` as explicit workflow or human-review evidence, not as mechanical proof of otherwise unobservable creative history.
+Create one fixed-canvas identity reference for each required camera or direction. Each canvas preserves the target aspect ratio, has a `512 px` shortest side, and rounds the proportional long side to the nearest integer. Keep action poses out of this stage.
 
-Then run the general grid validator:
+When the outline contract is enabled, apply [silhouette-outline.md](references/silhouette-outline.md) during canonical authoring. When target-size readability requires static redesign, apply [optical-sizing.md](references/optical-sizing.md) before approval. Source images, candidates, unoutlined buffers, and review contact sheets remain authoring evidence outside the production graph.
 
-```bash
-<python> <skill-dir>/scripts/validate_spritesheet.py \
-  --sheet <absolute-spritesheet.png> \
-  --frame-width <contract-frame-width> \
-  --frame-height <contract-frame-height> \
-  --frame-count <contract-frame-count> \
-  --columns <contract-column-count> \
-  --order <row-major-or-column-major>
-```
+Run `prepare-canonical` with a `canonical-authoring-request/v2` request. Review identity, direction, visual mass, palette, equipment handedness, anchor conventions, transparency, and outline treatment. Approval binds the exact image bytes by content hash; those bytes become the immutable `canonical-reference` artifact.
 
-Add contract-specific flags for safe bounds, transparent corners, sampling thresholds, repeated loop endpoints, or contact checks. Use `--closed-loop-range <label>:<1-based-start>:<count>` only for clips whose contract includes a repeated closing target. Even then, generate a distinct high-resolution closing frame and downsample it once; never copy or reuse a terminal target to create the repeated cell.
+Complete this step when every required direction has an approved, content-addressed canonical reference on the fixed canvas and the set forms the `CanonicalReferenceSet`.
 
-Then inspect every frame at native `1×`, every loop for at least three cycles, and every one-shot from entry through its transition or terminal hold. Reject identity drift, paper-doll articulation, flattened volume, incorrect foreshortening or perspective, impossible overlaps, depth-order errors, direction swaps, timing ambiguity, broken arcs, missing anticipation or recovery, contact or root-motion errors, unintended cropping, Alpha contamination, sampling artifacts, wrong cell order, and runtime event misalignment.
+## 3. Design motion and approve keyframes
 
-If target-size readability fails, read [optical-sizing.md](references/optical-sizing.md), revise the high-resolution pre-master, rebuild the canonical master, and repeat the complete keyframe, in-between, and single-downsample lineage. Never repair the target frames directly.
+Follow [motion-design.md](references/motion-design.md). Define phases, contacts, root path, timing, events, transitions, keyframe indices, and in-between indices for every clip.
 
-Complete validation only when lineage structure, generic mechanical checks, every action-specific behavioral gate, and native-size visual review pass, with declared and reviewed claims reported separately from machine-verified facts.
+Generate each keyframe as a new high-resolution RGBA image, using the matching canonical reference for identity and art direction and the approved action reference for motion. Generate at least two keyframes per clip. Present the complete keyframe set side by side and obtain `keyframe-set-approval` bound to the exact content hashes before continuing.
 
-## 8. Integrate only within explicit scope
+Complete this step when every clip has at least two structurally valid keyframes and its entire keyframe set is approved as one hash-bound gate.
 
-When integration is requested, follow [runtime-integration.md](references/runtime-integration.md), update every asset and animation contract atomically, run the repository's asset validation and visual coverage, and capture the real runtime result.
+## 4. Generate and approve the high-resolution sequence
 
-Report user-provided references, answered questions, delegated decisions and defaults, generated artifacts, machine-verified lineage facts, declared workflow claims, review evidence, clip-by-clip validation, visual findings, runtime changes and tests, and remaining uncertainty separately. Keep staging, committing, publishing, and production replacement outside scope unless requested.
+For each planned gap, generate a new high-resolution in-between from the same canonical reference and the two adjacent approved keyframes. Generate at least two in-betweens per clip. When the endpoints do not constrain a spatial change, add a keyframe, repeat the keyframe-set gate, and regenerate the affected interval.
+
+Review each complete ordered sequence for motion, volume, perspective, foreshortening, occlusion, identity, timing, contacts, and events. Obtain `sequence-approval` bound to every ordered high-resolution-frame hash.
+
+Complete this step when each clip contains at least two keyframes and two in-betweens, all frames use the single `high-resolution-frame` artifact type with a `keyframe` or `in-between` role, and the ordered sequence has hash-bound approval.
+
+## 5. Build the spritesheet package
+
+Run `build-package` with a `spritesheet-production-request/v2` request. The pipeline directly renders each unique approved high-resolution source into its logical sheet cell with `lanczos-premultiplied-v1`. Smooth-raster resizing operates in premultiplied-alpha space; stored PNG files are straight RGBA.
+
+When a loop contract requires an explicit repeated opening cell, reuse the opening cell pixels at the closing position. This adds no high-resolution artifact and performs no second render. Logical cells are addresses inside the spritesheet, not standalone production artifacts or editable PNG stages.
+
+The sole final deliverable is one `SpritesheetPackage`: the spritesheet, one authoritative `spritesheet-package/v2` manifest, and the content-addressed canonical and high-resolution sources referenced by that manifest. Any runtime metadata view is a projection of the manifest.
+
+Complete this step when the fixed-grid sheet and authoritative manifest agree on dimensions, order, clips, durations, events, anchors, unused cells, and loop behavior.
+
+## 6. Verify and hand off
+
+Run `verify-package` and retain its fresh categorized output as the validation report. Require the verifier to replay `lanczos-premultiplied-v1` from every unique approved high-resolution source and prove pixel by pixel that each populated cell equals its direct render. For an explicit repeated opening cell, require pixel equality with the opening cell. Then inspect every frame at native `1x`, loops for at least three cycles, and one-shots through their transition or terminal hold.
+
+Route corrections by source:
+
+- Canonical identity, transparency, or outline defects return to canonical authoring and invalidate all downstream approvals and package outputs.
+- Action, pose, volume, timing, or transition defects return to high-resolution keyframes or sequence generation.
+- Native target-cell readability or sampling defects return to the canonical reference or responsible high-resolution source, followed by a package rebuild.
+
+When integration is requested, follow [runtime-integration.md](references/runtime-integration.md), update the repository contracts atomically, and validate the real runtime. Keep staging, committing, publishing, and production replacement outside scope unless requested.
+
+Complete the skill only when schema validation, hash-bound gates, sampler replay, cell equality, action-specific checks, native-size visual review, and any requested runtime verification pass. Report machine-verified facts, human approvals, supplied evidence, visual findings, changes, tests, and remaining uncertainty separately.

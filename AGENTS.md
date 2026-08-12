@@ -11,11 +11,10 @@ There is no repository-wide build system or dependency manifest. The image tools
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install numpy Pillow
-.venv/bin/python create-better-spritesheet/scripts/assemble_spritesheet.py --help
-.venv/bin/python create-better-spritesheet/scripts/validate_spritesheet.py --help
+.venv/bin/python create-better-spritesheet/scripts/spritesheet_pipeline.py --help
 ```
 
-Run a tool with real RGBA fixtures and contract values before submitting script changes. For example, invoke `validate_spritesheet.py --sheet <sheet.png> --frame-width 96 --frame-height 96 --frame-count 8`.
+Run the public pipeline with real RGBA fixtures and v2 request files before submitting script changes. Exercise `prepare-canonical`, `build-package`, and `verify-package`; keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
 
 ## Coding Style & Naming Conventions
 
@@ -23,7 +22,7 @@ Run a tool with real RGBA fixtures and contract values before submitting script 
 
 ## Testing Guidelines
 
-No automated test framework or coverage threshold is configured. For documentation changes, verify YAML/frontmatter syntax, relative links, and package-name consistency. For Python changes, exercise `--help`, success paths, invalid arguments, emitted metadata, and validator failures against representative fixtures; also inspect generated sprites at native size. If adding pytest coverage, place it under `tests/test_<module>.py` and add a reproducible dependency/runner definition.
+The spritesheet package uses Python `unittest`; no coverage threshold is configured. For documentation changes, verify YAML/frontmatter syntax, relative links, and package-name consistency. For Python changes, exercise `--help`, success paths, invalid arguments, emitted metadata, and validator failures against representative fixtures; also inspect generated sprites at native size. Place additional tests under `tests/test_<module>.py` and keep the isolated dependency command reproducible.
 
 ## Commit & Pull Request Guidelines
 

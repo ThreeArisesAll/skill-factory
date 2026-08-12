@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Shared premultiplied-alpha image helpers for spritesheet tools."""
 
 from __future__ import annotations
@@ -6,15 +5,9 @@ from __future__ import annotations
 import numpy as np
 from PIL import Image
 
-MASTER_SHORT_SIDE = 512
-
-
-def alpha_bbox(image: Image.Image, threshold: int = 8) -> tuple[int, int, int, int]:
-    alpha = np.asarray(image.getchannel("A"))
-    ys, xs = np.where(alpha > threshold)
-    if len(xs) == 0:
-        raise ValueError("image has no visible pixels")
-    return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1
+HIGH_RESOLUTION_SHORT_SIDE = 512
+MAX_HIGH_RESOLUTION_SIDE = 16384
+MAX_TARGET_SIDE = 4096
 
 
 def to_premultiplied(image: Image.Image) -> np.ndarray:
@@ -53,33 +46,35 @@ def clear_transparent_rgb(image: Image.Image) -> Image.Image:
     return Image.fromarray(rgba, "RGBA")
 
 
-def resolve_frame_dimensions(
-    frame_size: int | None,
-    frame_width: int | None,
-    frame_height: int | None,
-) -> tuple[int, int]:
-    if frame_size is not None:
-        if frame_width is not None or frame_height is not None:
-            raise ValueError("use --frame-size or --frame-width/--frame-height, not both")
-        frame_width = frame_height = frame_size
-    if frame_width is None or frame_height is None:
-        raise ValueError("provide --frame-width and --frame-height")
-    if frame_width < 1 or frame_height < 1:
-        raise ValueError("frame dimensions must be positive")
-    return frame_width, frame_height
+def round_ratio(numerator: int, denominator: int) -> int:
+    """Round a positive rational using Python's ties-to-even rule without floats."""
+    quotient, remainder = divmod(numerator, denominator)
+    doubled = remainder * 2
+    if doubled > denominator or (doubled == denominator and quotient % 2 == 1):
+        quotient += 1
+    return quotient
 
 
-def resolve_master_dimensions(
+def resolve_high_resolution_dimensions(
     frame_width: int,
     frame_height: int,
 ) -> tuple[tuple[int, int], float]:
     if frame_width < 1 or frame_height < 1:
         raise ValueError("frame dimensions must be positive")
-    master_scale = MASTER_SHORT_SIDE / min(frame_width, frame_height)
-    master_size = (
-        round(frame_width * master_scale),
-        round(frame_height * master_scale),
+    if min(frame_width, frame_height) >= HIGH_RESOLUTION_SHORT_SIDE:
+        raise ValueError("target frame shortest side must be smaller than 512px")
+    if max(frame_width, frame_height) > MAX_TARGET_SIDE:
+        raise ValueError(f"target frame longest side must not exceed {MAX_TARGET_SIDE}px")
+    short_side = min(frame_width, frame_height)
+    high_resolution_scale = HIGH_RESOLUTION_SHORT_SIDE / short_side
+    high_resolution_size = (
+        round_ratio(frame_width * HIGH_RESOLUTION_SHORT_SIDE, short_side),
+        round_ratio(frame_height * HIGH_RESOLUTION_SHORT_SIDE, short_side),
     )
-    if min(master_size) != MASTER_SHORT_SIDE:
-        raise ValueError("canonical master shortest side must equal 512px")
-    return master_size, master_scale
+    if min(high_resolution_size) != HIGH_RESOLUTION_SHORT_SIDE:
+        raise ValueError("high-resolution canvas shortest side must equal 512px")
+    if max(high_resolution_size) > MAX_HIGH_RESOLUTION_SIDE:
+        raise ValueError(
+            f"high-resolution canvas longest side must not exceed {MAX_HIGH_RESOLUTION_SIDE}px",
+        )
+    return high_resolution_size, high_resolution_scale

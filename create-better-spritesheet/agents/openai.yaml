@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Better Spritesheet"
-  short_description: "Create and validate multi-action 2D character spritesheets"
-  default_prompt: "Use $create-better-spritesheet to apply the resolved outline treatment to the high-resolution pre-master, lock the canonical master, generate multiple high-resolution keyframes, generate multiple high-resolution in-betweens from adjacent approved high-resolution keyframes, downsample each frame once, assemble the spritesheet, and validate its lineage evidence."
+  short_description: "Create and verify v2 production spritesheet packages"
+  default_prompt: "Use $create-better-spritesheet to author and approve fixed-canvas canonical references, generate hash-approved high-resolution keyframes and in-betweens, build one spritesheet-package/v2 with deterministic target-cell rendering, and verify every cell by replaying the sampler."
