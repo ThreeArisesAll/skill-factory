@@ -1,20 +1,20 @@
-# 确定性站立待机配方
+# Deterministic Planted Idle Recipe
 
-仅用于正面、全身、脚底落地、方形帧的轻微呼吸待机。其他动作和镜头使用 [motion-design.md](motion-design.md) 中的通用动作流程及适合该动作的生产方法。
+Use only for a subtle breathing idle that is front-facing, full-body, planted at the soles, and rendered in square frames. For other actions and cameras, use the general motion workflow in [motion-design.md](motion-design.md) and a production method suited to the action.
 
-## 动作链
+## Motion chain
 
-- 头部与肩膀承担主要起伏。
-- 躯干与髋部用较小幅度连接上下半身。
-- 膝部和鞋面递减参与。
-- 只锁定鞋底接触带和脚底基线。
-- 控制水平质心漂移。
+- Let the head and shoulders carry the primary rise and fall.
+- Connect the upper and lower body through smaller torso and hip motion.
+- Reduce participation progressively through the knees and shoe uppers.
+- Lock only the sole contact band and foot baseline.
+- Control horizontal center-of-mass drift.
 
-优先读取项目的帧数、节奏、幅度和动作参考。缺失时先询问用户并提示提供待机参考；用户无法提供时，按 [reference-search.md](reference-search.md) 搜索 Pinterest，并把内置行走参考只作为清晰度基准。搜索仍无可用结果且用户明确授权自主设计后，才可把包含重复闭环帧的 `12` 帧、`500 ms` 循环和约帧高 `3%` 的峰值起伏作为明确标注的临时假设。
+Prefer the project's frame count, rhythm, amplitude, and action reference. When they are missing, ask the user and request an idle reference. If the user cannot provide one, search Pinterest according to [reference-search.md](reference-search.md) and use the built-in walk reference only as a clarity benchmark. Only after the search yields no usable result and the user explicitly authorizes independent design may you use the following clearly disclosed provisional assumptions: `12` frames including a repeated closing frame, a `500 ms` loop, and peak travel of approximately `3%` of frame height.
 
-## 构建
+## Build
 
-母帧必须是精确的方形工作画布：
+The master must use an exact square working canvas:
 
 ```bash
 <python> <skill-dir>/scripts/build_idle_spritesheet.py \
@@ -29,9 +29,9 @@
   --loop-duration-ms <contract-loop-duration>
 ```
 
-使用 `--fit-master` 只做一次规范化。脚本从同一母帧确定性生成所有帧，在预乘 Alpha 中变形，最终只降采样一次，并输出独立帧、横向精灵表和无损预览。
+Use `--fit-master` for a single normalization pass only. The script deterministically derives every frame from the same master, deforms in premultiplied Alpha, downsamples only once at the end, and emits individual frames, a horizontal spritesheet, and a lossless preview.
 
-## 验证
+## Validate
 
 ```bash
 <python> <skill-dir>/scripts/validate_spritesheet.py \
@@ -42,6 +42,6 @@
   --require-closed-loop
 ```
 
-按现场契约覆盖安全边距、位移、质心或接触带阈值。连续查看至少三次循环，拒绝上半身活塞感、下半身冻结、鞋底滑动、身份漂移和首尾跳点。
+Override safe-margin, travel, center-of-mass, or contact-band thresholds from the live contract. Watch at least three consecutive loops. Reject piston-like upper-body motion, a frozen lower body, sole sliding, identity drift, and a visible jump at the loop boundary.
 
-完成标准：专项机械检查通过，原生尺寸下动作传力自然，脚底接触与闭环方式符合待机契约。
+Completion criteria: specialized mechanical checks pass, force transfers naturally at native size, and sole contact and loop closure match the idle contract.

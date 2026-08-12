@@ -1,12 +1,12 @@
-# 动作参考搜索
+# Action Reference Search
 
-仅在用户明确无法提供动作参考时执行。无需再次请求搜索许可；主动搜索 Pinterest，然后让用户确认候选。
+Run this workflow only when the user explicitly cannot provide an action reference. Do not ask for separate search permission. Proactively search Pinterest, then ask the user to approve a candidate.
 
-## Pinterest 搜索
+## Search Pinterest
 
-使用可用的网页或浏览器工具直接搜索 Pinterest。Pinterest 页面不可访问、要求登录或结果加载不完整时，使用限定 `pinterest.com` 的网页或图片搜索并打开具体 Pin。
+Use an available web or browser tool to search Pinterest directly. If Pinterest pages are inaccessible, require login, or load incomplete results, use web or image search restricted to `pinterest.com` and open the specific Pin.
 
-从动作契约构造两至四个窄查询，优先使用英文动作术语：
+Construct two to four narrow queries from the motion contract. Prefer English action terms:
 
 - `<action> animation reference`
 - `<action> key poses`
@@ -14,39 +14,39 @@
 - `<direction or camera> <action> animation reference`
 - `<body type or equipment> <action> motion reference`
 
-把实际动作、方向、镜头、身体类型、装备和 loop 或 one-shot 语义代入查询。不要用宽泛的 `animation` 或 `character movement` 作为唯一查询。
+Substitute the actual action, direction, camera, body type, equipment, and loop or one-shot semantics. Do not use a broad term such as `animation` or `character movement` as the only query.
 
-## 清晰度与价值门槛
+## Clarity and value gate
 
-使用内置 [walk-cycle-reference.png](../assets/walk-cycle-reference.png) 作为筛选基准。优先选择：
+Use the built-in [walk-cycle-reference.png](../assets/walk-cycle-reference.png) as the screening benchmark. Prefer references that provide:
 
-- 原生尺寸足以看清关节、接触点和轮廓
-- 连续姿势顺序明确，或关键阶段有标签
-- 镜头、角色体量、地面线和运动方向稳定
-- 四肢无遮挡，近远侧关系和装备弧线可辨
-- 包含动作预备、主动作、极值、恢复或完整循环
-- 构图简洁，水印、文字和装饰不遮挡动作
+- Native resolution sufficient to read joints, contacts, and silhouettes
+- An unambiguous pose sequence or labeled key phases
+- Stable camera, character scale, ground line, and travel direction
+- Unobstructed limbs with readable near-far relationships and equipment arcs
+- Anticipation, main action, extreme, recovery, or a complete loop
+- Clean composition without watermarks, text, or decoration blocking the motion
 
-拒绝缩略图过小、姿势顺序不明、肢体严重裁切、透视或体量跳变、重复图拼贴、AI 解剖错误，或只展示成品画风而没有动作信息的候选。单张姿势图只能补充一个极值，不能单独证明完整动作。
+Reject candidates with tiny thumbnails, unclear pose order, severely cropped limbs, inconsistent perspective or scale, duplicate-image collages, AI anatomy errors, or only finished art style without usable motion information. A single pose may supplement one extreme but cannot prove a complete action by itself.
 
-## 向用户提交候选
+## Present candidates to the user
 
-提交二至四个最有价值的候选，而不是返回整页搜索结果。每个候选提供：
+Present the two to four most valuable candidates instead of returning an entire results page. For each candidate, provide:
 
-- 可访问的 Pin 或原始来源链接
-- 缩略预览或清楚的内容描述
-- 能支持哪些阶段、方向、节奏或事件判断
-- 仍然缺失的动作信息
+- An accessible Pin or original-source link
+- A thumbnail preview or clear content description
+- The phases, direction, rhythm, or event decisions it supports
+- The motion information it still lacks
 
-推荐其中一个，并请求用户确认采用哪个参考。用户确认前，只做动作分析和关键姿势计划，不生成完整帧序列。
+Recommend one candidate and ask the user which reference to adopt. Before approval, perform motion analysis and key-pose planning only; do not generate the full frame sequence.
 
-Pinterest 只用于发现动作参考。尽量打开 Pin 指向的原始来源，记录作者或来源页面；把外部图用于动作、节奏和姿势分析，不复制其角色身份、服装、品牌元素或画风。未经用户要求，不把第三方图片写入仓库或 Skill 资产。
+Use Pinterest only to discover motion references. Whenever possible, open the original source linked by the Pin and record the creator or source page. Use external images to analyze motion, rhythm, and pose; do not copy character identity, clothing, brand elements, or art style. Do not save third-party images into the repository or Skill assets unless the user requests it.
 
-## 内置行走循环参考
+## Built-in walk-cycle reference
 
-`assets/walk-cycle-reference.png` 是用户提供的内置参考，尺寸为 `1145×337`，SHA-256 为 `b85df770ed6528e2c16ba4817752a533af424b9c2fbe11520564484652c191fc`。其外部原始出处尚未确认。
+`assets/walk-cycle-reference.png` is the user-provided built-in reference. Its dimensions are `1145×337`, and its SHA-256 is `b85df770ed6528e2c16ba4817752a533af424b9c2fbe11520564484652c191fc`. Its original external provenance has not been confirmed.
 
-图中用九个侧视姿势展示两个交替半周期：
+The image presents two alternating half-cycles through nine side-view poses:
 
 1. CONTACT
 2. RECOIL
@@ -56,8 +56,8 @@ Pinterest 只用于发现动作参考。尽量打开 Pin 指向的原始来源�
 6. RECOIL
 7. PASSING
 8. HIGH-POINT
-9. CONTACT，重复首个落脚相位以显式闭环
+9. CONTACT, repeating the first footfall phase for explicit loop closure
 
-制作行走循环时必须先检查此图。把它用于接触顺序、重心起伏、摆臂反相、迈步弧线和闭环阶段参考；角色身份、身体比例、服装和最终画法继续服从项目参考。
+Inspect this image before producing any walk cycle. Use it to evaluate contact order, center-of-mass rise and fall, counter-swinging arms, stride arcs, and loop phases. Character identity, body proportions, clothing, and final art treatment remain governed by the project references.
 
-用户无法提供行走参考时，把内置图作为默认可用参考，同时搜索 Pinterest 寻找更匹配目标镜头、身体类型、速度和装备的候选。若搜索没有产生更高价值的结果，说明搜索结论并推荐直接采用内置图。
+When the user cannot provide a walk reference, use the built-in image as the default usable reference while searching Pinterest for a closer match to the target camera, body type, speed, and equipment. If the search yields nothing more valuable, report that result and recommend the built-in image.

@@ -1,39 +1,39 @@
-# 运行时集成契约
+# Runtime Integration Contract
 
-仅在用户明确要求替换或接入运行时资源时执行本文件。
+Use this workflow only when the user explicitly requests replacement or integration of runtime assets.
 
-## 先读取现场
+## Inspect the live system first
 
-使用仓库搜索、资源清单、构建配置和测试读取并记录：
+Use repository search, asset manifests, build configuration, and tests to read and record:
 
-- 目标资源的生产路径、尺寸、网格、方向、状态和完整性字段
-- 精灵表声明、action-direction clip 映射、帧序、逐帧时长与循环方式
-- 状态到动画的映射和回退逻辑
-- 命中、发射、落地、交互完成等事件帧与热点
-- origin、anchor、pivot、root motion、scale、baseline、裁切和纹理注册方式
-- 引擎、Canvas、WebGL 或 CSS 的过滤与像素对齐设置
-- 资源验证命令、视觉测试和真实展示入口
+- Production path, dimensions, grid, directions, states, and integrity fields for the target asset
+- Spritesheet declarations, action-direction clip mappings, frame order, per-frame durations, and loop behavior
+- State-to-animation mappings and fallback logic
+- Event frames and hotspots for hits, releases, landings, and interaction completion
+- Origin, anchor, pivot, root motion, scale, baseline, cropping, and texture registration
+- Filtering and pixel-alignment settings in the engine, Canvas, WebGL, or CSS
+- Asset validation commands, visual tests, and real rendering entry points
 
-不要假设某个仓库使用固定目录、文件名、引擎或测试命令。先用 `rg`、配置文件和包脚本定位现场，再判断新表是否兼容；评审用单动作横条不等于可直接替换的生产整表。
+Do not assume a repository uses a fixed directory, filename, engine, or test command. Locate the live contract through `rg`, configuration files, and package scripts before deciding whether the new sheet is compatible. A single-action review strip is not necessarily a production-ready full sheet.
 
-## 原子更新
+## Update atomically
 
-若集成已获授权，一次完成所有实际互相依赖的修改：
+When integration is authorized, update every genuinely interdependent item together:
 
-1. 生产图像资源
-2. 资源尺寸、网格、布局与完整性声明
-3. clip、状态、方向、帧数、逐帧时长、循环与转场
-4. 锚点、根节点、基线、事件帧、显示缩放与裁切
-5. 加载、缓存或纹理注册
-6. 属于同一契约的测试夹具和断言
+1. Production image assets
+2. Asset dimensions, grid, layout, and integrity declarations
+3. Clips, states, directions, frame counts, per-frame durations, loops, and transitions
+4. Anchors, roots, baselines, event frames, display scale, and cropping
+5. Loading, caching, or texture registration
+6. Test fixtures and assertions governed by the same contract
 
-保持新资源与邻近角色或状态相同的视觉体量、接触点原则和玩法可读性。优先更新共享契约；只有角色设计确实需要时才使用专属补偿。
+Keep the new asset consistent with neighboring characters or states in visual mass, contact principles, and gameplay readability. Prefer shared contract updates. Use character-specific compensation only when the design genuinely requires it.
 
-## 匹配画法的渲染
+## Match rendering to the art treatment
 
-平滑光栅角色通常使用线性插值、抗锯齿和非整数位置；像素画通常使用最近邻、整数缩放和像素对齐。读取当前引擎与项目规范后设置，不把某个引擎的选项名当作通用契约。
+Smooth raster characters generally use linear interpolation, antialiasing, and non-integer positions. Pixel art generally uses nearest-neighbor sampling, integer scaling, and pixel alignment. Read the current engine and project rules before choosing settings; do not treat one engine's option names as a universal contract.
 
-例如，Phaser 的平滑光栅配置可能包含：
+For example, a Phaser configuration for smooth raster art may include:
 
 ```ts
 pixelArt: false,
@@ -41,19 +41,19 @@ antialias: true,
 roundPixels: false,
 ```
 
-CSS 控制平滑光栅展示时通常使用 `image-rendering: auto`；像素画则按项目要求使用 `pixelated` 或等效设置。测试画廊与生产入口都要检查，避免用错误过滤方式的预览判断资源本身。
+CSS generally uses `image-rendering: auto` for smooth raster presentation. Pixel art uses `pixelated` or an equivalent project-approved setting. Inspect both test galleries and production entry points so a preview with incorrect filtering is not mistaken for an asset defect.
 
-## 验证
+## Validate
 
-执行仓库定义的资源验证、类型或静态检查、相关单元测试和视觉 E2E。选择隔离端口和项目提供的 `baseURL`；保留无关服务。
+Run the repository-defined asset validation, type or static checks, relevant unit tests, and visual E2E. Select an isolated port and the project-provided `baseURL`; leave unrelated services untouched.
 
-在项目支持的真实视口、相机和设备中检查：
+Inspect the project-supported real viewport, camera, and device for:
 
-- 朝向、体量、锚点与接触点
-- 前后景遮挡和相机缩放
-- 循环、单次动作、终态保持、状态切换与回退
-- 命中、发射、接触、落地与其他事件同步
-- 过滤方式、透明边缘和裁切
-- 邻近角色与场景的一致性
+- Direction, visual mass, anchors, and contacts
+- Foreground and background occlusion and camera scaling
+- Loops, one-shots, terminal holds, state changes, and fallbacks
+- Synchronization of hits, releases, contacts, landings, and other events
+- Filtering, transparent edges, and cropping
+- Consistency with neighboring characters and scenes
 
-区分自动化通过、条件跳过和仍需人工确认的视觉判断。只有生产入口的真实渲染结果能够证明运行时兼容。
+Distinguish automated passes, conditional skips, and visual judgments that still require human confirmation. Only the real render at the production entry point can demonstrate runtime compatibility.

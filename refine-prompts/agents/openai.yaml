@@ -1,7 +1,7 @@
 interface:
-  display_name: "需求挖掘与提示词优化"
-  short_description: "挖掘简略提示词背后的真实需求，生成可直接使用的优化提示词"
-  default_prompt: "使用 $refine-prompts 挖掘以下简略提示词的真实需求，并生成可直接使用的优化提示词："
+  display_name: "Refine Prompts"
+  short_description: "Turn rough requests into reliable, ready-to-use prompts"
+  default_prompt: "Use $refine-prompts to uncover the need behind this rough prompt and return one ready-to-use optimized prompt:"
 
 policy:
   allow_implicit_invocation: false

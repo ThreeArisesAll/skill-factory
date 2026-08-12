@@ -31,10 +31,10 @@ Review the conversation and directly relevant task-local artifacts. Use lightwei
 
 Use existing evidence instead of performing substantial new work solely for the handoff. Label claims so the destination can judge freshness:
 
-- `[已验证 <date/timezone>]` or the user's-language equivalent for facts checked in this turn;
-- `[既有证据，未在本轮重验]` for earlier test results or observations;
-- `[推断]` for the selected objective or other reasoned conclusions;
-- `[未知]` for unresolved or inaccessible facts.
+- `[Verified <date/timezone>]` or the user's-language equivalent for facts checked in this turn;
+- `[Existing evidence, not reverified this turn]` for earlier test results or observations;
+- `[Inference]` for the selected objective or other reasoned conclusions;
+- `[Unknown]` for unresolved or inaccessible facts.
 
 Complete this step when every mutable claim needed for the next action is either freshly verified or explicitly marked as stale, inferred, or unknown.
 
@@ -63,36 +63,36 @@ Complete this step when the handoff is self-contained for action, pointer-rich i
 Match the user's language. Preserve exact technical names, paths, commands, identifiers, and error text when translation would reduce precision. Use this structure and omit empty sections:
 
 ```text
-任务：<one concrete next objective>
+Task: <one concrete next objective>
 
-完成定义：
+Definition of done:
 - <observable artifact or state>
 - <required validation evidence>
 
-背景与当前状态：
+Background and current state:
 - <original intended outcome>
 - <completed work and current state, each with evidence labels>
 
-关键证据与定位：
+Key evidence and locations:
 - <absolute path, URL, commit, command, or external ID> — <why it matters>
 
-必须保留的决定与边界：
+Must-preserve decisions and boundaries:
 - <decision and reason>
 - <scope, exclusion, project rule, or human approval gate>
 
-未解决事项与风险：
+Open items and risks:
 - <unknown, blocker, failed attempt, risk, or invalidation signal>
 
-建议调用的 Skills：
+Suggested skills:
 - $<exact-installed-skill-name> — <when and why>
 
-执行要求：
-1. 先读取适用的项目指令，并检查与本目标相关的实时状态。
-2. 从列出的产物和证据继续；仅在证据已过期或失效时重做已完成工作。
-3. 保留无关的用户改动和并行改动。
-4. 在现有授权范围内自主推进；把未决的人类决定留给用户。
-5. 以交付、实施、修复或验收结果为主目标；不得把代码审查、复审或继续找问题扩展成后续任务。
-6. 按风险验证结果，并报告变更、证据、剩余不确定性和下一安全动作。
+Execution requirements:
+1. Read the applicable project instructions first, then inspect the live state relevant to this objective.
+2. Continue from the listed artifacts and evidence; repeat completed work only when its evidence is stale or invalid.
+3. Preserve unrelated user changes and parallel edits.
+4. Proceed autonomously within the existing authorization; leave unresolved human decisions to the user.
+5. Make delivery, implementation, repair, or acceptance the primary objective; do not expand code review, re-review, or continued issue hunting into a follow-up task.
+6. Validate in proportion to risk, then report changes, evidence, remaining uncertainty, and the next safe action.
 ```
 
 Complete this step when the prompt has exactly one actionable non-review objective, testable completion criteria, sufficient evidence to start, no transcript dump, and no sensitive value.

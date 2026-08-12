@@ -1,20 +1,20 @@
-# 确定性剪影外轮廓
+# Deterministic Silhouette Outline
 
-仅在目标尺寸静态帧已经批准、项目画法要求外描边、且尚未制作动画时执行。用 Alpha 膨胀生成外描边，同时锁住身份与内部细节。
+Use this workflow only after the target-size static frame is approved, the project art treatment requires an outer outline, and animation production has not begun. Generate the outer outline by dilating Alpha while locking identity and interior detail.
 
-## 轮廓契约
+## Outline contract
 
-1. 从艺术规范或邻近生产资源测量目标尺寸的外轮廓宽度与颜色。
-2. 用 `工作分辨率半径 = 目标像素半径 × working-scale` 换算脚本参数。
-3. 把描边放在角色图层后方，让原母帧的全部不透明像素逐字节一致。
-4. 让新增线宽只服务于剪影识别，内部结构线保持原粗细。
-5. 从描边后的高分辨率母帧生成动画，使外轮廓与身体变形共享同一像素来源。
+1. Measure the target-size outer-outline width and color from the art rules or neighboring production assets.
+2. Convert the script parameter with `working-resolution radius = target-pixel radius × working-scale`.
+3. Place the outline behind the character layer so every nontransparent source pixel remains byte-identical.
+4. Use the added width only to improve silhouette recognition; keep internal structure lines at their original weight.
+5. Generate animation from the outlined high-resolution master so outline and body deformation share one pixel source.
 
-颜色和线宽必须来自当前项目契约。没有依据时，先制作静态对比并向用户确认，不使用其他项目的默认风格。
+Color and width must come from the current project contract. When evidence is missing, create a static comparison and ask the user to approve it. Do not import another project's default style.
 
-## 执行
+## Run
 
-使用 fresh 输出目录运行；方形帧也可继续使用 `--frame-size` 简写：
+Use a fresh output directory. Square frames may continue to use the `--frame-size` shorthand:
 
 ```bash
 <python> <skill-dir>/scripts/add_silhouette_outline.py \
@@ -29,15 +29,15 @@
   --safe-margin <contract-safe-margin>
 ```
 
-脚本要求母帧尺寸精确等于目标尺寸乘工作倍率，输出描边母帧、目标帧、原图对比和指标 JSON，并拒绝覆盖非空目录。
+The script requires master dimensions exactly equal to target dimensions multiplied by the working scale. It emits the outlined master, target frame, source comparison, and metrics JSON, and refuses to overwrite a nonempty directory.
 
-## 验收
+## Accept
 
-1. 检查脚本报告 `opaque interior pixel-identical: True`。
-2. 在原生 `1×` 比较原图与描边版，再用棋盘背景 `4×` 定位边缘问题。
-3. 确认视觉体量、中心和基线未改变；只允许 Alpha 包围盒因描边向外扩大。
-4. 确认四边安全边距满足现场契约。
-5. 检查狭窄间隙、肢体、装备和挂件附近没有不自然粘连、锯齿、光晕或透明 RGB 污染。
-6. 与邻近生产资源对比线宽、颜色和采样，确认描边属于同一画法。
+1. Confirm that the script reports `opaque interior pixel-identical: True`.
+2. Compare source and outlined versions at native `1×`, then use a checkerboard-backed `4×` view to locate edge problems.
+3. Confirm that visual mass, center, and baseline are unchanged. Only the Alpha bounds may expand outward because of the outline.
+4. Confirm that all four safe margins satisfy the live contract.
+5. Inspect narrow gaps, limbs, equipment, and accessories for unnatural merging, jagged edges, halos, or transparent RGB contamination.
+6. Compare line width, color, and sampling with neighboring production assets to confirm that the outline belongs to the same art treatment.
 
-完成标准：目标帧出现与项目一致且克制的外轮廓，内部实色像素锁定，全部安全边距与透明度检查通过。
+Completion criteria: the target frame has a restrained, project-consistent outer outline; solid interior pixels remain locked; and all safe-margin and transparency checks pass.

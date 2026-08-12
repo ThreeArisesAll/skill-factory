@@ -1,135 +1,135 @@
-# 精灵表质量契约
+# Spritesheet Quality Contract
 
-## 目录
+## Table of contents
 
-- 现场契约
-- 身份与画法锁
-- 身份源包
-- 目标像素预算
-- 时间、空间与事件
-- 方向一致性
-- 可选剪影外轮廓
-- 采样与透明度
-- 组表与元数据
-- 验收门槛
-- 失败模式与修正方向
+- Live contract
+- Identity and art lock
+- Identity source pack
+- Target pixel budget
+- Time, space, and events
+- Directional consistency
+- Optional silhouette outline
+- Sampling and transparency
+- Assembly and metadata
+- Acceptance gates
+- Failure modes and correction paths
 
-## 现场契约
+## Live contract
 
-从用户资料和当前仓库读取以下字段。先主动询问会改变结果的缺失值；只有用户明确授权自主决定后，才把这些值记录为假设：
+Read the following fields from user material and the current repository. Actively ask for missing values that could change the result. Record a value as an assumption only after the user explicitly delegates the decision:
 
-- 角色、动作、方向、镜头和状态转场
-- 用户参考、Pinterest 候选、最终采用来源及其适用范围
-- 循环、一次性、终态保持或回退行为
-- root motion、动画原点、锚点、基线和事件热点
-- 单帧宽高、每个 clip 的帧数、逐帧时长、表格布局和顺序
-- 安全边界、运行时缩放、邻近资源的视觉体量
-- 线条、色阶、材质、轮廓、调色板和采样方式
-- 评审产物与生产集成的授权边界
+- Character, action, direction, camera, and state transitions
+- User references, Pinterest candidates, selected source, and applicable scope
+- Loop, one-shot, terminal hold, or fallback behavior
+- Root motion, animation origin, anchor, baseline, and event hotspots
+- Frame width and height, frame count per clip, per-frame durations, sheet layout, and order
+- Safe bounds, runtime scale, and visual mass of neighboring assets
+- Line treatment, value range, materials, silhouette, palette, and sampling method
+- Authorization boundary between review artifacts and production integration
 
-后续机械指标必须能够追溯到这些字段。
+Every later mechanical metric must be traceable to these fields.
 
-## 身份与画法锁
+## Identity and art lock
 
-以用户批准的设计板、模型表、现有资源或其他参考集合为身份真值，以当前项目的艺术规范和邻近生产资源为画法真值。逐项核对：
+Treat user-approved design boards, model sheets, existing assets, or other references as identity truth. Treat the current project's art rules and neighboring production assets as art-direction truth. Verify:
 
-- 脸型、五官、身体比例与表情基调
-- 发型大轮廓、发束数量与落点
-- 服装大形、鞋型、武器、背包或随身物
-- 非对称细节、装备手、标记与方向性元素
-- 外轮廓线、内部结构线、明暗层级、材质与细节密度
+- Face shape, features, body proportions, and baseline expression
+- Hairstyle silhouette, lock count, and endpoints
+- Major clothing shapes, footwear, weapons, backpacks, and carried items
+- Asymmetric details, equipment hand, markings, and directional elements
+- Outer contour, internal structure lines, value hierarchy, materials, and detail density
 
-让所有方向和极端动作继续属于同一角色。优先保证剪影、比例、配色和识别锚点，再分配微细节。
+Keep every direction and extreme action recognizably the same character. Protect silhouette, proportions, palette, and recognition anchors before allocating microdetail.
 
-## 身份源包
+## Identity source pack
 
-使用一张中性母帧锁定身份、比例和调色板；根据请求补充方向视图、关键姿势、部件层和特效层。小幅次级运动可以从单一母帧确定性变形；大幅关节运动、遮挡变化、透视压缩或方向旋转需要独立批准的关键姿势。
+Use one neutral master to lock identity, proportions, and palette. Add directional views, key poses, part layers, and effect layers as required. Small secondary motion may use deterministic deformation from one master. Large joint travel, occlusion changes, perspective compression, or direction changes require independently approved key poses.
 
-每个关键姿势必须共享：
+Every key pose must share:
 
-- 同一身份和艺术语言
-- 同一目标画布与坐标语义
-- 相容的视觉体量、线宽与调色板
-- 正确的方向、装备手和遮挡层次
+- The same identity and art language
+- The same target canvas and coordinate semantics
+- Compatible visual mass, line width, and palette
+- Correct direction, equipment hand, and occlusion order
 
-先批准关键姿势，再制作中间帧。
+Approve key poses before producing in-betweens.
 
-## 目标像素预算
+## Target pixel budget
 
-用目标尺寸帧的 Alpha 包围盒计算角色真正占用的像素。清晰度以原生 `1×` 的身份和动作轮廓识别为准，而不是锐化强度或放大预览的边缘反差。
+Use the target-size frame's Alpha bounds to calculate the pixels actually occupied by the character. Define clarity by identity and action-silhouette recognition at native `1×`, not by sharpening strength or edge contrast in an enlarged preview.
 
-为每个动作优先保住角色大形、受力方向、肢体关系、装备弧线和事件帧；让内部纹理、碎发、衣褶与五金服从剩余像素。关键姿势正确降采样后仍不可读时，先做目标尺寸光学校正。
+For every action, preserve major shapes, force direction, limb relationships, equipment arcs, and event frames first. Make internal texture, flyaway hair, folds, and hardware yield to the remaining pixel budget. If a correctly downsampled key pose remains unreadable, apply target-size optical correction before continuing.
 
-## 时间、空间与事件
+## Time, space, and events
 
-逐帧检查三个连续契约：
+Inspect three continuous contracts frame by frame:
 
-- **时间**：帧间距和停顿是否强调预备、主动作、冲击、恢复或终态
-- **空间**：重心、根节点、接触点、运动弧和镜头方向是否连续
-- **事件**：命中、发射、落地、交互完成和状态切换是否落在正确视觉帧
+- **Time**: Frame spacing and holds emphasize anticipation, main action, impact, recovery, or terminal state.
+- **Space**: Center of mass, root, contacts, motion arcs, and camera direction remain continuous.
+- **Events**: Hit, release, landing, interaction completion, and state changes land on the correct visual frames.
 
-循环动作验证末帧到首帧；单次动作验证进入状态、事件帧、恢复或终态以及后续转场。重复闭环帧只在契约要求时使用。
+For loops, verify the transition from last frame to first. For one-shots, verify entry, event frame, recovery or terminal state, and the following transition. Use a repeated closing frame only when required by the contract.
 
-## 方向一致性
+## Directional consistency
 
-多方向 clip 共享阶段、节奏、视觉体量和事件语义。分别验证近远侧肢体、遮挡、装备手、徽记、发型分缝和光照。只有不对称细节和玩法热点都安全时才通过镜像复用。
+Multi-direction clips share phases, rhythm, visual mass, and event semantics. Validate near and far limbs, occlusion, equipment hand, emblems, hair part, and lighting separately. Approve mirrored reuse only when asymmetric details and gameplay hotspots are safe.
 
-## 可选剪影外轮廓
+## Optional silhouette outline
 
-只有现场画法要求外描边时才添加。线宽和颜色取自当前艺术规范或邻近资源，在高分辨率 Alpha 后方确定性扩张，并保持内部实色 RGBA 不变。对全部身份源和关键姿势使用同一轮廓契约。
+Add an outer outline only when the live art direction requires it. Derive line width and color from the current art rules or neighboring assets. Expand deterministically behind the high-resolution Alpha while keeping solid interior RGBA unchanged. Apply one outline contract to every identity source and key pose.
 
-## 采样与透明度
+## Sampling and transparency
 
-平滑光栅画法采用预乘 Alpha、高分辨率生产和单次最终降采样。像素画采用离散调色板、像素簇、最近邻和整数对齐。先确定项目画法，再选择工具和验证阈值。
+For smooth raster art, use premultiplied Alpha, high-resolution production, and one final downsample. For pixel art, use a discrete palette, pixel clusters, nearest-neighbor sampling, and integer alignment. Establish the project art treatment before selecting tools and validation thresholds.
 
-每帧检查：
+Verify every frame:
 
-- 背景透明且透明像素下 RGB 清零
-- 半透明边缘符合画法，无色键残色或雾边
-- 画布尺寸、动画原点和安全边界一致
-- 有意越界、特效裁切或空帧已在契约中声明
+- The background is transparent and RGB is zero beneath fully transparent pixels.
+- Translucent edges match the art treatment and contain no key-color residue or haze.
+- Canvas dimensions, animation origin, and safe bounds are consistent.
+- Intentional overflow, effect cropping, or blank frames are declared in the contract.
 
-## 组表与元数据
+## Assembly and metadata
 
-按契约顺序使用零填充文件名。组表后核对：
+Use zero-padded filenames in contract order. After assembly, verify:
 
-- 单帧尺寸、总帧数、列数、行数和总表尺寸
-- row-major 或 column-major 顺序
-- 每个 action-direction clip 的起始索引和长度
-- 未使用单元格透明
-- 逐帧时长、事件、pivot 或 atlas 元数据与图像顺序一致
+- Frame dimensions, total frame count, columns, rows, and total sheet dimensions
+- Row-major or column-major order
+- Start index and length of every action-direction clip
+- Transparency of unused cells
+- Alignment between image order and per-frame durations, events, pivots, or atlas metadata
 
-固定网格不能表达裁边、旋转或逐帧 pivot 时，使用项目 atlas 管线并验证元数据。
+When a fixed grid cannot express trimming, rotation, or per-frame pivots, use the project's atlas pipeline and validate its metadata.
 
-## 验收门槛
+## Acceptance gates
 
-机械检查至少覆盖：
+Mechanical checks cover at minimum:
 
-- 图像模式、尺寸、帧数、布局、顺序与 Alpha 完整性
-- 声明的循环闭环、空帧、安全边界和采样阈值
-- 动作专项要求的接触、根节点、位移和事件帧
+- Image mode, dimensions, frame count, layout, order, and Alpha integrity
+- Declared loop closures, blank frames, safe bounds, and sampling thresholds
+- Action-specific contacts, root behavior, displacement, and event frames
 
-视觉检查至少覆盖：
+Visual checks cover at minimum:
 
-- 原生 `1×` 下身份、动作和方向可读
-- 所有关键姿势身份稳定，中间帧连接自然
-- 循环连续三次无跳点；单次动作完整走过转场或终态
-- 无错误镜像、装备换手、弧线折断、接触滑动或事件错位
-- 无意外裁切、残色边缘、光晕或采样伪影
-- 真实运行时中体量、锚点、过滤和玩法反馈正确
+- Identity, action, and direction are readable at native `1×`.
+- Identity is stable across all key poses and in-betweens connect naturally.
+- A loop runs three consecutive times without a jump; a one-shot completes its transition or terminal state.
+- No incorrect mirroring, equipment-hand swap, broken arc, contact slide, or event misalignment is present.
+- No unintended cropping, residual edge color, halo, or sampling artifact is present.
+- Visual mass, anchor, filtering, and gameplay feedback are correct in the real runtime.
 
-## 失败模式与修正方向
+## Failure modes and correction paths
 
-| 现象                 | 根因                                  | 回到哪一步                           |
-| -------------------- | ------------------------------------- | ------------------------------------ |
-| 极端动作不像同一角色 | 直接逐帧生成，缺少批准关键姿势        | 回到身份源包；先锁定关键姿势         |
-| 动作意思不清         | 缺少预备、主动作或终态信息            | 回到动作设计；重建阶段与剪影         |
-| 动画发飘             | 根节点、重心、接触点或画布对齐不一致  | 回到空间契约；统一坐标语义           |
-| 攻击无力或事件错位   | 均匀分帧且未标记事件帧                | 回到时间与事件；重排停顿和冲击帧     |
-| 行走脚滑             | 步频、接触位置和 root-motion 策略冲突 | 回到 locomotion 契约；统一接触与位移 |
-| 方向切换时装备换手   | 错误镜像或缺少方向身份源              | 回到方向一致性；制作独立方向关键姿势 |
-| 循环跳点             | 末首姿势、速度或轨迹不连续            | 回到循环过渡；按契约处理闭环         |
-| 单次动作尾部僵住     | 缺少恢复、转场或终态规则              | 回到动作设计；补全状态出口           |
-| 锯齿或过度模糊       | 采样与项目画法不匹配                  | 回到采样链；按平滑光栅或像素画处理   |
-| 细节糊掉             | 在小尺寸上反复编辑或多次缩放          | 回到高分辨率源；只做一次最终降采样   |
-| 图像正确但播放错误   | 表格顺序、clip 范围或元数据不一致     | 回到组表；逐格核对运行时声明         |
+| Symptom | Root cause | Return to |
+| --- | --- | --- |
+| Extreme action no longer resembles the character | Frames were generated independently without approved key poses | Identity source pack; lock the key poses first |
+| Action intent is unclear | Anticipation, main action, or terminal information is missing | Motion design; rebuild the phases and silhouettes |
+| Animation floats | Root, center of mass, contacts, or canvas alignment is inconsistent | Spatial contract; unify coordinate semantics |
+| Attack lacks force or events are misaligned | Frames are evenly spaced and event frames are unmarked | Time and events; redistribute holds and impact frames |
+| Feet slide in locomotion | Cadence, contact position, and root-motion policy conflict | Locomotion contract; reconcile contacts and displacement |
+| Equipment changes hands across directions | Incorrect mirroring or missing directional identity sources | Directional consistency; create independent directional key poses |
+| Loop jumps | End and start pose, velocity, or path are discontinuous | Loop transition; close the loop according to the contract |
+| One-shot freezes at the end | Recovery, transition, or terminal-state rule is missing | Motion design; complete the state exit |
+| Edges are jagged or overblurred | Sampling conflicts with the project art treatment | Sampling chain; use the correct smooth-raster or pixel-art path |
+| Detail turns muddy | Repeated editing at small size or repeated resizing | High-resolution source; downsample only once at the end |
+| Images are correct but playback is wrong | Sheet order, clip range, or metadata disagrees | Assembly; verify runtime declarations cell by cell |

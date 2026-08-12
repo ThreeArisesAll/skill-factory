@@ -1,86 +1,86 @@
-# 动作设计契约
+# Motion Design Contract
 
-在制作任何动作帧前读取本文件。先设计动作信息，再分配图像细节。
+Read this file before producing any action frames. Design the motion information before allocating image detail.
 
-## 动作参考
+## Action reference
 
-用户未提供动作参考时，主动请求。可接受：
+Actively request an action reference when the user has not provided one. Accept:
 
-- 视频或游戏录屏
-- GIF、APNG 或现有精灵表
-- 有顺序的关键帧或逐帧图片
-- 动作姿势板、摄影或动画片段
-- 可准确定位的游戏、电影、动画或现实动作名称
+- Video or gameplay capture
+- GIF, APNG, or an existing spritesheet
+- Ordered keyframes or frame-by-frame images
+- Motion pose sheets, photography, or animation clips
+- A precisely identifiable action from a game, film, animation, or real-world activity
 
-优先请求与目标动作、镜头、身体类型和节奏相近的参考；画风可以不同。说明参考主要用于读取动作阶段、重心路径、接触点、肢体弧线、停顿和事件时机，不会自动替代角色身份与项目画法。
+Prefer a reference close to the target action, camera, body type, and rhythm; its art style may differ. Explain that the reference is used to read action phases, center-of-mass travel, contacts, limb arcs, holds, and event timing. It does not replace the character identity or project art direction.
 
-从参考中记录：
+Record from the reference:
 
-- 起始、预备、主动作、极值、恢复或终态
-- 总时长、节奏变化和关键停顿
-- root motion、重心、接触点与运动弧
-- 镜头、方向、近远侧肢体和遮挡
-- 命中、发射、落地或交互事件
+- Start, anticipation, main action, extreme, recovery, and terminal states
+- Total duration, rhythm changes, and deliberate holds
+- Root motion, center of mass, contacts, and motion arcs
+- Camera, direction, near and far limbs, and occlusion
+- Hit, release, landing, or interaction events
 
-用户明确无法提供参考时，读取 [reference-search.md](reference-search.md)，主动搜索 Pinterest 并提交经过筛选的候选。参考不足、互相冲突或与运行时契约不一致时，向用户说明具体冲突并询问取舍。只有 Pinterest 也没有可用参考时，才询问是否授权按文字意图自主设计；获得授权后先提供动作阶段、关键姿势和时间图，不直接生成完整帧序列。
+When the user explicitly cannot provide a reference, read [reference-search.md](reference-search.md), proactively search Pinterest, and submit screened candidates. If references are incomplete, conflict with one another, or disagree with the runtime contract, explain the exact conflict and ask the user to choose. Only when Pinterest also yields no usable reference should you ask whether the user authorizes design from written intent. After authorization, present the action phases, key poses, and timing chart before generating a full frame sequence.
 
-## 通用动作语法
+## General motion grammar
 
-每个 clip 都记录：
+Record for every clip:
 
-- 状态意图、方向、镜头和进入条件
-- 循环、单次、终态保持或转场方式
-- root motion 或原地播放策略
-- 关键姿势、动作弧线、接触点和重心路径
-- 总时长、逐帧时长和刻意停顿
-- 命中、发射、落地、交互完成等游戏事件帧
-- 锚点、基线、画布越界规则和特效边界
+- State intent, direction, camera, and entry condition
+- Loop, one-shot, terminal hold, or transition behavior
+- Root-motion or in-place playback policy
+- Key poses, motion arcs, contacts, and center-of-mass path
+- Total duration, per-frame durations, and deliberate holds
+- Gameplay event frames such as hit, release, landing, or interaction completion
+- Anchor, baseline, canvas overflow rules, and effect bounds
 
-使用关键姿势承担信息：预备说明“将要发生什么”，主动作或极值说明“发生了什么”，恢复或终态说明“接下来去哪里”。中间帧只负责清楚地连接这些信息。
+Make key poses carry the information: anticipation explains what is about to happen, the main action or extreme explains what happens, and recovery or the terminal pose explains what follows. In-betweens only connect that information clearly.
 
-## 动作分支
+## Action branches
 
-### 待机与循环次级动作
+### Idle and looping secondary motion
 
-保持状态可识别和接触点稳定。呼吸、眨眼、布料或挂件采用不同相位，避免整身同步活塞运动。循环可使用重复闭环帧，也可让末帧自然过渡到首帧；以运行时契约为准。
+Keep the state recognizable and contact points stable. Offset the phases of breathing, blinking, cloth, and accessories to avoid synchronized piston motion across the whole body. A loop may use a repeated closing frame or transition naturally from the last frame to the first; follow the runtime contract.
 
-### 行走与跑步
+### Walk and run
 
-至少明确 contact、down、passing、up 四个阶段及左右脚顺序。决定角色是原地运动还是在帧内携带 root motion。跑步通常需要更短接触、更长腾空和更强躯干反向摆动。多方向套件保持步频和视觉体量一致，同时正确处理近侧与远侧肢体遮挡。
+Define at least the contact, down, passing, and up phases, including the left-right foot order. Decide whether the character moves in place or carries root motion within the frames. Running usually needs shorter contacts, longer airborne intervals, and stronger counter-rotation through the torso. Keep cadence and visual mass consistent across directions while handling near- and far-side limb occlusion correctly.
 
-制作行走循环时，先检查 [walk-cycle-reference.png](../assets/walk-cycle-reference.png)，用其 CONTACT、RECOIL、PASSING、HIGH-POINT 阶段校验接触顺序、重心起伏、摆臂反相和显式闭环。把它当作动作结构参考，不当作角色比例或画法模板。
+Before producing a walk cycle, inspect [walk-cycle-reference.png](../assets/walk-cycle-reference.png). Use its CONTACT, RECOIL, PASSING, and HIGH-POINT phases to verify contact order, center-of-mass rise and fall, counter-swinging arms, and the explicit loop closure. Treat it as a motion-structure reference, not a template for character proportions or art style.
 
-### 攻击、施法与交互
+### Attack, cast, and interaction
 
-划分 anticipation、action、recovery；标记命中、发射或交互完成帧。武器、手臂、身体和特效共享同一运动弧与方向。用少量强关键帧建立力度；需要拖影时把它作为受控特效层，不让拖影替代角色姿势。
+Separate anticipation, action, and recovery; mark the hit, release, or interaction-completion frame. Weapons, arms, body, and effects must share a coherent arc and direction. Establish force with a small number of strong keyframes. If a smear is needed, treat it as a controlled effect layer rather than a substitute for a readable character pose.
 
-### 跳跃、坠落与落地
+### Jump, fall, and land
 
-区分 takeoff、rise、apex、fall、land。腾空阶段的脚底不再是稳定基线，应改为根节点或身体质心作为对齐依据。原地跳与携带位移的跳跃必须在 clip 契约中明确。落地帧处理压缩、接触与随后转场。
+Separate takeoff, rise, apex, fall, and land. During airborne phases, the soles are no longer a stable baseline; align by the root or body center of mass instead. Declare whether the jump is in place or carries displacement. Landing frames must show compression, contact, and the following transition.
 
-### 受击、击倒与死亡
+### Hurt, knockdown, and death
 
-受击先保证冲击方向和轮廓可读，再处理回弹或状态转移。击倒和死亡允许改变基线与占地，但必须保持锚点语义和碰撞事件同步。死亡通常是一次性终态；只有运行时明确要求时才循环。
+Make impact direction and silhouette readable before adding recoil or a state change. Knockdown and death may change the baseline and occupied area, but anchor semantics and collision events must remain synchronized. Death is usually a one-shot terminal state and should loop only when the runtime explicitly requires it.
 
-## 方向与镜像
+## Direction and mirroring
 
-先判断能否安全镜像。发型分缝、服装扣位、文字、徽记、伤疤、武器手、鞘位和光照方向可能要求独立方向资源。镜像获得批准时，也要单独验证装备手、攻击弧和事件热点。
+Decide whether mirroring is safe before using it. Hair parts, garment fasteners, text, emblems, scars, weapon hand, sheath position, and lighting direction may require independent directional assets. Even when mirroring is approved, validate equipment handedness, attack arcs, and event hotspots independently.
 
-多个方向共享：
+All directions share:
 
-- 相同的帧阶段和总节奏
-- 相同的视觉体量与根节点语义
-- 对应的接触、命中、发射与落地事件
-- 方向正确的遮挡层次和非对称细节
+- The same frame phases and overall rhythm
+- The same visual mass and root semantics
+- Corresponding contact, hit, release, and landing events
+- Direction-correct occlusion and asymmetric details
 
-## 关键姿势门槛
+## Key-pose gate
 
-在生成全部中间帧前，把每个方向的关键姿势并排展示并检查：
+Before generating all in-betweens, present the key poses for each direction side by side and verify:
 
-1. 只看剪影能否识别动作与方向。
-2. 身份、比例、装备和画法是否一致。
-3. 重心、接触点和运动弧是否连续。
-4. 极端姿势和特效是否仍在合同边界内。
-5. 游戏事件帧是否具有明确的视觉因果。
+1. The action and direction are recognizable from silhouette alone.
+2. Identity, proportions, equipment, and art treatment remain consistent.
+3. Center of mass, contacts, and motion arcs are continuous.
+4. Extreme poses and effects remain within the contract bounds.
+5. Gameplay event frames show clear visual cause and effect.
 
-完成标准：动作参考或用户的自主设计授权已记录，每个 clip 的关键姿势与时间图已获批准，中间帧只剩受约束的连接工作。
+Completion criteria: the action reference or the user's authorization for independent design is recorded, the key poses and timing chart for every clip are approved, and only constrained connection work remains for the in-betweens.

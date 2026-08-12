@@ -1,54 +1,54 @@
-# 目标尺寸光学校正
+# Target-Size Optical Correction
 
-当高分辨率母帧、预乘 Alpha、单次高质量降采样和运行时采样都正确，但角色在原生尺寸仍然不清楚时，执行本文件。目标是重画信息层级，而不是制造更多边缘反差。
+Use this workflow when the high-resolution master, premultiplied Alpha, single high-quality downsample, and runtime sampling are all correct, yet the character remains unclear at native size. The goal is to redraw the information hierarchy, not to manufacture extra edge contrast.
 
-## 1. 诊断真实像素预算
+## 1. Diagnose the real pixel budget
 
-1. 在最终帧上用 `alpha > 8` 计算角色包围盒，记录实际宽高和四边边距。
-2. 在原生 `1×` 检查项目定义的身份锚点；用 `4×` 只定位像素竞争位置。
-3. 分清三类问题：
-   - 轮廓锯齿或光晕：回到采样与透明度链。
-   - 整体发虚：检查运行时、画布、CSS 或实际缩放。
-   - 轮廓平滑但信息挤成一团：进入光学校正。
-4. 记录原图目标尺寸的包围盒。后续候选保持相同画布、视觉体量、中心和基线，避免用放大角色伪装清晰度提升。
+1. Calculate the character bounds on the final frame with `alpha > 8`; record occupied width, height, and all four margins.
+2. Inspect project-defined identity anchors at native `1×`. Use `4×` only to locate pixel competition.
+3. Distinguish three problem classes:
+   - Jagged edges or halos: return to the sampling and transparency chain.
+   - Global softness: inspect runtime, canvas, CSS, or actual scaling.
+   - Smooth edges with crowded information: proceed to optical correction.
+4. Record the original target-size bounds. Keep the same canvas, visual mass, center, and baseline in later candidates so enlarging the character cannot masquerade as improved clarity.
 
-完成标准：能够指出哪些形状在实际占用像素内互相竞争，而不是笼统归因于“分辨率低”。
+Completion criteria: identify which shapes compete within the occupied pixels instead of attributing the problem generally to low resolution.
 
-## 2. 编辑一张静态高分辨率候选
+## 2. Edit one static high-resolution candidate
 
-把批准的身份参考、画法参考和当前透明源帧同时作为约束，只编辑一张静态候选。优先选择最难读出的关键姿势；保持身份、动作意图、比例、构图、配色和随身物不变。
+Use the approved identity reference, art reference, and current transparent source frame as simultaneous constraints. Edit only one static candidate, preferably the hardest-to-read key pose. Preserve identity, action intent, proportions, composition, palette, and carried items.
 
-按最终目标尺寸设计高分辨率画面：
+Design the high-resolution image for the final target size:
 
-- 从邻近生产资源读取最终外轮廓和关键内部结构线的目标像素宽度。
-- 把碎发、衣褶、鞋带、五金或同类微细节归并为少量稳定形状。
-- 使用项目画法允许的明暗层级，增强身份锚点之间的明度或色相分离。
-- 保持项目既有的抗锯齿、线条粗细、材质与轮廓语言。
-- 把精度用在大形边界和身份锚点上，让微纹理服从剩余像素。
+- Read the target pixel width of the outer silhouette and important internal structure lines from neighboring production assets.
+- Consolidate flyaway hair, folds, laces, hardware, and similar microdetails into a few stable shapes.
+- Increase value or hue separation between identity anchors within the tonal hierarchy allowed by the project art direction.
+- Preserve the project's antialiasing, line weight, material treatment, and silhouette language.
+- Spend precision on large-form boundaries and identity anchors; make microtexture yield to the remaining pixel budget.
 
-第一次编辑若仍保留过多微细节，做一次有边界的第二遍：只简化线条层级、细节密度和明暗归组，不改身份或构图。随后停止生成同义候选。
+If the first edit retains too much microdetail, perform one bounded second pass that simplifies only line hierarchy, detail density, and value grouping without changing identity or composition. Then stop generating equivalent candidates.
 
-完成标准：高分辨率候选与批准参考一致，且其形状设计明确服务于目标尺寸。
+Completion criteria: the high-resolution candidate agrees with the approved references and its shape design clearly serves the target size.
 
-## 3. 透明化并验证 Alpha
+## 3. Create and validate transparency
 
-优先生成透明背景。必须使用色键时，选择不属于角色配色的平坦纯色，并用可靠的色键移除工具透明化；先检查工具参数，再按实际边缘调阈值，避免复用其他图片的常量。
+Prefer transparent generation. When a color key is required, choose a flat solid color outside the character palette and remove it with a reliable color-key tool. Inspect the tool parameters first and tune thresholds against the actual edge instead of reusing constants from another image.
 
-每次透明化后检查：
+After every transparency operation, verify:
 
-- 四角 Alpha 为零。
-- `alpha > 8` 的包围盒没有贴满画布。
-- 角色配色没有被阈值吞掉。
-- 边缘没有色键残色、白边、黑边或半透明雾。
-- 透明像素下的 RGB 已清零。
+- Corner Alpha values are zero.
+- The `alpha > 8` bounds do not fill the canvas.
+- Thresholding has not removed character colors.
+- Edges contain no key-color residue, white or black fringe, or translucent haze.
+- RGB is zero beneath fully transparent pixels.
 
-透明查看器可能把正确的透明区域显示成黑色。先把 RGBA 合成到中性灰和棋盘背景，并抽查疑点像素的 RGBA，再判断内容是否真的丢失。
+A transparency viewer may render correct transparent areas as black. Composite the RGBA image over neutral gray and checkerboard backgrounds, then sample suspicious RGBA pixels before deciding that content is missing.
 
-完成标准：Alpha 包围盒干净、边缘色彩完整、背景残留为零。
+Completion criteria: the Alpha bounds are clean, edge colors are intact, and no background residue remains.
 
-## 4. 规范化和生成对比
+## 4. Normalize and generate comparisons
 
-使用 fresh 输出目录运行；方形帧也可继续使用 `--frame-size` 简写：
+Run in a fresh output directory. Square frames may continue to use the `--frame-size` shorthand:
 
 ```bash
 <python> <skill-dir>/scripts/prepare_optical_candidate.py \
@@ -63,20 +63,20 @@
   --margin <contract-safe-margin>
 ```
 
-若使用色键，再传入 `--key-rgb R G B` 以报告残色比例。脚本验证透明边界，用预乘 Alpha 将候选规范化到工作画布，只做一次最终降采样，并输出母帧、目标帧、指标 JSON、原生对比和棋盘背景 `4×` 对比。`--sharpened` 是可选对照，不是生产阶段。
+When using a color key, also pass `--key-rgb R G B` to report the residual-color ratio. The script validates transparent boundaries, normalizes the candidate onto the working canvas in premultiplied Alpha, downsamples only once, and emits the master, target frame, metrics JSON, native-size comparison, and checkerboard-backed `4×` comparison. `--sharpened` is an optional control, not a production stage.
 
-完成标准：候选与对照尺寸一致，候选包围盒与原图视觉体量相当，且所有输出来自同一高分辨率候选。
+Completion criteria: candidate and controls have identical dimensions, the candidate bounds retain comparable visual mass to the original, and every output derives from the same high-resolution candidate.
 
-## 5. 批准静态门槛
+## 5. Approve the static gate
 
-按固定顺序并排展示：原图、可选温和锐化、光学校正。先看原生 `1×`，再用 `4×` 解释差异。判断：
+Present images side by side in a fixed order: original, optional mild sharpening, and optical correction. Inspect native `1×` first, then use `4×` to explain differences. Evaluate whether:
 
-- 身份锚点是否更快读出。
-- 线条是否更稳定，而非更黑、更硬或出现光晕。
-- 明暗组是否更清楚，并继续符合项目画法。
-- 身份、比例、构图、视觉体量和基线是否保持。
-- 细节是否做了有目的的归并，而非模糊或丢失关键元素。
+- Identity anchors read faster.
+- Lines are more stable rather than merely darker, harder, or haloed.
+- Value groups are clearer while remaining faithful to the project art direction.
+- Identity, proportions, composition, visual mass, and baseline are preserved.
+- Detail has been consolidated intentionally instead of blurred or stripped of defining elements.
 
-向用户提供静态对比并等待批准。批准后把同一光学校正规则应用到相关身份源和关键姿势；拒绝后只针对指出的问题修订静态帧。
+Present the static comparison to the user and wait for approval. After approval, apply the same optical-correction rules to related identity sources and key poses. After rejection, revise only the cited problems in the static frame.
 
-完成标准：用户明确选定一张静态目标帧，并确认该校正规则如何覆盖相关动作帧。
+Completion criteria: the user explicitly selects one static target frame and confirms how the correction rules apply across the related action frames.

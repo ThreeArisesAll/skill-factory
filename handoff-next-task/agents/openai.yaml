@@ -1,4 +1,4 @@
 interface:
-  display_name: "交接并启动下一任务"
-  short_description: "提炼非审查型交接提示词，并创建和确认下一项 Codex 任务"
-  default_prompt: "使用 $handoff-next-task 将当前工作整理为经核验的自包含提示词，并创建一个不以代码审查为目标的新 Codex 任务。"
+  display_name: "Handoff and Start Next Task"
+  short_description: "Create and confirm one non-review Codex task"
+  default_prompt: "Use $handoff-next-task to package the current work into a verified, self-contained prompt and start one non-review Codex task."
