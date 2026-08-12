@@ -1,4 +1,4 @@
 interface:
   display_name: "创建更好的角色精灵表"
   short_description: "跨项目制作、诊断并验收多动作多方向的二维角色动画精灵表"
-  default_prompt: "使用 $create-better-spritesheet 根据当前项目的角色参考和运行时契约制作指定动作与方向的高质量精灵表。"
+  default_prompt: "使用 $create-better-spritesheet 先检查缺失信息并提醒我提供动作参考，再按当前项目契约制作指定动作与方向的高质量精灵表。"

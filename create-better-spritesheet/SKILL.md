@@ -1,22 +1,23 @@
 ---
 name: create-better-spritesheet
-description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite sheets for any project, action, and direction. Use for idle, locomotion, attacks, jumps, casting, interactions, hurt or death clips; loops and one-shots; directional sets; rectangular frames and grid layouts; identity consistency, timing, target-size readability, alpha or sampling artifacts, assembly, validation, and runtime integration."
+description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite sheets for any project, action, and direction. Use for missing-information and action-reference intake; idle, locomotion, attacks, jumps, casting, interactions, hurt or death clips; loops and one-shots; directional sets; rectangular frames and grid layouts; identity consistency, timing, target-size readability, assembly, validation, and runtime integration."
 ---
 
 # Create Better Spritesheet
 
 Produce project-faithful animation through an identity-locked source pack, approved key poses, controlled frame derivation, contract-driven assembly, and behavioral quality gates. Treat the target runtime as the final contract.
 
-## 1. Establish the live contract
+## 1. Inspect inputs and close gaps
 
-1. Locate the repository root when a repository is in scope. Read its agent instructions and the user-named art, asset, animation, and runtime references completely.
-2. Inspect `git status --short`; preserve unrelated and pre-existing changes.
-3. Visually inspect the user-named design board, model sheet, existing sprite, animation reference, or neighboring production asset. If none is named, locate likely sources and state which ones will be authoritative.
-4. Read the live asset declaration, clip and state mappings, event timing, frame order, scale, anchor or pivot, renderer options, and relevant visual tests before claiming compatibility.
-5. Record the character, action set, directions, camera, loop or one-shot behavior, root-motion policy, frame width and height, frame count per clip, per-frame timing, grid layout and order, anchor, baseline or motion origin, safe bounds, sampling style, and integration scope.
-6. Label missing material values as assumptions. Keep review artifacts in a fresh non-production output directory and production integration outside scope unless requested.
+1. Read the user prompt, attachments, linked references, and repository evidence before asking questions. Locate the repository root when applicable, read its agent instructions, inspect `git status --short`, and preserve unrelated changes.
+2. Inspect design boards, model sheets, existing sprites, animation references, neighboring production assets, asset declarations, clip mappings, event timing, anchors, renderer settings, and visual tests that can answer the contract directly.
+3. Separate confirmed facts from missing values. Record the character, action set, directions, camera, loop or one-shot behavior, root-motion policy, frame dimensions, frame count, timing, grid layout, anchor, motion origin, safe bounds, sampling style, and integration scope.
+4. When the prompt does not include an action reference, actively ask the user to provide one. Accept video, GIF, frame sequences, existing spritesheets, gameplay clips, pose sheets, or a named animation example. Explain that a reference with a similar action, camera, body type, and timing is most useful even when its art style differs.
+5. Ask at most three concise, high-impact questions per round. Prioritize: action reference; requested action, direction, loop or one-shot behavior, root motion, and gameplay event; then identity reference and technical output contract. Ask only for facts that cannot be reliably discovered from the supplied material or repository.
+6. Pause frame generation while a missing answer could materially change identity, motion, timing, direction, layout, or integration. If the user has no action reference, ask them to explicitly authorize motion design from the written intent; then present a provisional phase and key-pose plan for approval before generating frames.
+7. Use disclosed defaults only for low-impact gaps after material questions are resolved. Keep review artifacts in a fresh non-production output directory and production integration outside scope unless requested.
 
-Complete this step only when every contract field is explicit or marked as an assumption. Read [quality-contract.md](references/quality-contract.md) before generating or reviewing frames. Read [runtime-integration.md](references/runtime-integration.md) only when integration is in scope.
+Complete this step only when material gaps have user answers, explicit user delegation, or authoritative repository evidence. Read [quality-contract.md](references/quality-contract.md) before generating or reviewing frames. Read [runtime-integration.md](references/runtime-integration.md) only when integration is in scope.
 
 ## 2. Lock the identity source pack
 
@@ -112,4 +113,4 @@ Complete validation only when generic mechanical checks, every action-specific b
 
 When integration is requested, follow [runtime-integration.md](references/runtime-integration.md), update every asset and animation contract atomically, run the repository's asset validation and visual coverage, and capture the real runtime result.
 
-Report generated artifacts, contract values and assumptions, clip-by-clip validation, visual findings, runtime changes and tests, and remaining uncertainty separately. Keep staging, committing, publishing, and production replacement outside scope unless requested.
+Report user-provided references, answered questions, delegated decisions and defaults, generated artifacts, clip-by-clip validation, visual findings, runtime changes and tests, and remaining uncertainty separately. Keep staging, committing, publishing, and production replacement outside scope unless requested.
