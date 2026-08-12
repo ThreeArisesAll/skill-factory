@@ -1,6 +1,6 @@
 ---
 name: create-better-spritesheet
-description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite sheets for any project, action, and direction. Use for missing-information and action-reference intake; idle, locomotion, attacks, jumps, casting, interactions, hurt or death clips; loops and one-shots; directional sets; rectangular frames and grid layouts; identity consistency, timing, target-size readability, assembly, validation, and runtime integration."
+description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite sheets for any project, action, and direction. Use for missing-information intake, Pinterest action-reference discovery, a built-in walk-cycle reference, idle, locomotion, attacks, jumps, casting, interactions, hurt or death clips; directional sets; grid layouts; identity consistency, timing, assembly, validation, and runtime integration."
 ---
 
 # Create Better Spritesheet
@@ -14,8 +14,9 @@ Produce project-faithful animation through an identity-locked source pack, appro
 3. Separate confirmed facts from missing values. Record the character, action set, directions, camera, loop or one-shot behavior, root-motion policy, frame dimensions, frame count, timing, grid layout, anchor, motion origin, safe bounds, sampling style, and integration scope.
 4. When the prompt does not include an action reference, actively ask the user to provide one. Accept video, GIF, frame sequences, existing spritesheets, gameplay clips, pose sheets, or a named animation example. Explain that a reference with a similar action, camera, body type, and timing is most useful even when its art style differs.
 5. Ask at most three concise, high-impact questions per round. Prioritize: action reference; requested action, direction, loop or one-shot behavior, root motion, and gameplay event; then identity reference and technical output contract. Ask only for facts that cannot be reliably discovered from the supplied material or repository.
-6. Pause frame generation while a missing answer could materially change identity, motion, timing, direction, layout, or integration. If the user has no action reference, ask them to explicitly authorize motion design from the written intent; then present a provisional phase and key-pose plan for approval before generating frames.
-7. Use disclosed defaults only for low-impact gaps after material questions are resolved. Keep review artifacts in a fresh non-production output directory and production integration outside scope unless requested.
+6. When the user says they cannot provide an action reference, read [reference-search.md](references/reference-search.md) and search Pinterest without asking for separate permission. Filter against the built-in walk-cycle clarity standard, present two to four useful candidates with links and a recommendation, and ask the user to approve one. For walk cycles, inspect the built-in reference and include it as the default candidate.
+7. Pause frame generation while a missing answer could materially change identity, motion, timing, direction, layout, or integration. If Pinterest yields no usable reference, report what was searched and ask the user to explicitly authorize motion design from the written intent; then present a provisional phase and key-pose plan for approval before generating frames.
+8. Use disclosed defaults only for low-impact gaps after material questions are resolved. Keep review artifacts in a fresh non-production output directory and production integration outside scope unless requested.
 
 Complete this step only when material gaps have user answers, explicit user delegation, or authoritative repository evidence. Read [quality-contract.md](references/quality-contract.md) before generating or reviewing frames. Read [runtime-integration.md](references/runtime-integration.md) only when integration is in scope.
 
