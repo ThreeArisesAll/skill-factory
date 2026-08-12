@@ -19,16 +19,18 @@
 Read the following fields from user material and the current repository. Actively ask for missing values that could change the result. Record a value as an assumption only after the user explicitly delegates the decision:
 
 - Character, action, direction, camera, and state transitions
+- Action-reference status: supplied, missing, unavailable, or explicitly declined
 - User references, Pinterest candidates, selected source, and applicable scope
 - Loop, one-shot, terminal hold, or fallback behavior
 - Root motion, animation origin, anchor, baseline, and event hotspots
 - Frame width and height, frame count per clip, per-frame durations, sheet layout, and order
-- Working scale and canonical master width and height
+- Derived master scale and canonical master width and height
 - Safe bounds, runtime scale, and visual mass of neighboring assets
 - Line treatment, value range, materials, silhouette, palette, and sampling method
+- Resolved outer silhouette outline decision and target-size width, using `none` when disabled
 - Authorization boundary between review artifacts and production integration
 
-Every later mechanical metric must be traceable to these fields.
+Every later mechanical metric must be traceable to these fields. Keep outline fields already established consistently by either the user prompt or applicable authoritative repository rules without restating them or asking for confirmation. Ask only for missing, ambiguous, or conflicting outline fields; do not substitute defaults or delegated judgment for an unresolved value.
 
 ## Identity and art lock
 
@@ -59,13 +61,13 @@ Approve key poses before producing in-betweens.
 
 Create every canonical master with its shortest side fixed at exactly `512 px`. Scale the long side proportionally from the target frame aspect ratio and round it to the nearest whole pixel. Record the target dimensions, derived master scale, and resulting master dimensions as one traceable contract. Use the exact fixed-canvas rule in `SKILL.md` when a bundled script produces or consumes the master.
 
-Resolve the outer-outline requirement before master generation. When the art direction requires an outline, derive its target-size width and color from current references and generate it within the master-creation step. The outlined output is the canonical master; the unoutlined high-resolution input remains a temporary source. Produce every animation frame and key-pose derivative from a canonical master with the same locked outline treatment.
+Resolve the outer silhouette outline requirement before master generation from the user prompt, applicable authoritative repository rules, or a direct user answer. When enabled, use the resolved target-size width, derive the color from current references, and add the outline to the fixed-size high-resolution pre-master before any deformation, target-size downsample, frame export, or sheet assembly. Lock the outlined output as the canonical master and keep the unoutlined pre-master only as a temporary source. Produce every animation frame and key-pose derivative from a canonical master with the same locked outline treatment. Treat any target-size frame or assembled sheet as a terminal derivative, never as an outline-processing input. When disabled, record the width as `none` and use the unoutlined canonical master.
 
 ## Target pixel budget
 
 Use the target-size frame's Alpha bounds to calculate the pixels actually occupied by the character. Define clarity by identity and action-silhouette recognition at native `1×`, not by sharpening strength or edge contrast in an enlarged preview.
 
-For every action, preserve major shapes, force direction, limb relationships, equipment arcs, and event frames first. Make internal texture, flyaway hair, folds, and hardware yield to the remaining pixel budget. If a correctly downsampled key pose remains unreadable, apply target-size optical correction before continuing.
+For every action, preserve major shapes, force direction, limb relationships, equipment arcs, and event frames first. Make internal texture, flyaway hair, folds, and hardware yield to the remaining pixel budget. If a correctly downsampled key pose remains unreadable, redesign one high-resolution master for target-size clarity before continuing.
 
 ## Time, space, and events
 
@@ -109,7 +111,7 @@ When a fixed grid cannot express trimming, rotation, or per-frame pivots, use th
 Mechanical checks cover at minimum:
 
 - Image mode, dimensions, frame count, layout, order, and Alpha integrity
-- Canonical master scale, exact `512 px` short side, and outline timing
+- Canonical master scale, exact `512 px` short side, and proof that any outline was added before frame derivation or downsampling
 - Declared loop closures, blank frames, safe bounds, and sampling thresholds
 - Action-specific contacts, root behavior, displacement, and event frames
 
@@ -124,16 +126,16 @@ Visual checks cover at minimum:
 
 ## Failure modes and correction paths
 
-| Symptom | Root cause | Return to |
-| --- | --- | --- |
-| Extreme action no longer resembles the character | Frames were generated independently without approved key poses | Identity source pack; lock the key poses first |
-| Action intent is unclear | Anticipation, main action, or terminal information is missing | Motion design; rebuild the phases and silhouettes |
-| Animation floats | Root, center of mass, contacts, or canvas alignment is inconsistent | Spatial contract; unify coordinate semantics |
-| Attack lacks force or events are misaligned | Frames are evenly spaced and event frames are unmarked | Time and events; redistribute holds and impact frames |
-| Feet slide in locomotion | Cadence, contact position, and root-motion policy conflict | Locomotion contract; reconcile contacts and displacement |
-| Equipment changes hands across directions | Incorrect mirroring or missing directional identity sources | Directional consistency; create independent directional key poses |
-| Loop jumps | End and start pose, velocity, or path are discontinuous | Loop transition; close the loop according to the contract |
-| One-shot freezes at the end | Recovery, transition, or terminal-state rule is missing | Motion design; complete the state exit |
-| Edges are jagged or overblurred | Sampling conflicts with the project art treatment | Sampling chain; use the correct smooth-raster or pixel-art path |
-| Detail turns muddy | Repeated editing at small size or repeated resizing | High-resolution source; downsample only once at the end |
-| Images are correct but playback is wrong | Sheet order, clip range, or metadata disagrees | Assembly; verify runtime declarations cell by cell |
+| Symptom                                          | Root cause                                                          | Return to                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Extreme action no longer resembles the character | Frames were generated independently without approved key poses      | Identity source pack; lock the key poses first                    |
+| Action intent is unclear                         | Anticipation, main action, or terminal information is missing       | Motion design; rebuild the phases and silhouettes                 |
+| Animation floats                                 | Root, center of mass, contacts, or canvas alignment is inconsistent | Spatial contract; unify coordinate semantics                      |
+| Attack lacks force or events are misaligned      | Frames are evenly spaced and event frames are unmarked              | Time and events; redistribute holds and impact frames             |
+| Feet slide in locomotion                         | Cadence, contact position, and root-motion policy conflict          | Locomotion contract; reconcile contacts and displacement          |
+| Equipment changes hands across directions        | Incorrect mirroring or missing directional identity sources         | Directional consistency; create independent directional key poses |
+| Loop jumps                                       | End and start pose, velocity, or path are discontinuous             | Loop transition; close the loop according to the contract         |
+| One-shot freezes at the end                      | Recovery, transition, or terminal-state rule is missing             | Motion design; complete the state exit                            |
+| Edges are jagged or overblurred                  | Sampling conflicts with the project art treatment                   | Sampling chain; use the correct smooth-raster or pixel-art path   |
+| Detail turns muddy                               | Repeated editing at small size or repeated resizing                 | High-resolution source; downsample only once at the end           |
+| Images are correct but playback is wrong         | Sheet order, clip range, or metadata disagrees                      | Assembly; verify runtime declarations cell by cell                |

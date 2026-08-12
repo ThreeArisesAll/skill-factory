@@ -10,7 +10,7 @@ Use only for a subtle breathing idle that is front-facing, full-body, planted at
 - Lock only the sole contact band and foot baseline.
 - Control horizontal center-of-mass drift.
 
-Prefer the project's frame count, rhythm, amplitude, and action reference. When they are missing, ask the user and request an idle reference. If the user cannot provide one, search Pinterest according to [reference-search.md](reference-search.md) and use the built-in walk reference only as a clarity benchmark. Only after the search yields no usable result and the user explicitly authorizes independent design may you use the following clearly disclosed provisional assumptions: `12` frames including a repeated closing frame, a `500 ms` loop, and peak travel of approximately `3%` of frame height.
+Prefer the project's frame count, rhythm, amplitude, and action reference. When they are missing, ask the user and request an idle reference unless the user explicitly says no action reference is needed. Treat that opt-out as authorization to design from written intent and present the provisional motion contract for approval. If the user cannot provide a reference but has not declined references, search Pinterest according to [reference-search.md](reference-search.md) and use the built-in walk reference only as a clarity benchmark. Only after explicit opt-out or a search with no usable result may you propose the following clearly disclosed assumptions: `12` frames including a repeated closing frame, a `500 ms` loop, and peak travel of approximately `3%` of frame height.
 
 ## Build
 
@@ -28,7 +28,7 @@ The canonical master must use an exact `512×512` square canvas:
   --loop-duration-ms <contract-loop-duration>
 ```
 
-Use `--fit-master` for a single normalization pass only. The script deterministically derives every frame from the same master, deforms in premultiplied Alpha, downsamples only once at the end, and emits individual frames, a horizontal spritesheet, and a lossless preview.
+Pass a locked canonical master whose outline treatment is already complete. When the outline contract is enabled, normalize the pre-master and run the silhouette-outline workflow before invoking this script, then pass the outlined canonical master without `--fit-master`. Use `--fit-master` for a single normalization pass only when the outline contract is disabled. The script deterministically derives every frame from the same master, deforms in premultiplied Alpha, downsamples only once at the end, and emits individual frames, a horizontal spritesheet, and a lossless preview.
 
 ## Validate
 

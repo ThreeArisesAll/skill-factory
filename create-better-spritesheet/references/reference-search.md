@@ -1,6 +1,6 @@
 # Action Reference Search
 
-Run this workflow only when the user explicitly cannot provide an action reference. Do not ask for separate search permission. Proactively search Pinterest, then ask the user to approve a candidate.
+Run this workflow only when the user cannot provide an action reference but still wants reference discovery. Do not run it when the user explicitly says no action reference is needed. Do not ask for separate search permission. Proactively search Pinterest, then ask the user to approve a candidate.
 
 ## Search Pinterest
 

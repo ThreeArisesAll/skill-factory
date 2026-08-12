@@ -21,7 +21,7 @@ from PIL import Image, ImageFilter
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Add a deterministic outer silhouette stroke without re-inking the character.",
+        description="Add a deterministic outer silhouette outline without re-inking the character.",
     )
     parser.add_argument(
         "--source",

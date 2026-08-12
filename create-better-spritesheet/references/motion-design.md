@@ -4,7 +4,7 @@ Read this file before producing any action frames. Design the motion information
 
 ## Action reference
 
-Actively request an action reference when the user has not provided one. Accept:
+Actively request an action reference when the user has not provided one and has not explicitly said that no action reference is needed. Accept:
 
 - Video or gameplay capture
 - GIF, APNG, or an existing spritesheet
@@ -22,7 +22,9 @@ Record from the reference:
 - Camera, direction, near and far limbs, and occlusion
 - Hit, release, landing, or interaction events
 
-When the user explicitly cannot provide a reference, read [reference-search.md](reference-search.md), proactively search Pinterest, and submit screened candidates. If references are incomplete, conflict with one another, or disagree with the runtime contract, explain the exact conflict and ask the user to choose. Only when Pinterest also yields no usable reference should you ask whether the user authorizes design from written intent. After authorization, present the action phases, key poses, and timing chart before generating a full frame sequence.
+When the user explicitly says no action reference is needed, treat that statement as authorization to design from written intent. Skip the reference request and search, then present the action phases, key poses, and timing chart before generating a full frame sequence.
+
+When the user cannot provide a reference but has not declined references, read [reference-search.md](reference-search.md), proactively search Pinterest, and submit screened candidates. If references are incomplete, conflict with one another, or disagree with the runtime contract, explain the exact conflict and ask the user to choose. Only when Pinterest also yields no usable reference should you ask whether the user authorizes design from written intent. After authorization, present the action phases, key poses, and timing chart before generating a full frame sequence.
 
 ## General motion grammar
 
@@ -83,4 +85,4 @@ Before generating all in-betweens, present the key poses for each direction side
 4. Extreme poses and effects remain within the contract bounds.
 5. Gameplay event frames show clear visual cause and effect.
 
-Completion criteria: the action reference or the user's authorization for independent design is recorded, the key poses and timing chart for every clip are approved, and only constrained connection work remains for the in-betweens.
+Completion criteria: the action reference or the user's explicit opt-out or authorization for independent design is recorded, the key poses and timing chart for every clip are approved, and only constrained connection work remains for the in-betweens.

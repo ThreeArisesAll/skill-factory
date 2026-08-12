@@ -20,7 +20,7 @@ Use the approved identity reference, art reference, and current transparent sour
 
 Design the high-resolution image for the final target size:
 
-- Read the target pixel width of the outer silhouette and important internal structure lines from neighboring production assets.
+- Read the target pixel width of the outer silhouette outline and important internal structure lines from neighboring production assets.
 - Consolidate flyaway hair, folds, laces, hardware, and similar microdetails into a few stable shapes.
 - Increase value or hue separation between identity anchors within the tonal hierarchy allowed by the project art direction.
 - Preserve the project's antialiasing, line weight, material treatment, and silhouette language.
@@ -62,9 +62,9 @@ Run in a fresh output directory. Square frames may continue to use the `--frame-
   --margin <contract-safe-margin>
 ```
 
-When using a color key, also pass `--key-rgb R G B` to report the residual-color ratio. The script validates transparent boundaries, normalizes the candidate onto the working canvas in premultiplied Alpha, downsamples only once, and emits the master, target frame, metrics JSON, native-size comparison, and checkerboard-backed `4×` comparison. `--sharpened` is an optional control, not a production stage.
+When using a color key, also pass `--key-rgb R G B` to report the residual-color ratio. The script validates transparent boundaries, normalizes the candidate onto the working canvas in premultiplied Alpha, downsamples only once, and emits the normalized high-resolution candidate, target-size comparison control, metrics JSON, native-size comparison, and checkerboard-backed `4×` comparison. Treat the normalized high-resolution candidate as a pre-master until its resolved outline treatment is complete; only then may it become the canonical master. `--sharpened` is an optional control, not a production stage.
 
-When the live art direction requires an outer outline, treat the emitted unoutlined high-resolution file as a temporary source. Run the silhouette-outline workflow within this candidate's master-generation step, and present the outlined target frame for approval. Only the outlined output becomes the canonical master.
+When the resolved master-outline contract enables an outer silhouette outline, treat the emitted unoutlined high-resolution file as the temporary pre-master and its unoutlined target-size derivative as a comparison control only. Run the silhouette-outline workflow on the high-resolution pre-master within this candidate's master-generation step. Lock the outlined result as the canonical master before deriving the outlined target frame for approval. Never add the outline to the target-size candidate itself.
 
 Completion criteria: candidate and controls have identical dimensions, the candidate bounds retain comparable visual mass to the original, and every output derives from the same high-resolution candidate.
 
