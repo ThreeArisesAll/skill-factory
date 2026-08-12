@@ -21,14 +21,15 @@ Each top-level directory is an independent package. The package boundary keeps i
 
 **Ask your Agent to install it.**
 
-````text
+```text
 Install these skills: https://github.com/ThreeArisesAll/skill-factory
+```
 
 Then invoke the installed skill explicitly:
 
 ```text
 Use $refine-prompts to turn this rough request into one ready-to-use prompt: …
-````
+```
 
 ```text
 Use $handoff-next-task to package the current work and start one concrete next task.
