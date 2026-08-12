@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="420" viewBox="0 0 1200 420"
+     role="img" aria-labelledby="title desc">
+  <title id="title">Skill Factory</title>
+  <desc id="desc">A local library of three inspectable Codex skill packages: Refine Prompts, Handoff Next Task, and Create Better Spritesheet.</desc>
+
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D1117"/>
+      <stop offset="1" stop-color="#111820"/>
+    </linearGradient>
+    <pattern id="bench-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#21262D" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="420" rx="28" fill="url(#surface)"/>
+  <rect width="1200" height="420" rx="28" fill="url(#bench-grid)" opacity="0.42"/>
+  <path d="M0 194H1200" stroke="#30363D"/>
+
+  <g id="title-block" transform="translate(64 42)">
+    <text x="0" y="18" fill="#7EE787" font-size="18" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="2">LOCAL CODEX WORKFLOW LIBRARY</text>
+    <text x="0" y="92" fill="#F0F6FC" font-size="74" font-weight="750"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" letter-spacing="-3">Skill Factory</text>
+    <text x="4" y="136" fill="#B7C0CB" font-size="25" font-weight="450"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Reusable agent workflows, packaged to inspect, adapt, and run.</text>
+  </g>
+
+  <g id="package-count" transform="translate(1008 50)">
+    <rect width="128" height="88" rx="18" fill="#161B22" stroke="#30363D"/>
+    <text x="20" y="30" fill="#8B949E" font-size="16" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="1.5">PACKAGES</text>
+    <text x="20" y="68" fill="#D2A8FF" font-size="34" font-weight="750"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">03</text>
+    <circle cx="102" cy="62" r="7" fill="#7EE787"/>
+  </g>
+
+  <g id="package-line" transform="translate(64 210)">
+    <path d="M18 0H1054" stroke="#30363D" stroke-width="2"/>
+    <circle cx="18" cy="0" r="6" fill="#7EE787"/>
+    <circle cx="536" cy="0" r="6" fill="#D2A8FF"/>
+    <circle cx="1054" cy="0" r="6" fill="#79C0FF"/>
+  </g>
+
+  <g id="refine-prompts-package" transform="translate(64 230)">
+    <rect width="330" height="136" rx="18" fill="#161B22" stroke="#30363D"/>
+    <path d="M0 18Q0 0 18 0H82L98 16H330" fill="none" stroke="#7EE787" stroke-width="3"/>
+    <text x="22" y="42" fill="#7EE787" font-size="16" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">01 / PROMPT</text>
+    <text x="22" y="76" fill="#F0F6FC" font-size="23" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">refine-prompts</text>
+    <text x="22" y="107" fill="#B7C0CB" font-size="18"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">rough request → ready prompt</text>
+    <text x="22" y="128" fill="#6E7681" font-size="15"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">SKILL.md · openai.yaml</text>
+  </g>
+
+  <g id="handoff-package" transform="translate(435 230)">
+    <rect width="330" height="136" rx="18" fill="#161B22" stroke="#30363D"/>
+    <path d="M0 18Q0 0 18 0H82L98 16H330" fill="none" stroke="#D2A8FF" stroke-width="3"/>
+    <text x="22" y="42" fill="#D2A8FF" font-size="16" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">02 / HANDOFF</text>
+    <text x="22" y="76" fill="#F0F6FC" font-size="22" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">handoff-next-task</text>
+    <text x="22" y="107" fill="#B7C0CB" font-size="18"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">current context → one new task</text>
+    <text x="22" y="128" fill="#6E7681" font-size="15"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">SKILL.md · openai.yaml</text>
+  </g>
+
+  <g id="spritesheet-package" transform="translate(806 230)">
+    <rect width="330" height="136" rx="18" fill="#161B22" stroke="#30363D"/>
+    <path d="M0 18Q0 0 18 0H82L98 16H330" fill="none" stroke="#79C0FF" stroke-width="3"/>
+    <text x="22" y="42" fill="#79C0FF" font-size="16" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">03 / SPRITES</text>
+    <text x="22" y="76" fill="#F0F6FC" font-size="20" font-weight="700"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">create-better-spritesheet</text>
+    <text x="22" y="107" fill="#B7C0CB" font-size="18"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">source pack → runtime-ready sheet</text>
+    <text x="22" y="128" fill="#6E7681" font-size="15"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">SKILL · refs · scripts · assets</text>
+  </g>
+
+  <g id="footer-rail" transform="translate(64 392)">
+    <text x="0" y="0" fill="#6E7681" font-size="16"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">ONE DIRECTORY = ONE SKILL PACKAGE</text>
+    <text x="1072" y="0" text-anchor="end" fill="#6E7681" font-size="16"
+          font-family="ui-monospace, SFMono-Regular, Menlo, monospace">EDITABLE · LOCAL · EXPLICIT</text>
+  </g>
+</svg>
