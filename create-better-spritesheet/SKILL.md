@@ -1,6 +1,6 @@
 ---
 name: create-better-spritesheet
-description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite sheets for any project, action, and direction. Use for missing-information intake, Pinterest action-reference discovery, a built-in walk-cycle reference, idle, locomotion, attacks, jumps, casting, interactions, hurt or death clips; directional sets; grid layouts; identity consistency, timing, assembly, validation, and runtime integration."
+description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite sheets for any action."
 ---
 
 # Create Better Spritesheet
@@ -9,7 +9,7 @@ Produce project-faithful animation through an identity-locked source pack, appro
 
 ## 1. Inspect inputs and close gaps
 
-1. Read the user prompt, attachments, linked references, and repository evidence before asking questions. Locate the repository root when applicable, read its agent instructions, inspect `git status --short`, and preserve unrelated changes.
+1. Read the user prompt, attachments, linked references, and repository evidence before asking questions. Locate the repository root when applicable, read its agent instructions, and preserve unrelated changes.
 2. Inspect design boards, model sheets, existing sprites, animation references, neighboring production assets, asset declarations, clip mappings, event timing, anchors, renderer settings, and visual tests that can answer the contract directly.
 3. Separate confirmed facts from missing values. Record the character, action set, directions, camera, loop or one-shot behavior, root-motion policy, frame dimensions, frame count, timing, grid layout, anchor, motion origin, safe bounds, sampling style, and integration scope.
 4. When the prompt does not include an action reference, actively ask the user to provide one. Accept video, GIF, frame sequences, existing spritesheets, gameplay clips, pose sheets, or a named animation example. Explain that a reference with a similar action, camera, body type, and timing is most useful even when its art style differs.
