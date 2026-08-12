@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Normalize one optical-size candidate and build native/review comparisons."""
+"""Normalize one optical-size pre-master candidate and build opaque review comparisons."""
 
 from __future__ import annotations
 
@@ -163,11 +163,6 @@ def comparison(images: list[Image.Image], scale: int) -> Image.Image:
     ]
     width = sum(image.width for image in rendered) + gutter * (len(rendered) - 1)
     height = max(image.height for image in rendered)
-    if scale == 1:
-        canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        for index, image in enumerate(rendered):
-            canvas.alpha_composite(image, (index * (image.width + gutter), 0))
-        return canvas
     canvas = checkerboard((width, height), cell=32).convert("RGBA")
     x = 0
     for image in rendered:
@@ -187,19 +182,17 @@ def main() -> int:
     margin_work = round(args.margin * master_scale)
     master, fitted_size = normalize_candidate(source, source_bbox, working_size, margin_work)
     frame_size = (frame_width, frame_height)
-    final = resize_premultiplied(master, frame_size)
+    target_review = resize_premultiplied(master, frame_size)
 
-    master_path = args.output_dir / f"{args.name}-master-{working_size[0]}x{working_size[1]}.png"
-    final_path = args.output_dir / f"{args.name}-frame-{frame_width}x{frame_height}.png"
+    master_path = args.output_dir / f"{args.name}-pre-master-{working_size[0]}x{working_size[1]}.png"
     metrics_path = args.output_dir / f"{args.name}-metrics.json"
     master.save(master_path)
-    final.save(final_path)
 
     key_rgb = tuple(args.key_rgb) if args.key_rgb is not None else None
     metrics = {
         "source": image_metrics(source, args.alpha_threshold, key_rgb, args.key_distance),
-        "master": image_metrics(master, args.alpha_threshold, key_rgb, args.key_distance),
-        "final": image_metrics(final, args.alpha_threshold, key_rgb, args.key_distance),
+        "pre_master": image_metrics(master, args.alpha_threshold, key_rgb, args.key_distance),
+        "target_review": image_metrics(target_review, args.alpha_threshold, key_rgb, args.key_distance),
         "master_scale": master_scale,
         "normalized_content_size": list(fitted_size),
     }
@@ -213,18 +206,18 @@ def main() -> int:
         if image.size != frame_size:
             raise ValueError(f"{label} frame is {image.size}; expected {frame_size}")
         controls.append(image)
-    comparisons = controls + [final]
+    comparisons = controls + [target_review]
     if len(comparisons) > 1:
-        comparison(comparisons, 1).save(args.output_dir / f"{args.name}-comparison-native.png")
-        comparison(comparisons, 4).save(args.output_dir / f"{args.name}-comparison-review-4x.png")
+        comparison(comparisons, 1).save(args.output_dir / f"{args.name}-review-comparison-native.png")
+        comparison(comparisons, 4).save(args.output_dir / f"{args.name}-review-comparison-4x.png")
 
     print(f"source bbox: {source_bbox} ({source_bbox[2] - source_bbox[0]}x{source_bbox[3] - source_bbox[1]})")
     print(
         f"normalized content: {fitted_size[0]}x{fitted_size[1]} "
         f"in {working_size[0]}x{working_size[1]}",
     )
-    print(f"master: {master_path}")
-    print(f"final: {final_path}, bbox={tuple(metrics['final']['alpha_bbox'])}")
+    print(f"pre-master: {master_path}")
+    print(f"target review bbox: {tuple(metrics['target_review']['alpha_bbox'])}")
     print(f"metrics: {metrics_path}")
     return 0
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Better Spritesheet"
   short_description: "Create and validate multi-action 2D character spritesheets"
-  default_prompt: "Use $create-better-spritesheet to honor action-reference opt-outs, reuse resolved outline rules without reconfirming, apply any outline to the fixed-size high-resolution pre-master before locking the canonical master, and create a contract-matched spritesheet."
+  default_prompt: "Use $create-better-spritesheet to apply the resolved outline treatment to the high-resolution pre-master, lock the canonical master, generate multiple high-resolution keyframes, generate multiple high-resolution in-betweens from adjacent approved high-resolution keyframes, downsample each frame once, assemble the spritesheet, and validate its lineage evidence."

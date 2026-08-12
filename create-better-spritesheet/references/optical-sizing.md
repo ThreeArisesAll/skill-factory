@@ -1,6 +1,6 @@
 # Target-Size Optical Correction
 
-Use this workflow when the high-resolution master, premultiplied Alpha, single high-quality downsample, and runtime sampling are all correct, yet the character remains unclear at native size. The goal is to redraw the information hierarchy, not to manufacture extra edge contrast.
+Use this workflow when target frames produced by the mandatory high-resolution lineage remain unclear at native size. The goal is to revise the pre-master's information hierarchy, then repeat canonical-master lock, high-resolution keyframe generation, high-resolution in-between generation, and the single production downsample. Never repair an existing target frame.
 
 ## 1. Diagnose the real pixel budget
 
@@ -14,9 +14,9 @@ Use this workflow when the high-resolution master, premultiplied Alpha, single h
 
 Completion criteria: identify which shapes compete within the occupied pixels instead of attributing the problem generally to low resolution.
 
-## 2. Edit one static high-resolution candidate
+## 2. Edit one static high-resolution pre-master candidate
 
-Use the approved identity reference, art reference, and current transparent source frame as simultaneous constraints. Edit only one static candidate, preferably the hardest-to-read key pose. Preserve identity, action intent, proportions, composition, palette, and carried items.
+Use the approved identity reference, art reference, and current pre-master as simultaneous constraints. Edit only one static pre-master candidate. Preserve identity, proportions, composition, palette, and carried items.
 
 Design the high-resolution image for the final target size:
 
@@ -28,7 +28,7 @@ Design the high-resolution image for the final target size:
 
 If the first edit retains too much microdetail, perform one bounded second pass that simplifies only line hierarchy, detail density, and value grouping without changing identity or composition. Then stop generating equivalent candidates.
 
-Completion criteria: the high-resolution candidate agrees with the approved references and its shape design clearly serves the target size.
+Completion criteria: the high-resolution pre-master candidate agrees with the approved references and its shape design clearly serves the target size.
 
 ## 3. Create and validate transparency
 
@@ -62,11 +62,11 @@ Run in a fresh output directory. Square frames may continue to use the `--frame-
   --margin <contract-safe-margin>
 ```
 
-When using a color key, also pass `--key-rgb R G B` to report the residual-color ratio. The script validates transparent boundaries, normalizes the candidate onto the working canvas in premultiplied Alpha, downsamples only once, and emits the normalized high-resolution candidate, target-size comparison control, metrics JSON, native-size comparison, and checkerboard-backed `4×` comparison. Treat the normalized high-resolution candidate as a pre-master until its resolved outline treatment is complete; only then may it become the canonical master. `--sharpened` is an optional control, not a production stage.
+When using a color key, also pass `--key-rgb R G B` to report the residual-color ratio. The script validates transparent boundaries, normalizes the candidate onto the working canvas in premultiplied Alpha, and emits only the normalized high-resolution pre-master candidate as a production-capable RGBA image. It performs the target-size review downsample in memory and records its metrics without emitting a standalone target frame. When controls are supplied, it emits opaque RGB native-size and checkerboard-backed `4×` review contact sheets. Treat the high-resolution candidate as a pre-master until its resolved outline treatment is complete; only then may it become the canonical master. `--sharpened` is an optional review control, not a production stage.
 
-When the resolved master-outline contract enables an outer silhouette outline, treat the emitted unoutlined high-resolution file as the temporary pre-master and its unoutlined target-size derivative as a comparison control only. Run the silhouette-outline workflow on the high-resolution pre-master within this candidate's master-generation step. Lock the outlined result as the canonical master before deriving the outlined target frame for approval. Never add the outline to the target-size candidate itself.
+When the resolved master-outline contract enables an outer silhouette outline, treat the emitted unoutlined high-resolution file as the temporary pre-master. Run the silhouette-outline workflow on it and lock the outlined result as the canonical master. Never extract or reconstruct a target frame from a review contact sheet.
 
-Completion criteria: candidate and controls have identical dimensions, the candidate bounds retain comparable visual mass to the original, and every output derives from the same high-resolution candidate.
+Completion criteria: every target-size item inside a review contact sheet uses identical dimensions, the pre-master candidate retains comparable visual mass to the original, and no standalone target-size production image is emitted.
 
 ## 5. Approve the static gate
 
@@ -78,6 +78,6 @@ Present images side by side in a fixed order: original, optional mild sharpening
 - Identity, proportions, composition, visual mass, and baseline are preserved.
 - Detail has been consolidated intentionally instead of blurred or stripped of defining elements.
 
-Present the static comparison to the user and wait for approval. After approval, apply the same optical-correction rules to related identity sources and key poses. After rejection, revise only the cited problems in the static frame.
+Present the static comparison to the user and wait for approval. After approval, promote the high-resolution candidate to the pre-master, rebuild the canonical master, and repeat all high-resolution keyframe and in-between generation before performing the single production downsample. After rejection, revise only the cited pre-master problems.
 
-Completion criteria: the user explicitly selects one static target frame and confirms how the correction rules apply across the related action frames.
+Completion criteria: the user explicitly selects one high-resolution pre-master candidate and the entire downstream production lineage is regenerated from its rebuilt canonical master.

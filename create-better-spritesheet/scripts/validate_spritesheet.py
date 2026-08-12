@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate layout, alpha integrity, loops, and optional motion profiles."""
+"""Validate spritesheet layout, alpha integrity, loops, and motion contracts."""
 
 from __future__ import annotations
 
@@ -30,7 +30,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--frame-count", type=int, required=True)
     parser.add_argument("--columns", type=int, help="Defaults to frame count for a horizontal strip")
     parser.add_argument("--order", choices=("row-major", "column-major"), default="row-major")
-    parser.add_argument("--profile", choices=("general", "idle-planted"), default="general")
     parser.add_argument("--alpha-threshold", type=int, default=8)
     parser.add_argument("--safe-margin", type=int)
     parser.add_argument("--require-transparent-corners", action="store_true")
@@ -50,13 +49,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-vertical-travel", type=float)
     parser.add_argument(
         "--contact-rows",
-        "--sole-rows",
-        dest="contact_rows",
         type=int,
-        help="Bottom contact-band rows for a planted animation",
+        help="Bottom contact-band rows compared across frames",
     )
-    parser.add_argument("--max-contact-difference", "--max-sole-difference", dest="max_contact_difference", type=float)
-    parser.add_argument("--min-lower-body-difference", type=float)
+    parser.add_argument("--max-contact-difference", type=float)
     parser.add_argument("--min-partial-alpha-ratio", type=float)
     parser.add_argument("--max-partial-alpha-ratio", type=float)
     parser.add_argument("--min-unique-colors", type=int)
@@ -100,32 +96,6 @@ def parse_loop_range(spec: str, frame_count: int) -> tuple[str, int, int]:
     return label, start - 1, count
 
 
-def apply_idle_defaults(args: argparse.Namespace, frame_width: int, frame_height: int) -> None:
-    if args.profile != "idle-planted":
-        return
-    base = min(frame_width, frame_height)
-    if args.safe_margin is None:
-        args.safe_margin = max(1, round(base * 3 / 128))
-    args.require_transparent_corners = True
-    if args.max_centroid_drift is None:
-        args.max_centroid_drift = frame_width * 1.5 / 128
-    if args.min_vertical_travel is None:
-        args.min_vertical_travel = frame_height * 2.0 / 128
-    if args.max_vertical_travel is None:
-        args.max_vertical_travel = frame_height * 8.0 / 128
-    if args.contact_rows is None:
-        args.contact_rows = max(1, round(frame_height * 3 / 128))
-    if args.max_contact_difference is None:
-        args.max_contact_difference = 1.0
-    if args.min_lower_body_difference is None:
-        args.min_lower_body_difference = 0.5
-    if args.min_partial_alpha_ratio is None:
-        args.min_partial_alpha_ratio = 0.05
-    if args.min_unique_colors is None:
-        area_ratio = (frame_width * frame_height) / (128 * 128)
-        args.min_unique_colors = max(32, round(800 * area_ratio))
-
-
 def validate_args(args: argparse.Namespace, frame_width: int, frame_height: int) -> tuple[int, int]:
     if args.frame_count < 1:
         raise ValueError("--frame-count must be positive")
@@ -155,7 +125,6 @@ def main() -> int:
         args.frame_width,
         args.frame_height,
     )
-    apply_idle_defaults(args, frame_width, frame_height)
     columns, rows = validate_args(args, frame_width, frame_height)
     loop_ranges = [parse_loop_range(spec, args.frame_count) for spec in args.closed_loop_range]
 
@@ -286,24 +255,6 @@ def main() -> int:
                 "contact-lock",
                 contact_difference <= args.max_contact_difference,
                 f"maximum mean RGBA difference={contact_difference:.3f}, maximum={args.max_contact_difference:.3f}",
-            ),
-        )
-
-    if len(frames) >= 3 and len(populated) == len(frames) and args.min_lower_body_difference is not None:
-        global_top = min(bbox[1] for _, bbox in populated)
-        global_bottom = max(bbox[3] for _, bbox in populated)
-        lower_start = round(global_top + (global_bottom - global_top) * 0.55)
-        lower_end = round(global_top + (global_bottom - global_top) * 0.90)
-        lower_reference = frames[0][lower_start:lower_end]
-        lower_difference = max(
-            mean_abs_difference(lower_reference, frame[lower_start:lower_end])
-            for frame in frames[1:-1]
-        )
-        checks.append(
-            Check(
-                "lower-body-participation",
-                lower_difference >= args.min_lower_body_difference,
-                f"maximum mean RGBA difference={lower_difference:.3f}, minimum={args.min_lower_body_difference:.3f}",
             ),
         )
 

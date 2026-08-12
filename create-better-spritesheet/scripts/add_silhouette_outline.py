@@ -25,11 +25,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--source",
-        "--master",
-        dest="source",
         required=True,
         type=Path,
-        help="Working-size RGBA pre-master source; --master remains a compatibility alias",
+        help="Fixed-size high-resolution RGBA pre-master source",
     )
     parser.add_argument("--output-dir", required=True, type=Path, help="Fresh output directory")
     parser.add_argument("--name", default="character-outline", help="Output filename prefix")
@@ -139,13 +137,10 @@ def comparison(original: Image.Image, outlined: Image.Image, scale: int) -> Imag
         original = original.resize(size, Image.Resampling.LANCZOS)
         outlined = outlined.resize(size, Image.Resampling.LANCZOS)
     output_size = (original.width * 2 + gutter, original.height)
-    if scale == 1:
-        canvas = Image.new("RGBA", output_size, (0, 0, 0, 0))
-    else:
-        canvas = checkerboard(output_size).convert("RGBA")
+    canvas = checkerboard(output_size).convert("RGBA")
     canvas.alpha_composite(original, (0, 0))
     canvas.alpha_composite(outlined, (original.width + gutter, 0))
-    return canvas
+    return canvas.convert("RGB")
 
 
 def main() -> int:
@@ -179,16 +174,14 @@ def main() -> int:
     if transparent_rgb_max(outlined_master) != 0 or transparent_rgb_max(outlined_frame) != 0:
         raise ValueError("outline output contains RGB contamination under alpha=0")
 
-    master_path = args.output_dir / f"{args.name}-master-{working_size[0]}x{working_size[1]}.png"
-    frame_path = args.output_dir / f"{args.name}-frame-{frame_width}x{frame_height}.png"
+    master_path = args.output_dir / f"{args.name}-canonical-master-{working_size[0]}x{working_size[1]}.png"
     metrics_path = args.output_dir / f"{args.name}-metrics.json"
     outlined_master.save(master_path)
-    outlined_frame.save(frame_path)
     comparison(original_frame, outlined_frame, 1).save(
-        args.output_dir / f"{args.name}-comparison-native.png",
+        args.output_dir / f"{args.name}-review-comparison-native.png",
     )
     comparison(original_frame, outlined_frame, 4).save(
-        args.output_dir / f"{args.name}-comparison-review-4x.png",
+        args.output_dir / f"{args.name}-review-comparison-4x.png",
     )
 
     metrics = {
@@ -200,7 +193,7 @@ def main() -> int:
         "outline_color": args.outline_color.lower(),
         "original_master_bbox": list(master_bbox),
         "outlined_master_bbox": list(outlined_master_bbox),
-        "outlined_frame_bbox": list(frame_bbox),
+        "outlined_target_review_bbox": list(frame_bbox),
         "minimum_target_margin": margin,
         "opaque_interior_pixel_identical": interior_equal,
         "transparent_rgb_max": 0,
@@ -208,7 +201,6 @@ def main() -> int:
     metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
 
     print(f"master: {master_path}")
-    print(f"frame: {frame_path}")
     print(
         f"outline: {args.outline_radius}px at {working_size[0]}x{working_size[1]}, "
         f"{args.outline_radius / master_scale:.2f}px at target",

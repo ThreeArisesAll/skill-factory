@@ -9,7 +9,7 @@ Use an available web or browser tool to search Pinterest directly. If Pinterest 
 Construct two to four narrow queries from the motion contract. Prefer English action terms:
 
 - `<action> animation reference`
-- `<action> key poses`
+- `<action> keyframes`
 - `<action> cycle contact passing high point`
 - `<direction or camera> <action> animation reference`
 - `<body type or equipment> <action> motion reference`
@@ -38,7 +38,7 @@ Present the two to four most valuable candidates instead of returning an entire 
 - The phases, direction, rhythm, or event decisions it supports
 - The motion information it still lacks
 
-Recommend one candidate and ask the user which reference to adopt. Before approval, perform motion analysis and key-pose planning only; do not generate the full frame sequence.
+Recommend one candidate and ask the user which reference to adopt. Before approval, perform motion analysis and keyframe planning only; do not generate the full frame sequence.
 
 Use Pinterest only to discover motion references. Whenever possible, open the original source linked by the Pin and record the creator or source page. Use external images to analyze motion, rhythm, and pose; do not copy character identity, clothing, brand elements, or art style. Do not save third-party images into the repository or Skill assets unless the user requests it.
 
