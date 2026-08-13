@@ -22,10 +22,14 @@ from image_utils import (
 )
 from PIL import Image, ImageChops, ImageFilter
 
-CANONICAL_REQUEST_SCHEMA = "canonical-authoring-request/v2"
-PRODUCTION_REQUEST_SCHEMA = "spritesheet-production-request/v2"
-PACKAGE_SCHEMA = "spritesheet-package/v2"
-EVIDENCE_SCHEMA = "canonical-reference-evidence/v2"
+CANONICAL_REQUEST_SCHEMA = "canonical-authoring-request/v3"
+PRODUCTION_REQUEST_SCHEMA = "spritesheet-production-request/v3"
+PACKAGE_SCHEMA = "spritesheet-package/v3"
+EVIDENCE_SCHEMA = "canonical-reference-evidence/v3"
+ADMISSION_PROOF_SCHEMA = "canonical-admission-proof/v1"
+NORMALIZATION_ALGORITHM = "normalize-to-canvas/lanczos-premultiplied-v1"
+OUTLINE_ALGORITHM = "outward-silhouette-maxfilter/v1"
+IDENTITY_ALGORITHM = "identity/v1"
 SAMPLER = "lanczos-premultiplied-v1"
 SAMPLER_PROOF = (
     "Each cell must exactly equal the recorded algorithm applied directly to its unique high-resolution source."
@@ -110,8 +114,8 @@ def decode_rgba(data: bytes, location: str) -> Image.Image:
 
 
 def open_rgba(path: Path, location: str) -> Image.Image:
-    if not path.is_file():
-        raise ContractError(f"{location} does not exist: {path}")
+    if path.is_symlink() or not path.is_file():
+        raise ContractError(f"{location} must be a regular non-symlink file: {path}")
     try:
         return decode_rgba(path.read_bytes(), location)
     except OSError as error:
@@ -174,13 +178,16 @@ def atomic_directory(output_dir: Path, build: Callable[[Path], None]) -> None:
 
 def prepare_canonical(request_path: Path, output_dir: Path) -> None:
     request = read_request(request_path, CANONICAL_REQUEST_SCHEMA)
-    require_exact_keys(request, {"schema_version", "source", "target", "outline"}, "request")
+    require_exact_keys(request, {"schema_version", "canonical_id", "source", "target", "outline"}, "request")
+    canonical_id = require_string(request.get("canonical_id"), "canonical_id")
     source_value = request.get("source")
     if not isinstance(source_value, str) or not source_value:
         raise ContractError("source must be a non-empty path string")
     source_path = Path(source_value)
     if not source_path.is_absolute():
         raise ContractError("source must be an absolute path")
+    if source_path.is_symlink():
+        raise ContractError("source must be a regular non-symlink file")
     try:
         source_bytes = source_path.read_bytes()
     except OSError as error:
@@ -216,6 +223,10 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
     def build(destination: Path) -> None:
         candidate_path = destination / "canonical-reference-candidate.png"
         candidate.save(candidate_path)
+        source_relative = Path("evidence") / f"{source_digest}.png"
+        source_evidence_path = destination / source_relative
+        source_evidence_path.parent.mkdir()
+        source_evidence_path.write_bytes(source_bytes)
         outline_evidence = {
             "enabled": enabled,
             "target_width": outline.get("target_width"),
@@ -233,7 +244,12 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
                 "height": candidate.height,
                 "mode": candidate.mode,
             },
-            "source": {"path": str(source_path), "sha256": source_digest},
+            "source": {"path": source_relative.as_posix(), "sha256": source_digest},
+            "target": {"frame_width": frame_width, "frame_height": frame_height},
+            "derivation": {
+                "normalization": NORMALIZATION_ALGORITHM,
+                "outline": OUTLINE_ALGORITHM if enabled else IDENTITY_ALGORITHM,
+            },
             "outline": outline_evidence,
             "metrics": {
                 "width": candidate.width,
@@ -242,8 +258,23 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
                 "visible_bbox": bbox,
             },
         }
-        (destination / "canonical-reference-evidence.json").write_text(
+        evidence_path = destination / "canonical-reference-evidence.json"
+        evidence_path.write_text(
             json.dumps(evidence, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        proof = canonical_admission_proof(
+            canonical_id,
+            candidate_path,
+            evidence_path,
+            destination,
+            outline,
+            frame_width,
+            frame_height,
+        )
+        proof_payload = {key: value for key, value in proof.items() if not key.startswith("_")}
+        (destination / "canonical-admission-proof.json").write_text(
+            json.dumps(proof_payload, indent=2) + "\n",
             encoding="utf-8",
         )
 
@@ -405,6 +436,7 @@ def validate_review_requests(
     reviews_value: Any,
     expected: list[tuple[str, list[str]]],
     source_hashes: dict[str, str],
+    admission_hashes: dict[str, str],
 ) -> list[dict[str, Any]]:
     if not isinstance(reviews_value, list):
         raise ContractError("reviews must be an array")
@@ -427,6 +459,7 @@ def validate_review_requests(
                 "reviewer",
                 "evidence",
                 "declared_order",
+                "admission_sha256",
             },
             f"reviews[{index}]",
         )
@@ -454,6 +487,13 @@ def validate_review_requests(
         expected_hashes = {subject_id: source_hashes[subject_id] for subject_id in subject_ids}
         if review.get("subject_sha256") != expected_hashes:
             raise ContractError(f"{gate} subject_sha256 must bind every subject to current file content")
+        canonical_ids = [subject_id for subject_id in subject_ids if subject_id in admission_hashes]
+        expected_admissions = {
+            canonical_id: admission_hashes[canonical_id]
+            for canonical_id in canonical_ids
+        }
+        if review.get("admission_sha256") != expected_admissions:
+            raise ContractError(f"{gate} admission_sha256 must bind the current canonical admission proof")
         review_id = require_string(review.get("id"), f"reviews[{index}].id")
         if review_id in review_ids:
             raise ContractError(f"duplicate review id: {review_id}")
@@ -501,6 +541,124 @@ def validate_review_requests(
     return ordered
 
 
+def canonical_admission_proof(
+    canonical_id: str,
+    canonical_path: Path,
+    evidence_path: Path,
+    evidence_root: Path,
+    contract_outline: dict[str, Any],
+    frame_width: int,
+    frame_height: int,
+) -> dict[str, Any]:
+    if evidence_path.is_symlink() or not evidence_path.is_file():
+        raise ContractError(f"canonical reference {canonical_id!r} evidence_path must be a regular file")
+    try:
+        evidence = require_object(json.loads(evidence_path.read_text(encoding="utf-8")), "canonical evidence")
+    except (OSError, json.JSONDecodeError) as error:
+        raise ContractError(f"cannot read canonical evidence: {error}") from error
+    require_exact_keys(
+        evidence,
+        {"schema_version", "candidate", "source", "target", "derivation", "outline", "metrics"},
+        "canonical evidence",
+    )
+    if evidence.get("schema_version") != EVIDENCE_SCHEMA:
+        raise ContractError(f"canonical evidence schema_version must be {EVIDENCE_SCHEMA!r}")
+    candidate = require_object(evidence.get("candidate"), "canonical evidence.candidate")
+    require_exact_keys(candidate, {"kind", "path", "sha256", "width", "height", "mode"}, "canonical evidence.candidate")
+    canonical = open_rgba(canonical_path, f"canonical reference {canonical_id!r}")
+    canonical_hash = sha256_file(canonical_path)
+    if (
+        candidate.get("kind") != "canonical-reference-candidate"
+        or candidate.get("path") != "canonical-reference-candidate.png"
+        or candidate.get("sha256") != canonical_hash
+        or candidate.get("width") != canonical.width
+        or candidate.get("height") != canonical.height
+        or candidate.get("mode") != "RGBA"
+    ):
+        raise ContractError(f"canonical reference {canonical_id!r} does not match its evidence candidate")
+    target = require_object(evidence.get("target"), "canonical evidence.target")
+    require_exact_keys(target, {"frame_width", "frame_height"}, "canonical evidence.target")
+    if target != {"frame_width": frame_width, "frame_height": frame_height}:
+        raise ContractError(f"canonical reference {canonical_id!r} evidence target does not match production contract")
+    source_record = require_object(evidence.get("source"), "canonical evidence.source")
+    require_exact_keys(source_record, {"path", "sha256"}, "canonical evidence.source")
+    source_value = require_string(source_record.get("path"), "canonical evidence.source.path")
+    source_relative = Path(source_value)
+    source_path = (evidence_root / source_relative).resolve()
+    if (
+        source_relative.is_absolute()
+        or ".." in source_relative.parts
+        or source_value != source_relative.as_posix()
+        or source_value != f"evidence/{source_record.get('sha256')}.png"
+        or not source_path.is_relative_to(evidence_root.resolve())
+        or source_path.is_symlink()
+        or not source_path.is_file()
+        or sha256_file(source_path) != source_record.get("sha256")
+    ):
+        raise ContractError(f"canonical reference {canonical_id!r} source hash does not match evidence")
+    source = open_rgba(source_path, "canonical evidence source")
+    expected_size, _ = resolve_high_resolution_dimensions(frame_width, frame_height)
+    normalized = normalize_to_canvas(source, expected_size)
+    derivation = require_object(evidence.get("derivation"), "canonical evidence.derivation")
+    require_exact_keys(derivation, {"normalization", "outline"}, "canonical evidence.derivation")
+    expected_outline_algorithm = OUTLINE_ALGORITHM if contract_outline["enabled"] else IDENTITY_ALGORITHM
+    if derivation != {"normalization": NORMALIZATION_ALGORITHM, "outline": expected_outline_algorithm}:
+        raise ContractError("canonical evidence derivation algorithms do not match the production contract")
+    outline = require_object(evidence.get("outline"), "canonical evidence.outline")
+    expected_outline = {
+        **contract_outline,
+        "resolved_high_resolution_width": (
+            round(contract_outline["target_width"] * HIGH_RESOLUTION_SHORT_SIDE / min(frame_width, frame_height))
+            if contract_outline["enabled"]
+            else 0
+        ),
+    }
+    if outline != expected_outline:
+        raise ContractError("canonical evidence outline does not exactly match the production outline contract")
+    replay = normalized
+    if contract_outline["enabled"]:
+        replay, _ = apply_outline(
+            normalized,
+            contract_outline["target_width"],
+            min(frame_width, frame_height),
+            contract_outline["color"],
+        )
+    if replay.tobytes() != canonical.tobytes():
+        raise ContractError("canonical reference does not pixel-match its replayed admission evidence")
+    metrics = require_object(evidence.get("metrics"), "canonical evidence.metrics")
+    require_exact_keys(metrics, {"width", "height", "short_side", "visible_bbox"}, "canonical evidence.metrics")
+    visible_bbox = canonical.getchannel("A").getbbox()
+    if metrics != {
+        "width": canonical.width,
+        "height": canonical.height,
+        "short_side": min(canonical.size),
+        "visible_bbox": list(visible_bbox) if visible_bbox is not None else None,
+    }:
+        raise ContractError("canonical evidence metrics must exactly match the candidate")
+    return {
+        "schema_version": ADMISSION_PROOF_SCHEMA,
+        "canonical_reference": {
+            "id": canonical_id,
+            "sha256": canonical_hash,
+            "width": canonical.width,
+            "height": canonical.height,
+            "mode": canonical.mode,
+        },
+        "target": dict(target),
+        "source": {
+            "sha256": source_record["sha256"],
+            "width": source.width,
+            "height": source.height,
+            "mode": source.mode,
+        },
+        "outline": dict(outline),
+        "derivation": dict(derivation),
+        "authoring_evidence_sha256": sha256_file(evidence_path),
+        "_source_path": source_path,
+        "_evidence_path": evidence_path,
+    }
+
+
 def parse_production_request(request_path: Path) -> dict[str, Any]:
     request = read_request(request_path, PRODUCTION_REQUEST_SCHEMA)
     require_exact_keys(
@@ -536,18 +694,30 @@ def parse_production_request(request_path: Path) -> dict[str, Any]:
     if not isinstance(canonical_values, list) or not canonical_values:
         raise ContractError("canonical_references must be a non-empty array")
     canonical: dict[str, dict[str, Any]] = {}
+    admissions: dict[str, dict[str, Any]] = {}
     images: dict[str, Image.Image] = {}
     paths: dict[str, Path] = {}
     hashes: dict[str, str] = {}
     for index, raw in enumerate(canonical_values):
         entry = require_object(raw, f"canonical_references[{index}]")
-        require_exact_keys(entry, {"id", "path"}, f"canonical_references[{index}]")
+        require_exact_keys(
+            entry,
+            {"id", "path", "evidence_path", "proof_path"},
+            f"canonical_references[{index}]",
+        )
         artifact_id = require_string(entry.get("id"), f"canonical_references[{index}].id")
         if artifact_id == "spritesheet":
             raise ContractError("'spritesheet' is a reserved artifact id")
         if artifact_id in canonical:
             raise ContractError(f"duplicate artifact id: {artifact_id}")
         path = require_absolute_path(entry.get("path"), f"canonical_references[{index}].path")
+        evidence_path = require_absolute_path(
+            entry.get("evidence_path"),
+            f"canonical_references[{index}].evidence_path",
+        )
+        proof_path = require_absolute_path(entry.get("proof_path"), f"canonical_references[{index}].proof_path")
+        if path.is_symlink() or evidence_path.is_symlink() or proof_path.is_symlink():
+            raise ContractError("canonical, evidence, and proof inputs must be regular non-symlink files")
         image = open_rgba(path, f"canonical_references[{index}].path")
         if image.size != expected_high_resolution_size:
             raise ContractError("canonical reference has wrong high-resolution canvas")
@@ -555,6 +725,32 @@ def parse_production_request(request_path: Path) -> dict[str, Any]:
         images[artifact_id] = image
         paths[artifact_id] = path
         hashes[artifact_id] = sha256_file(path)
+        proof = canonical_admission_proof(
+            artifact_id,
+            path,
+            evidence_path,
+            evidence_path.parent,
+            normalized_outline,
+            frame_width,
+            frame_height,
+        )
+        proof_payload = {key: value for key, value in proof.items() if not key.startswith("_")}
+        expected_proof_bytes = (json.dumps(proof_payload, indent=2) + "\n").encode("utf-8")
+        try:
+            proof_bytes = proof_path.read_bytes()
+            supplied_proof = require_object(json.loads(proof_bytes), "canonical admission proof")
+        except (OSError, json.JSONDecodeError) as error:
+            raise ContractError(f"cannot read canonical admission proof: {error}") from error
+        if supplied_proof != proof_payload or proof_bytes != expected_proof_bytes:
+            raise ContractError("canonical admission proof must exactly match prepare-canonical replay output")
+        admissions[artifact_id] = {
+            "proof": proof_payload,
+            "proof_bytes": proof_bytes,
+            "proof_sha256": hashlib.sha256(proof_bytes).hexdigest(),
+            "source_path": proof["_source_path"],
+            "evidence_path": proof["_evidence_path"],
+            "evidence_sha256": proof_payload["authoring_evidence_sha256"],
+        }
 
     clips_value = request.get("clips")
     if not isinstance(clips_value, list) or not clips_value:
@@ -688,6 +884,7 @@ def parse_production_request(request_path: Path) -> dict[str, Any]:
         request.get("reviews"),
         scoped_reviews + clip_review_scopes,
         hashes,
+        {canonical_id: admission["proof_sha256"] for canonical_id, admission in admissions.items()},
     )
     grid = require_object(request.get("grid"), "grid")
     require_exact_keys(grid, {"columns", "order"}, "grid")
@@ -710,6 +907,7 @@ def parse_production_request(request_path: Path) -> dict[str, Any]:
         "images": images,
         "paths": paths,
         "hashes": hashes,
+        "admissions": admissions,
         "clips": clips,
         "frame_ids": frame_ids,
         "reviews": reviews,
@@ -724,6 +922,35 @@ def build_package(request_path: Path, output_dir: Path) -> None:
     def build(destination: Path) -> None:
         artifacts_dir = destination / "artifacts"
         artifacts_dir.mkdir()
+        admission_dir = destination / "admission"
+        admission_dir.mkdir()
+        evidence_dir = destination / "evidence"
+        evidence_dir.mkdir()
+        admission_records: list[dict[str, Any]] = []
+        for canonical_id in parsed["canonical_ids"]:
+            admission = parsed["admissions"][canonical_id]
+            proof_hash = admission["proof_sha256"]
+            proof_relative = f"admission/{proof_hash}.json"
+            (destination / proof_relative).write_bytes(admission["proof_bytes"])
+            source_hash = admission["proof"]["source"]["sha256"]
+            source_relative = f"evidence/{source_hash}.png"
+            source_destination = destination / source_relative
+            if not source_destination.exists():
+                shutil.copyfile(admission["source_path"], source_destination)
+            evidence_hash = admission["evidence_sha256"]
+            evidence_relative = f"evidence/{evidence_hash}.json"
+            shutil.copyfile(admission["evidence_path"], destination / evidence_relative)
+            admission_records.append(
+                {
+                    "canonical_reference": canonical_id,
+                    "proof_path": proof_relative,
+                    "proof_sha256": proof_hash,
+                    "source_path": source_relative,
+                    "source_sha256": source_hash,
+                    "evidence_path": evidence_relative,
+                    "evidence_sha256": evidence_hash,
+                },
+            )
         artifact_records: list[dict[str, Any]] = []
         for artifact_id in parsed["canonical_ids"] + parsed["frame_ids"]:
             source_path = parsed["paths"][artifact_id]
@@ -816,6 +1043,7 @@ def build_package(request_path: Path, output_dir: Path) -> None:
             "schema_version": PACKAGE_SCHEMA,
             "contract": parsed["contract"],
             "artifacts": artifact_records,
+            "canonical_admissions": admission_records,
             "clips": parsed["clips"],
             "reviews": parsed["reviews"],
             "sampling": {
@@ -861,7 +1089,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         data = {}
     check(data.get("schema_version") == PACKAGE_SCHEMA, "schema_version", f"required={PACKAGE_SCHEMA!r}")
     check(
-        set(data) == {"schema_version", "contract", "artifacts", "clips", "reviews", "sampling", "assembly"},
+        set(data) == {"schema_version", "contract", "artifacts", "canonical_admissions", "clips", "reviews", "sampling", "assembly"},
         "$ fields",
         "manifest top-level fields are closed",
     )
@@ -991,6 +1219,167 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
                         f"{location}.high-resolution-canvas",
                         f"actual={image.size}, expected={expected_high_resolution_size}",
                     )
+    admission_hashes: dict[str, str] = {}
+    admission_relative_paths: set[str] = set()
+    admissions_value = data.get("canonical_admissions")
+    check(isinstance(admissions_value, list) and bool(admissions_value), "canonical_admissions", "must be a non-empty array")
+    if isinstance(admissions_value, list):
+        for index, raw_admission in enumerate(admissions_value):
+            location = f"canonical_admissions[{index}]"
+            if not isinstance(raw_admission, dict):
+                check(False, location, "must be an object")
+                continue
+            check(
+                set(raw_admission) == {
+                    "canonical_reference", "proof_path", "proof_sha256",
+                    "source_path", "source_sha256", "evidence_path", "evidence_sha256",
+                },
+                f"{location}.fields",
+                "admission record fields are closed",
+            )
+            canonical_id = raw_admission.get("canonical_reference")
+            proof_hash = raw_admission.get("proof_sha256")
+            source_hash = raw_admission.get("source_sha256")
+            evidence_hash = raw_admission.get("evidence_sha256")
+            proof_value = raw_admission.get("proof_path")
+            source_value = raw_admission.get("source_path")
+            evidence_value = raw_admission.get("evidence_path")
+            proof_expected = f"admission/{proof_hash}.json"
+            source_expected = f"evidence/{source_hash}.png"
+            evidence_expected = f"evidence/{evidence_hash}.json"
+            valid_paths = (
+                proof_value == proof_expected
+                and source_value == source_expected
+                and evidence_value == evidence_expected
+            )
+            check(valid_paths, f"{location}.content-address", "proof and source paths must be content-addressed")
+            proof_path = (base_dir / proof_value).resolve() if isinstance(proof_value, str) else base_dir
+            source_path = (base_dir / source_value).resolve() if isinstance(source_value, str) else base_dir
+            evidence_path = (base_dir / evidence_value).resolve() if isinstance(evidence_value, str) else base_dir
+            contained = (
+                valid_paths
+                and proof_path.is_relative_to(package_root)
+                and source_path.is_relative_to(package_root)
+                and evidence_path.is_relative_to(package_root)
+                and proof_path.is_file()
+                and source_path.is_file()
+                and evidence_path.is_file()
+                and not proof_path.is_symlink()
+                and not source_path.is_symlink()
+                and not evidence_path.is_symlink()
+            )
+            check(contained, f"{location}.files", "proof and source must be regular files inside package root")
+            if not contained or not isinstance(canonical_id, str):
+                continue
+            admission_relative_paths.update((proof_value, source_value, evidence_value))
+            actual_proof_hash = sha256_file(proof_path)
+            actual_source_hash = sha256_file(source_path)
+            actual_evidence_hash = sha256_file(evidence_path)
+            check(actual_proof_hash == proof_hash, f"{location}.proof_sha256", "proof bytes must match")
+            check(actual_source_hash == source_hash, f"{location}.source_sha256", "source bytes must match")
+            check(actual_evidence_hash == evidence_hash, f"{location}.evidence_sha256", "evidence bytes must match")
+            try:
+                proof = require_object(json.loads(proof_path.read_text(encoding="utf-8")), "admission proof")
+                require_exact_keys(
+                    proof,
+                    {
+                        "schema_version", "canonical_reference", "target", "source", "outline",
+                        "derivation", "authoring_evidence_sha256",
+                    },
+                    "admission proof",
+                )
+                if proof.get("schema_version") != ADMISSION_PROOF_SCHEMA:
+                    raise ContractError(f"admission proof schema_version must be {ADMISSION_PROOF_SCHEMA!r}")
+                canonical_record = require_object(proof.get("canonical_reference"), "admission proof.canonical_reference")
+                require_exact_keys(
+                    canonical_record,
+                    {"id", "sha256", "width", "height", "mode"},
+                    "admission proof.canonical_reference",
+                )
+                derivation = require_object(proof.get("derivation"), "admission proof.derivation")
+                require_exact_keys(derivation, {"normalization", "outline"}, "admission proof.derivation")
+                raw_proof_outline = require_object(proof.get("outline"), "admission proof.outline")
+                resolved_width = raw_proof_outline.get("resolved_high_resolution_width")
+                proof_outline = validate_outline_contract(
+                    {key: value for key, value in raw_proof_outline.items() if key != "resolved_high_resolution_width"},
+                    "admission proof.outline",
+                )
+                expected_resolved = (
+                    round(proof_outline["target_width"] * HIGH_RESOLUTION_SHORT_SIDE / min(width, height))
+                    if proof_outline["enabled"] and dimensions_valid
+                    else 0
+                )
+                if resolved_width != expected_resolved:
+                    raise ContractError("admission proof resolved outline width is invalid")
+                if proof.get("target") != {"frame_width": width, "frame_height": height}:
+                    raise ContractError("admission proof target must match package contract")
+                if proof.get("outline") != contract.get("outline") | {"resolved_high_resolution_width": expected_resolved}:
+                    raise ContractError("admission proof outline must match package contract")
+                expected_derivation = {
+                    "normalization": NORMALIZATION_ALGORITHM,
+                    "outline": OUTLINE_ALGORITHM if proof_outline["enabled"] else IDENTITY_ALGORITHM,
+                }
+                if derivation != expected_derivation:
+                    raise ContractError("admission proof algorithms are invalid")
+                if proof.get("authoring_evidence_sha256") != actual_evidence_hash:
+                    raise ContractError("admission proof must bind the packaged authoring evidence")
+                source = open_rgba(source_path, "admission source")
+                source_record = require_object(proof.get("source"), "admission proof.source")
+                require_exact_keys(source_record, {"sha256", "width", "height", "mode"}, "admission proof.source")
+                if source_record != {
+                    "sha256": actual_source_hash,
+                    "width": source.width,
+                    "height": source.height,
+                    "mode": source.mode,
+                }:
+                    raise ContractError("admission source metadata is invalid")
+                expected_size, _ = resolve_high_resolution_dimensions(width, height)
+                normalized = normalize_to_canvas(source, expected_size)
+                canonical_image = images.get(canonical_id)
+                canonical_artifact = artifacts.get(canonical_id, {})
+                if (
+                    canonical_image is None
+                    or canonical_artifact.get("type") != "canonical-reference"
+                    or canonical_record != {
+                        "id": canonical_id,
+                        "sha256": canonical_artifact.get("sha256"),
+                        "width": canonical_image.width,
+                        "height": canonical_image.height,
+                        "mode": canonical_image.mode,
+                    }
+                ):
+                    raise ContractError("admission proof must bind a current canonical-reference artifact")
+                replay = normalized
+                if proof_outline["enabled"]:
+                    replay, _ = apply_outline(
+                        normalized,
+                        proof_outline["target_width"],
+                        min(width, height),
+                        proof_outline["color"],
+                    )
+                if replay.tobytes() != canonical_image.tobytes():
+                    raise ContractError("canonical reference does not pixel-match packaged admission evidence")
+                canonical_path = base_dir / canonical_artifact["path"]
+                replayed_proof = canonical_admission_proof(
+                    canonical_id,
+                    canonical_path,
+                    evidence_path,
+                    base_dir,
+                    proof_outline,
+                    width,
+                    height,
+                )
+                replayed_payload = {
+                    key: value for key, value in replayed_proof.items() if not key.startswith("_")
+                }
+                if proof != replayed_payload:
+                    raise ContractError("admission proof must exactly match independent evidence replay")
+            except (ContractError, OSError, json.JSONDecodeError, TypeError) as error:
+                check(False, location, str(error))
+            else:
+                if canonical_id in admission_hashes:
+                    check(False, f"{location}.canonical_reference", "must be unique")
+                admission_hashes[canonical_id] = actual_proof_hash
     clips_value = data.get("clips")
     check(isinstance(clips_value, list) and bool(clips_value), "clips", "must be a non-empty array")
     frame_ids: list[str] = []
@@ -1131,6 +1520,11 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         if artifact.get("type") == "canonical-reference"
     ]
     check(
+        set(admission_hashes) == set(declared_canonical_ids),
+        "canonical_admissions.graph",
+        "every canonical reference must have exactly one valid admission proof",
+    )
+    check(
         set(canonical_ids) == set(declared_canonical_ids),
         "clips.canonical_reference",
         "every canonical reference must be consumed by at least one clip",
@@ -1168,7 +1562,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         *clip_review_scopes,
     ]
     try:
-        validated_reviews = validate_review_requests(reviews_value, expected_reviews, hashes)
+        validated_reviews = validate_review_requests(reviews_value, expected_reviews, hashes, admission_hashes)
     except (ContractError, KeyError, TypeError) as error:
         check(False, "reviews", str(error))
     else:
@@ -1272,7 +1666,12 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         path.relative_to(base_dir).as_posix()
         for path in package_entries
     }
-    expected_package_entries = artifact_relative_paths | {"manifest.json", "artifacts"}
+    expected_package_entries = artifact_relative_paths | admission_relative_paths | {
+        "manifest.json",
+        "artifacts",
+        "admission",
+        "evidence",
+    }
     check(
         actual_package_entries == expected_package_entries
         and all(not path.is_symlink() for path in package_entries),
@@ -1311,9 +1710,9 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Public schemas:\n"
-            "  canonical-authoring-request/v2 -> canonical review candidate + evidence\n"
-            "  spritesheet-production-request/v2 -> immutable spritesheet package\n"
-            "  spritesheet-package/v2 -> verified authoritative manifest"
+            "  canonical-authoring-request/v3 -> canonical review candidate + replay evidence\n"
+            "  spritesheet-production-request/v3 -> admission-bound immutable spritesheet package\n"
+            "  spritesheet-package/v3 -> independently replayed authoritative manifest"
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1321,32 +1720,33 @@ def parse_args() -> argparse.Namespace:
         "prepare-canonical",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Consume canonical-authoring-request/v2. Required fields:\n"
-            "  source: absolute path to an RGBA PNG\n"
+            "Consume canonical-authoring-request/v3. Required fields:\n"
+            "  canonical_id: production canonical-reference artifact ID\n"
+            "  source: absolute path to a regular non-symlink RGBA PNG\n"
             "  target: frame_width, frame_height\n"
             "  outline: enabled, target_width, and color (RGBA array) only when enabled\n"
-            "The command emits a non-production candidate and hash-bound authoring evidence."
+            "The command atomically emits a candidate, source evidence, authoring evidence, and admission proof."
         ),
     )
-    prepare.add_argument("--request", required=True, type=Path, help="canonical-authoring-request/v2 JSON")
+    prepare.add_argument("--request", required=True, type=Path, help="canonical-authoring-request/v3 JSON")
     prepare.add_argument("--output-dir", required=True, type=Path, help="new atomic candidate directory")
     build = subparsers.add_parser(
         "build-package",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Consume spritesheet-production-request/v2. Required sections:\n"
+            "Consume spritesheet-production-request/v3. Required sections:\n"
             "  contract: dimensions, 512 high-resolution side, sampler, conditional outline, origin, anchor, safe bounds\n"
-            "  canonical_references: id + absolute path to an approved RGBA PNG\n"
+            "  canonical_references: id + absolute regular candidate, evidence_path, and proof_path\n"
             "  clips: runtime metadata + ordered keyframe/in-between records with absolute RGBA PNG paths\n"
             "  reviews: hash-bound canonical, keyframe-set, and sequence approvals\n"
             "  grid: columns + row-major or column-major order"
         ),
     )
-    build.add_argument("--request", required=True, type=Path, help="spritesheet-production-request/v2 JSON")
+    build.add_argument("--request", required=True, type=Path, help="spritesheet-production-request/v3 JSON")
     build.add_argument("--output-dir", required=True, type=Path, help="new atomic package directory")
     verify = subparsers.add_parser(
         "verify-package",
-        description="Verify a spritesheet-package/v2 manifest, replay every cell, and emit MACHINE-VERIFIED, DECLARED, and REVIEWED results.",
+        description="Verify a spritesheet-package/v3 manifest, replay canonical admission and every cell, and emit MACHINE-VERIFIED, DECLARED, and REVIEWED results.",
     )
     verify.add_argument("--manifest", required=True, type=Path, help="package-relative authoritative manifest")
     return parser.parse_args()

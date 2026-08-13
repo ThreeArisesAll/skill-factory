@@ -47,15 +47,56 @@ class SpritesheetPipelineTests(unittest.TestCase):
     def write_json(path: Path, value: object) -> None:
         path.write_text(json.dumps(value), encoding="utf-8")
 
+    def prepare_fixture(
+        self,
+        root: Path,
+        name: str,
+        seed: int,
+        outline: dict[str, object] | None = None,
+        output_name: str | None = None,
+    ) -> tuple[Path, Path, Path]:
+        source = root / f"{name}-source.png"
+        self.write_rgba(source, (400, 400), seed)
+        request = root / f"{name}-authoring.json"
+        self.write_json(
+            request,
+            {
+                "schema_version": "canonical-authoring-request/v3",
+                "canonical_id": name,
+                "source": str(source),
+                "target": {"frame_width": 32, "frame_height": 32},
+                "outline": outline or {"enabled": False, "target_width": "none"},
+            },
+        )
+        output = root / (output_name or f"{name}-prepared")
+        prepared = self.run_cli(
+            "prepare-canonical",
+            "--request",
+            str(request),
+            "--output-dir",
+            str(output),
+        )
+        self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+        return (
+            output / "canonical-reference-candidate.png",
+            output / "canonical-reference-evidence.json",
+            output / "canonical-admission-proof.json",
+        )
+
     def make_production_request(
         self,
         root: Path,
         *,
         repeat_opening_cell: bool = False,
         columns: int = 2,
+        canonical_output_name: str | None = None,
     ) -> tuple[Path, dict[str, object]]:
-        canonical = root / "canonical.png"
-        self.write_rgba(canonical, (512, 512), 20)
+        canonical, canonical_evidence, canonical_proof = self.prepare_fixture(
+            root,
+            "canonical",
+            20,
+            output_name=canonical_output_name,
+        )
         frame_paths: dict[str, Path] = {}
         for index, frame_id in enumerate(("k0", "i1", "i2", "k3"), start=1):
             path = root / f"{frame_id}.png"
@@ -63,6 +104,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             frame_paths[frame_id] = path
         hashes = {artifact_id: hashlib.sha256(path.read_bytes()).hexdigest() for artifact_id, path in frame_paths.items()}
         canonical_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
+        admission_hash = hashlib.sha256(canonical_proof.read_bytes()).hexdigest()
         frames: list[dict[str, object]] = [
             {"id": "k0", "role": "keyframe", "path": str(frame_paths["k0"])},
             {
@@ -82,7 +124,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             {"id": "k3", "role": "keyframe", "path": str(frame_paths["k3"])},
         ]
         request_data: dict[str, object] = {
-            "schema_version": "spritesheet-production-request/v2",
+            "schema_version": "spritesheet-production-request/v3",
             "contract": {
                 "frame_width": 32,
                 "frame_height": 32,
@@ -94,7 +136,14 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 "anchor": [16, 31],
                 "safe_bounds": [2, 2, 30, 30],
             },
-            "canonical_references": [{"id": "canonical", "path": str(canonical)}],
+            "canonical_references": [
+                {
+                    "id": "canonical",
+                    "path": str(canonical),
+                    "evidence_path": str(canonical_evidence),
+                    "proof_path": str(canonical_proof),
+                },
+            ],
             "clips": [
                 {
                     "id": "action-east",
@@ -120,6 +169,9 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     "reviewer": "reviewer@example.com",
                     "evidence": "approved canonical reference",
                     "declared_order": 1,
+                    "admission_sha256": {
+                        "canonical": admission_hash,
+                    },
                 },
                 {
                     "id": "keyframe-review",
@@ -133,6 +185,9 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     "reviewer": "reviewer@example.com",
                     "evidence": "approved keyframe set",
                     "declared_order": 2,
+                    "admission_sha256": {
+                        "canonical": admission_hash,
+                    },
                 },
                 {
                     "id": "sequence-review",
@@ -142,6 +197,9 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     "reviewer": "reviewer@example.com",
                     "evidence": "approved sequence",
                     "declared_order": 3,
+                    "admission_sha256": {
+                        "canonical": admission_hash,
+                    },
                 },
             ],
             "grid": {"columns": columns, "order": "row-major"},
@@ -149,6 +207,24 @@ class SpritesheetPipelineTests(unittest.TestCase):
         request = root / "production.json"
         self.write_json(request, request_data)
         return request, request_data
+
+    def test_public_flow_accepts_prepare_bundle_named_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request, request_data = self.make_production_request(root, canonical_output_name="evidence")
+            proof_path = Path(request_data["canonical_references"][0]["proof_path"])
+            proof_hash = hashlib.sha256(proof_path.read_bytes()).hexdigest()
+            self.assertEqual(
+                {review["admission_sha256"]["canonical"] for review in request_data["reviews"]},
+                {proof_hash},
+            )
+            output = root / "package"
+
+            built = self.run_cli("build-package", "--request", str(request), "--output-dir", str(output))
+            verified = self.run_cli("verify-package", "--manifest", str(output / "manifest.json"))
+
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            self.assertEqual(verified.returncode, 0, verified.stdout + verified.stderr)
 
     def test_prepare_canonical_without_outline_is_atomic_and_minimal(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -159,7 +235,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.write_json(
                 request,
                 {
-                    "schema_version": "canonical-authoring-request/v2",
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
                     "source": str(source),
                     "target": {"frame_width": 32, "frame_height": 16},
                     "outline": {"enabled": False, "target_width": "none"},
@@ -178,8 +255,25 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 self.assertEqual(image.mode, "RGBA")
                 self.assertEqual(image.size, (1024, 512))
             record = json.loads(evidence.read_text(encoding="utf-8"))
-            self.assertEqual(record["schema_version"], "canonical-reference-evidence/v2")
+            self.assertEqual(record["schema_version"], "canonical-reference-evidence/v3")
             self.assertEqual(record["candidate"]["sha256"], hashlib.sha256(candidate.read_bytes()).hexdigest())
+            self.assertEqual(record["derivation"]["normalization"], "normalize-to-canvas/lanczos-premultiplied-v1")
+            self.assertEqual(record["derivation"]["outline"], "identity/v1")
+            self.assertNotIn("witness", record)
+            source_evidence = output / record["source"]["path"]
+            self.assertEqual(source_evidence.read_bytes(), source.read_bytes())
+            self.assertEqual(
+                {path.relative_to(output).as_posix() for path in output.rglob("*.png")},
+                {"canonical-reference-candidate.png", record["source"]["path"]},
+            )
+            proof = output / "canonical-admission-proof.json"
+            self.assertTrue(proof.is_file())
+            proof_record = json.loads(proof.read_text())
+            self.assertEqual(proof_record["canonical_reference"]["id"], "canonical")
+            self.assertEqual(
+                proof_record["authoring_evidence_sha256"],
+                hashlib.sha256(evidence.read_bytes()).hexdigest(),
+            )
             self.assertNotIn("type", record["candidate"])
             self.assertEqual(record["metrics"]["short_side"], 512)
             names = " ".join(path.name.lower() for path in output.rglob("*"))
@@ -196,7 +290,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.write_json(
                 request,
                 {
-                    "schema_version": "canonical-authoring-request/v2",
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
                     "source": str(source),
                     "target": {"frame_width": 32, "frame_height": 32},
                     "outline": {"enabled": True, "target_width": 2, "color": [7, 8, 9, 255]},
@@ -221,7 +316,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.write_json(
                 request,
                 {
-                    "schema_version": "canonical-authoring-request/v2",
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
                     "source": str(source),
                     "target": {"frame_width": 32, "frame_height": 32},
                     "outline": {"enabled": True, "target_width": 2, "color": [7, 8, 9, 0]},
@@ -233,6 +329,31 @@ class SpritesheetPipelineTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 1)
             self.assertIn("alpha must be greater than zero", result.stdout)
+            self.assertFalse(output.exists())
+
+    def test_prepare_rejects_symlinked_source_atomically(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            real_source = root / "real-source.png"
+            self.write_rgba(real_source, (64, 64), 2)
+            source = root / "source.png"
+            source.symlink_to(real_source)
+            request = root / "request.json"
+            self.write_json(
+                request,
+                {
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
+                    "source": str(source),
+                    "target": {"frame_width": 32, "frame_height": 32},
+                    "outline": {"enabled": False, "target_width": "none"},
+                },
+            )
+            output = root / "canonical"
+
+            rejected = self.run_cli("prepare-canonical", "--request", str(request), "--output-dir", str(output))
+
+            self.assertEqual(rejected.returncode, 1)
             self.assertFalse(output.exists())
 
     def test_outline_preserves_every_existing_nontransparent_pixel(self) -> None:
@@ -249,7 +370,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 self.write_json(
                     request,
                     {
-                        "schema_version": "canonical-authoring-request/v2",
+                        "schema_version": "canonical-authoring-request/v3",
+                        "canonical_id": f"canonical-{enabled}",
                         "source": str(source),
                         "target": {"frame_width": 32, "frame_height": 32},
                         "outline": {
@@ -277,6 +399,58 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 if plain_pixel[3] > 0:
                     self.assertEqual(plain_pixel, outlined_pixel)
 
+    def test_enabled_outline_expands_even_when_source_already_has_black_edge_pixels(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "black-edged-source.png"
+            image = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(image)
+            draw.rectangle((12, 12, 51, 51), fill=(0, 0, 0, 255))
+            draw.rectangle((14, 14, 49, 49), fill=(190, 80, 40, 255))
+            image.save(source)
+            request = root / "request.json"
+            self.write_json(
+                request,
+                {
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
+                    "source": str(source),
+                    "target": {"frame_width": 32, "frame_height": 32},
+                    "outline": {"enabled": True, "target_width": 1, "color": [0, 0, 0, 255]},
+                },
+            )
+            output = root / "prepared"
+
+            prepared = self.run_cli("prepare-canonical", "--request", str(request), "--output-dir", str(output))
+
+            self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+            evidence = json.loads((output / "canonical-reference-evidence.json").read_text())
+            plain_request = root / "plain-request.json"
+            self.write_json(
+                plain_request,
+                {
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "plain-canonical",
+                    "source": str(source),
+                    "target": {"frame_width": 32, "frame_height": 32},
+                    "outline": {"enabled": False, "target_width": "none"},
+                },
+            )
+            plain_output = root / "plain"
+            plain_result = self.run_cli(
+                "prepare-canonical", "--request", str(plain_request), "--output-dir", str(plain_output),
+            )
+            self.assertEqual(plain_result.returncode, 0, plain_result.stdout + plain_result.stderr)
+            with Image.open(plain_output / "canonical-reference-candidate.png") as plain_image, Image.open(
+                output / "canonical-reference-candidate.png",
+            ) as candidate:
+                plain_bbox = plain_image.getchannel("A").getbbox()
+                candidate_bbox = candidate.getchannel("A").getbbox()
+            self.assertLess(candidate_bbox[0], plain_bbox[0])
+            self.assertLess(candidate_bbox[1], plain_bbox[1])
+            self.assertGreater(candidate_bbox[2], plain_bbox[2])
+            self.assertGreater(candidate_bbox[3], plain_bbox[3])
+
     def test_prepare_failure_leaves_no_partial_output(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -286,7 +460,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.write_json(
                 request,
                 {
-                    "schema_version": "canonical-authoring-request/v2",
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
                     "source": str(source),
                     "target": {"frame_width": 512, "frame_height": 512},
                     "outline": {"enabled": False, "target_width": "none"},
@@ -314,7 +489,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 self.write_json(
                     request,
                     {
-                        "schema_version": "canonical-authoring-request/v2",
+                        "schema_version": "canonical-authoring-request/v3",
+                        "canonical_id": f"canonical-{target_width}",
                         "source": str(source),
                         "target": {"frame_width": 32, "frame_height": 32},
                         "outline": outline,
@@ -346,7 +522,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 self.write_json(
                     request,
                     {
-                        "schema_version": "canonical-authoring-request/v2",
+                        "schema_version": "canonical-authoring-request/v3",
+                        "canonical_id": f"canonical-{label}",
                         "source": str(source),
                         "target": {"frame_width": 32, "frame_height": 32},
                         "outline": {"enabled": False, "target_width": "none"},
@@ -368,10 +545,17 @@ class SpritesheetPipelineTests(unittest.TestCase):
             built = self.run_cli("build-package", "--request", str(request), "--output-dir", str(output))
 
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
-            self.assertEqual({path.name for path in output.iterdir()}, {"artifacts", "manifest.json", "spritesheet.png"})
+            self.assertEqual(
+                {path.name for path in output.iterdir()},
+                {"artifacts", "admission", "evidence", "manifest.json", "spritesheet.png"},
+            )
             manifest_path = output / "manifest.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            self.assertEqual(manifest["schema_version"], "spritesheet-package/v2")
+            self.assertEqual(manifest["schema_version"], "spritesheet-package/v3")
+            self.assertEqual(len(manifest["canonical_admissions"]), 1)
+            admission = manifest["canonical_admissions"][0]
+            self.assertTrue((output / admission["proof_path"]).is_file())
+            self.assertNotIn("witness_path", admission)
             self.assertEqual(
                 {artifact["type"] for artifact in manifest["artifacts"]},
                 {"canonical-reference", "high-resolution-frame", "spritesheet"},
@@ -564,6 +748,178 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertIn("absolute path", rejected.stdout)
             self.assertFalse(output.exists())
 
+    def test_build_requires_admission_evidence_and_rejects_outline_skip_fields(self) -> None:
+        mutations = {
+            "missing-evidence": lambda request: request["canonical_references"][0].pop("evidence_path"),
+            "already-outlined": lambda request: request["contract"]["outline"].update(already_outlined=True),
+            "skip-outline": lambda request: request["contract"]["outline"].update(skip_outline=True),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                request_path, request = self.make_production_request(root)
+                mutate(request)
+                self.write_json(request_path, request)
+                output = root / "package"
+
+                rejected = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+
+                self.assertEqual(rejected.returncode, 1)
+                self.assertFalse(output.exists())
+
+    def test_build_rejects_tampered_authoring_evidence_and_stale_proof(self) -> None:
+        mutations = {
+            "candidate-path": lambda evidence: evidence["candidate"].update(path="renamed.png"),
+            "metrics": lambda evidence: evidence["metrics"].update(short_side=511),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                request_path, request = self.make_production_request(root)
+                evidence_path = Path(request["canonical_references"][0]["evidence_path"])
+                evidence = json.loads(evidence_path.read_text())
+                mutate(evidence)
+                evidence_path.write_text(json.dumps(evidence))
+                output = root / "package"
+
+                rejected = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+
+                self.assertEqual(rejected.returncode, 1)
+                self.assertFalse(output.exists())
+
+    def test_build_rejects_symlinked_canonical_frame_source_evidence_and_proof_inputs(self) -> None:
+        for input_kind in ("canonical", "frame", "source", "evidence", "proof"):
+            with self.subTest(input_kind=input_kind), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                request_path, request = self.make_production_request(root)
+                canonical_entry = request["canonical_references"][0]
+                if input_kind == "frame":
+                    target = Path(request["clips"][0]["frames"][0]["path"])
+                    field_owner = request["clips"][0]["frames"][0]
+                    field = "path"
+                elif input_kind == "canonical":
+                    target = Path(canonical_entry["path"])
+                    field_owner, field = canonical_entry, "path"
+                elif input_kind in ("evidence", "proof"):
+                    field = f"{input_kind}_path"
+                    target = Path(canonical_entry[field])
+                    field_owner = canonical_entry
+                else:
+                    evidence_path = Path(canonical_entry["evidence_path"])
+                    evidence = json.loads(evidence_path.read_text())
+                    target = evidence_path.parent / evidence["source"]["path"]
+                    field_owner = None
+                    field = ""
+                if field_owner is not None:
+                    link = root / f"{input_kind}-link{target.suffix}"
+                    link.symlink_to(target)
+                    field_owner[field] = str(link)
+                    self.write_json(request_path, request)
+                else:
+                    real_source = root / "real-source.png"
+                    target.rename(real_source)
+                    target.symlink_to(real_source)
+                output = root / "package"
+
+                rejected = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+
+                self.assertEqual(rejected.returncode, 1)
+                self.assertFalse(output.exists())
+
+    def test_build_reuses_approved_enabled_outline_canonical_bytes_without_reapplying_outline(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path, request = self.make_production_request(root)
+            outline = {"enabled": True, "target_width": 1, "color": [0, 0, 0, 255]}
+            outlined_source = root / "outlined-source.png"
+            outlined_image = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+            ImageDraw.Draw(outlined_image).rectangle((100, 100, 299, 299), fill=(120, 80, 40, 255))
+            outlined_image.save(outlined_source)
+            authoring_request = root / "outlined-authoring.json"
+            self.write_json(
+                authoring_request,
+                {
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
+                    "source": str(outlined_source),
+                    "target": {"frame_width": 32, "frame_height": 32},
+                    "outline": outline,
+                },
+            )
+            prepared_output = root / "outlined-prepared"
+            prepared = self.run_cli(
+                "prepare-canonical",
+                "--request",
+                str(authoring_request),
+                "--output-dir",
+                str(prepared_output),
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+            canonical = prepared_output / "canonical-reference-candidate.png"
+            evidence = prepared_output / "canonical-reference-evidence.json"
+            proof_path = prepared_output / "canonical-admission-proof.json"
+            request["contract"]["outline"] = outline
+            request["canonical_references"][0] = {
+                "id": "canonical",
+                "path": str(canonical),
+                "evidence_path": str(evidence),
+                "proof_path": str(proof_path),
+            }
+            canonical_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
+            admission_hash = hashlib.sha256(proof_path.read_bytes()).hexdigest()
+            for review in request["reviews"]:
+                review["subject_sha256"]["canonical"] = canonical_hash
+                review["admission_sha256"]["canonical"] = admission_hash
+            self.write_json(request_path, request)
+            output = root / "package"
+
+            built = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            manifest = json.loads((output / "manifest.json").read_text())
+            canonical_record = next(
+                artifact for artifact in manifest["artifacts"] if artifact["type"] == "canonical-reference"
+            )
+            self.assertEqual((output / canonical_record["path"]).read_bytes(), canonical.read_bytes())
+
+    def test_verify_replays_packaged_source_normalization_and_admission_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path, _ = self.make_production_request(root)
+            output = root / "package"
+            built = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            manifest_path = output / "manifest.json"
+            manifest = json.loads(manifest_path.read_text())
+            admission = manifest["canonical_admissions"][0]
+            source_path = output / admission["source_path"]
+            self.write_rgba(source_path, (400, 400), 99)
+            new_source_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+            new_source_path = output / "evidence" / f"{new_source_hash}.png"
+            source_path.rename(new_source_path)
+            proof_path = output / admission["proof_path"]
+            proof = json.loads(proof_path.read_text())
+            proof["source"]["sha256"] = new_source_hash
+            proof_bytes = (json.dumps(proof, indent=2) + "\n").encode()
+            new_proof_hash = hashlib.sha256(proof_bytes).hexdigest()
+            new_proof_path = output / "admission" / f"{new_proof_hash}.json"
+            new_proof_path.write_bytes(proof_bytes)
+            proof_path.unlink()
+            admission.update(
+                source_path=f"evidence/{new_source_hash}.png",
+                source_sha256=new_source_hash,
+                proof_path=f"admission/{new_proof_hash}.json",
+                proof_sha256=new_proof_hash,
+            )
+            for review in manifest["reviews"]:
+                review["admission_sha256"]["canonical"] = new_proof_hash
+            manifest_path.write_text(json.dumps(manifest))
+
+            verified = self.run_cli("verify-package", "--manifest", str(manifest_path))
+
+            self.assertEqual(verified.returncode, 1)
+            self.assertIn("does not pixel-match packaged admission evidence", verified.stdout)
+
     def test_verify_rejects_extra_files_absolute_paths_and_zero_columns_without_traceback(self) -> None:
         mutations = (
             "extra-file",
@@ -666,13 +1022,19 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertNotIn("Traceback", verified.stderr)
             self.assertIn("must be a normalized package-relative path", verified.stdout)
 
-    def test_build_supports_two_clips_with_distinct_canonical_references(self) -> None:
+    def test_builds_two_canonical_references_and_verifier_requires_each_admission(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request_path, request = self.make_production_request(root)
-            canonical_two = root / "canonical-two.png"
-            self.write_rgba(canonical_two, (512, 512), 40)
-            request["canonical_references"].append({"id": "canonical-two", "path": str(canonical_two)})
+            canonical_two, evidence_two, proof_two = self.prepare_fixture(root, "canonical-two", 40)
+            request["canonical_references"].append(
+                {
+                    "id": "canonical-two",
+                    "path": str(canonical_two),
+                    "evidence_path": str(evidence_two),
+                    "proof_path": str(proof_two),
+                },
+            )
             frames_two = []
             for index, (frame_id, role) in enumerate(
                 (("k4", "keyframe"), ("i5", "in-between"), ("i6", "in-between"), ("k7", "keyframe")),
@@ -703,6 +1065,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             request["canonical_references"].reverse()
             request["contract"]["frame_count"] = 8
             canonical_two_hash = hashlib.sha256(canonical_two.read_bytes()).hexdigest()
+            admission_two_hash = hashlib.sha256(proof_two.read_bytes()).hexdigest()
             second_hashes = {
                 frame["id"]: hashlib.sha256(Path(frame["path"]).read_bytes()).hexdigest()
                 for frame in frames_two
@@ -717,6 +1080,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     "reviewer": "reviewer@example.com",
                     "evidence": "approved second canonical",
                     "declared_order": 1,
+                    "admission_sha256": {"canonical-two": admission_two_hash},
                 },
                 dict(original_canonical, declared_order=2),
                 dict(original_keyframes, declared_order=3),
@@ -733,6 +1097,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     "reviewer": "reviewer@example.com",
                     "evidence": "approved second keyframe set",
                     "declared_order": 4,
+                    "admission_sha256": {"canonical-two": admission_two_hash},
                 },
                 {
                     "id": "sequence-review-two",
@@ -742,6 +1107,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     "reviewer": "reviewer@example.com",
                     "evidence": "approved second sequence",
                     "declared_order": 6,
+                    "admission_sha256": {"canonical-two": admission_two_hash},
                 },
             ]
             request["reviews"].reverse()
@@ -766,13 +1132,40 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 ],
             )
 
+            removed = next(
+                admission
+                for admission in manifest["canonical_admissions"]
+                if admission["canonical_reference"] == "canonical-two"
+            )
+            manifest["canonical_admissions"].remove(removed)
+            (output / removed["proof_path"]).unlink()
+            (output / removed["source_path"]).unlink()
+            for review in manifest["reviews"]:
+                if "canonical-two" in review["subject_ids"]:
+                    review["admission_sha256"] = {}
+            manifest_path = output / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            verified = self.run_cli("verify-package", "--manifest", str(manifest_path))
+
+            self.assertEqual(verified.returncode, 1)
+            self.assertIn("canonical_admissions.graph", verified.stdout)
+
     def test_build_rejects_sequence_approval_before_all_canonical_gates(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request_path, request = self.make_production_request(root)
-            duplicate_canonical = root / "unused-canonical.png"
-            self.write_rgba(duplicate_canonical, (512, 512), 77)
-            request["canonical_references"].append({"id": "unused-canonical", "path": str(duplicate_canonical)})
+            duplicate_canonical, duplicate_evidence, duplicate_proof = self.prepare_fixture(
+                root, "unused-canonical", 77,
+            )
+            request["canonical_references"].append(
+                {
+                    "id": "unused-canonical",
+                    "path": str(duplicate_canonical),
+                    "evidence_path": str(duplicate_evidence),
+                    "proof_path": str(duplicate_proof),
+                },
+            )
             second_clip = json.loads(json.dumps(request["clips"][0]))
             second_clip.update(id="second", canonical_reference="unused-canonical")
             request["clips"].append(second_clip)
@@ -793,6 +1186,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 for frame in by_role
             }
             canonical_hash = hashlib.sha256(duplicate_canonical.read_bytes()).hexdigest()
+            admission_hash = hashlib.sha256(duplicate_proof.read_bytes()).hexdigest()
             request["reviews"].extend(
                 [
                     {
@@ -803,6 +1197,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                         "reviewer": "reviewer@example.com",
                         "evidence": "second canonical",
                         "declared_order": 4,
+                        "admission_sha256": {"unused-canonical": admission_hash},
                     },
                     {
                         "id": "second-keyframes",
@@ -816,6 +1211,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                         "reviewer": "reviewer@example.com",
                         "evidence": "second keyframes",
                         "declared_order": 5,
+                        "admission_sha256": {"unused-canonical": admission_hash},
                     },
                     {
                         "id": "second-sequence",
@@ -825,6 +1221,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                         "reviewer": "reviewer@example.com",
                         "evidence": "second sequence",
                         "declared_order": 6,
+                        "admission_sha256": {"unused-canonical": admission_hash},
                     },
                 ],
             )

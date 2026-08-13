@@ -1,77 +1,47 @@
-# Spritesheet Quality Contract v2
+# Spritesheet Quality Contract v3
 
 ## Production spec
 
-Resolve these fields from user material and authoritative repository evidence. Ask only for material values that remain missing, ambiguous, or conflicting; use assumptions only after explicit delegation.
+Resolve material values from user input and authoritative repository evidence. Ask only for missing, ambiguous, or conflicting values; apply assumptions only after explicit delegation.
 
-The working production spec is broader than the closed `spritesheet-production-request/v2` package-build schema. Keep identity sources, art direction, fallback policy, runtime scale, event hotspot geometry, review scope, and integration scope as planning and review evidence. Serialize only the dimensions, outline, coordinate contract, clip runtime metadata, approved production inputs, hash-bound reviews, and grid fields accepted by `build-package`.
+Keep identity evidence, art direction, fallback policy, runtime scale, hotspot geometry, review scope, and integration scope in the working plan when the closed `spritesheet-production-request/v3` does not encode them. Serialize only fields accepted by the CLI.
 
-- Character, actions, directions, camera, and state transitions
-- Action-reference status and selected motion evidence
-- Loop, one-shot, repeated-opening-cell, terminal-hold, and fallback behavior
-- Root motion, animation origin, anchor, baseline, safe bounds, and event hotspots
-- Target width and height, frame counts, clip ranges, durations, grid layout, and order
-- Runtime scale, neighboring visual mass, palette, materials, line treatment, and sampling style
-- Outer silhouette outline enabled state and target-size outward thickness; require a color source only when enabled
-- Review-artifact and runtime-integration scope
+Resolve character, actions, directions, camera, transitions, playback, root motion, coordinate contract, target geometry, timing, events, grid, visual treatment, sampling, and outline. Execute consistent outline `enabled` and `target_width` values without reconfirmation; use `none` when disabled.
 
-The target shortest side is strictly less than `512 px`, the target longest side is at most `4096 px`, and the derived high-resolution longest side is at most `16384 px`. Canonical canvases preserve the target aspect ratio with a `512 px` shortest side and a proportionally rounded long side.
+Require a target shortest side below `512 px`, a target longest side at most `4096 px`, and a derived high-resolution longest side at most `16384 px`.
 
-When authoritative inputs consistently specify outline enabled state and `target_width`, keep those values without restating or reconfirming them. Ask only for an unresolved or conflicting field. Use `none` for width when outline is disabled.
+## Canonical admission and approval
 
-## Canonical reference gate
+Treat canonical preparation as a deterministic admission boundary. Normalize the content-addressed original authoring source in memory and apply the resolved outward outline when enabled. Require `prepare-canonical` to emit the candidate, evidence, `canonical-admission-proof/v1`, and content-addressed source evidence only after replay passes. Keep the normalized buffer ephemeral. Follow [silhouette-outline.md](silhouette-outline.md) for the proof boundary.
 
-The canonical reference is the first formal production image. Author it on the fixed canonical canvas from approved identity and art-direction evidence. Resolve optical design, transparency, and the optional outline before approval. Approval seals the exact same pixels and file hash as an immutable `canonical-reference` artifact; no earlier authoring image enters the production graph.
+After machine proof exists, use visual review to judge identity, anatomy, silhouette quality, palette, equipment, direction, camera, mass, coordinate semantics, transparency, and outline aesthetics. Do not use visual linework or human review to establish execution history. Bind `canonical-approval` to both admitted candidate bytes and the admission-proof hash.
 
-Verify face, anatomy, silhouette, hairstyle, outfit, palette, equipment, asymmetric details, direction, camera, visual mass, anchor semantics, safe bounds, material treatment, transparency, and outline. Use one canonical reference per required camera or direction, with compatible identity and art language across the set.
-
-The canonical reference guides later generation visually. It is not a pose image, parts source, rig, or source of pixels for deterministic deformation.
+Reuse an approved canonical only with a full current admission match. Any bound source, target, algorithm, outline, or candidate change requires new admission, approval, and downstream production.
 
 ## High-resolution frame gates
 
-All action images share the artifact type `high-resolution-frame` and use a `keyframe` or `in-between` role.
+Use only `high-resolution-frame` with role `keyframe` or `in-between` for action sources. Generate keyframes anew from the applicable admitted canonical and action evidence. Bind `keyframe-set-approval` to the canonical admission proof and complete ordered keyframe set.
 
-Generate each keyframe anew from the matching canonical reference as its identity and art reference. Use the action reference for pose, projection, depth, contacts, and timing. Each clip requires at least two keyframes. The `keyframe-set-approval` gate binds the applicable canonical hash followed by the entire ordered keyframe set and verifies identity, three-dimensional volume, body planes, joint projection, foreshortening, near-versus-far scale, visible surfaces, overlap, depth order, contacts, arcs, and event causality.
+Generate in-betweens anew from the same admitted canonical plus adjacent approved keyframes. Add and reapprove a keyframe when an interval does not constrain articulation, projection, visible surfaces, or occlusion. Bind `sequence-approval` to the same admission proof and complete ordered sequence.
 
-After that gate, generate every in-between anew from the same canonical reference plus its two adjacent approved keyframes. Each clip requires at least two in-betweens. Add and approve another keyframe when an interval does not sufficiently constrain articulation, projection, visible surfaces, or occlusion topology.
+Use new image generation rather than deformation as the production method. Review volume, body planes, projection, foreshortening, overlap, depth, contacts, arcs, timing, events, and transitions as aesthetic and motion judgments.
 
-The production method is new image generation. Warp, rig, morph, layered deformation, two-dimensional deformation, and direct target-size drawing do not satisfy either role. The `sequence-approval` gate binds the same canonical hash followed by the complete ordered high-resolution sequence before rendering.
+## Sampling and package acceptance
 
-## Motion, direction, and events
+Render each logical cell directly from its approved high-resolution source with `lanczos-premultiplied-v1`. Store straight RGBA and clear RGB beneath zero Alpha. Treat cells as regions of the sheet, not artifacts. Reuse opening pixels only for an explicit loop-closing alias.
 
-Inspect three continuous contracts:
+Require `build-package` and `verify-package` to consume the packaged canonical admission evidence and replay its normalization and outline derivation. Require verification to replay every target-cell sample and compare pixels exactly. Treat deterministic replay, schema closure, hashes, dimensions, topology, coverage, and metadata consistency as machine facts. Treat identity, aesthetics, motion quality, and reviewer intent as human judgments.
 
-- **Time:** spacing and holds communicate anticipation, action, impact, recovery, and terminal state.
-- **Space:** center of mass, root, contacts, arcs, camera, volume, and occlusion remain coherent.
-- **Events:** hit, release, landing, interaction completion, and state changes coincide with the intended visual positions.
-
-For loops, review the final-to-opening transition. When the contract requires an explicit repeated opening cell, the package aliases the already-rendered opening pixels at the closing position. For one-shots, review entry, event, recovery or terminal state, and the following transition.
-
-Generate each direction from its own directional canonical reference and newly generated high-resolution frames. Validate handedness, emblems, hair part, lighting, projection, near and far limbs, and occlusion natively for that direction.
-
-## Sampling and target cells
-
-For smooth raster art, the sole production sampler is `lanczos-premultiplied-v1`. It reads straight-RGBA PNG input, resizes in premultiplied-alpha space, and produces straight-RGBA cell pixels. RGB beneath fully transparent output pixels is zero. Pixel-art requests require an explicit production-spec decision because this v2 sampler contract targets smooth raster art.
-
-Each logical target cell is rendered directly from its unique approved high-resolution source. Target cells exist only within the sheet; they are not formal artifacts, standalone PNGs, or editable stages. An explicit repeated opening cell reuses the opening pixels without another source or render.
-
-Verify transparent corners, edge color, absence of halos or haze, declared safe bounds, intentional overflow, and native-size readability. Use enlarged views only to diagnose pixel competition.
-
-## Package and acceptance
-
-The final deliverable is one `SpritesheetPackage`: a fixed-grid, untrimmed, unrotated RGBA sheet; one authoritative `spritesheet-package/v2` manifest; and the content-addressed sources referenced by that manifest. Runtime views are projections of the manifest. `verify-package` emits a fresh categorized report rather than storing a second authority inside the package.
-
-Machine verification covers artifact hashes and decoded properties, closed vocabularies, gate subjects, sequence topology, complete logical-cell coverage, dimensions, order, unused-cell transparency, metadata consistency, deterministic sampler replay, and pixel equality between each direct render and its cell. It does not prove historical resize count or authenticate human approval.
-
-Visual acceptance covers native-size identity and action readability, volumetric continuity, direction, loop or transition behavior, contacts, events, cropping, transparency, sampling, visual mass, anchor, and real-runtime behavior when integration is in scope.
+Deliver one `SpritesheetPackage`: the fixed-grid spritesheet, one authoritative `spritesheet-package/v3` `manifest.json`, and its referenced content-addressed production sources and admission material.
 
 ## Correction routing
 
 | Symptom | Return to | Required consequence |
 | --- | --- | --- |
-| Identity, palette, transparency, or outline is wrong | Canonical authoring | Approve a new canonical hash and invalidate every dependent frame, gate, and package |
-| Pose, perspective, volume, occlusion, timing, contact, or event is wrong | High-resolution keyframes or sequence | Repeat the affected keyframe-set or sequence gate before rebuilding |
-| Native target-cell readability or sampling fails | Canonical reference or responsible high-resolution source | Correct the source, repeat dependent approvals, and rebuild the package |
-| Cell order, clip range, duration, event, or anchor metadata is wrong | Production spec and package build | Regenerate the authoritative manifest and sheet together |
+| Identity, palette, transparency, optical design, or outline is wrong | Canonical authoring | Prepare, admit, and approve new canonical bytes; invalidate all dependents |
+| Admission evidence or replay mismatches | Canonical preparation | Regenerate complete evidence; admit no canonical until replay passes |
+| Pose, perspective, volume, occlusion, timing, contact, or event is wrong | Keyframe or sequence generation | Repeat affected gates before rebuilding |
+| Native cell sampling fails | Responsible high-resolution source | Correct and reapprove the source, then rebuild |
+| Order, range, duration, event, or anchor metadata is wrong | Production spec and package build | Regenerate manifest and sheet together |
 
-Corrections terminate at an approved source and then regenerate the package. A sheet cell is never patched.
+Terminate corrections at an admitted and approved source. Never patch a sheet cell.

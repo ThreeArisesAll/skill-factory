@@ -5,74 +5,64 @@ description: "Create, rebuild, diagnose, or review high-fidelity 2D character sp
 
 # Create Better Spritesheet
 
-Produce runtime-ready animation through one formal lineage:
+Produce runtime-ready animation through one evidence-bound lineage:
 
-`ProductionSpec -> CanonicalReferenceSet -> ApprovedHighResolutionSequence -> deterministic target-cell rendering -> SpritesheetPackage`
+`ProductionSpec -> AdmittedCanonicalReferenceSet -> ApprovedHighResolutionSequence -> deterministic target-cell rendering -> SpritesheetPackage`
 
-The only production entry point is:
+Use only:
 
 ```bash
 <python> <skill-dir>/scripts/spritesheet_pipeline.py prepare-canonical|build-package|verify-package
 ```
 
-Use the CLI help and tests as the executable source of truth for request fields and file layout. Use [lineage-evidence.md](references/lineage-evidence.md) for the package contract and evidence boundaries.
+Treat CLI behavior and tests as the executable source of truth for exact fields and layout. Read [lineage-evidence.md](references/lineage-evidence.md) for admission, package, and proof semantics.
 
-## 1. Establish the production spec
+## 1. Resolve the production spec
 
-1. Read the prompt, attachments, repository instructions, asset declarations, existing sprites, animation mappings, renderer settings, and visual tests before asking questions.
-2. Record the character, actions, directions, camera, loop or one-shot behavior, root motion, frame dimensions, frame count, durations, grid layout, anchor, safe bounds, event frames, sampling style, outline contract, and integration scope. Keep character identity evidence, art direction, fallback policy, runtime scale, and integration scope in the working plan when they are not fields of the package request.
-3. Resolve the action reference by following [motion-design.md](references/motion-design.md). Ask at most three material questions per round and pause generation while an answer could change identity, motion, timing, layout, or integration.
-4. Preserve an outline decision and `target_width` when the prompt or authoritative repository rules already determine both consistently. Ask only when either value is missing, ambiguous, or conflicting.
-5. Require each target shortest side to be less than `512 px`, each target longest side to be at most `4096 px`, and the derived high-resolution longest side to be at most `16384 px`.
+1. Inspect the prompt, attachments, repository rules, asset declarations, sprites, animation mappings, renderer settings, and visual tests.
+2. Resolve identity, actions, directions, camera, playback, root motion, dimensions, counts, timing, grid, coordinate contract, events, sampling, outline, and integration scope. Keep planning-only material outside the closed request schema.
+3. Follow [motion-design.md](references/motion-design.md) for action evidence and motion planning. Ask at most three material questions per round; pause image production while an answer could change identity, motion, timing, layout, or integration.
+4. Execute a consistently resolved outline `enabled` state and `target_width` without reconfirmation. Ask only for missing, ambiguous, or conflicting values.
+5. Require a target shortest side below `512 px`, a target longest side at most `4096 px`, and a derived high-resolution longest side at most `16384 px`.
 
-Complete this step when every material field has an authoritative value, a user answer, or explicit user delegation, and the package-build subset can be serialized as `spritesheet-production-request/v2`. The broader working plan remains review evidence rather than an extension of the closed package schema. Read [quality-contract.md](references/quality-contract.md) before producing images. Read [runtime-integration.md](references/runtime-integration.md) only when integration is requested.
+Complete this step when material decisions are authoritative, answered, or explicitly delegated and the package subset can be serialized as `spritesheet-production-request/v3`. Read [quality-contract.md](references/quality-contract.md) before image production. Read [runtime-integration.md](references/runtime-integration.md) only for requested integration.
 
-## 2. Author and approve canonical references
+## 2. Prepare and admit canonical references
 
-Create one fixed-canvas identity reference for each required camera or direction. Each canvas preserves the target aspect ratio, has a `512 px` shortest side, and rounds the proportional long side to the nearest integer. Keep action poses out of this stage.
+Create one neutral identity source for each required camera or direction. Keep action poses out of canonical authoring.
 
-When the outline contract is enabled, apply [silhouette-outline.md](references/silhouette-outline.md) during canonical authoring. When target-size readability requires static redesign, apply [optical-sizing.md](references/optical-sizing.md) before approval. Source images, candidates, unoutlined buffers, and review contact sheets remain authoring evidence outside the production graph.
+Run `prepare-canonical` with `canonical-authoring-request/v3`. It normalizes the authoring source to the fixed high-resolution canvas and, when enabled, deterministically expands its outer silhouette according to [silhouette-outline.md](references/silhouette-outline.md). Require it to emit `canonical-reference-candidate.png`, `canonical-reference-evidence.json`, `canonical-admission-proof.json`, and content-addressed original authoring-source evidence. Apply [optical-sizing.md](references/optical-sizing.md) before rerunning preparation when native-size readability requires static redesign.
 
-Run `prepare-canonical` with a `canonical-authoring-request/v2` request. Review identity, direction, visual mass, palette, equipment handedness, anchor conventions, transparency, and outline treatment. Approval binds the exact image bytes by content hash; those bytes become the immutable `canonical-reference` artifact.
+Require machine replay to validate the complete `canonical-reference-evidence/v3` record, content-addressed authoring source, candidate, target geometry, declared algorithms, and resolved outline before accepting `canonical-admission-proof/v1`. Then review identity, direction, visual mass, palette, handedness, anchor conventions, transparency, and outline aesthetics. Bind `canonical-approval` to the exact candidate hash and admission-proof hash.
 
-Complete this step when every required direction has an approved, content-addressed canonical reference on the fixed canvas and the set forms the `CanonicalReferenceSet`.
+Treat visual linework as aesthetic evidence only. Require admission replay to prove outline execution. Reuse only an approved canonical whose exact bytes and complete admission evidence match the current request; otherwise rerun canonical preparation and dependent approvals.
 
-## 3. Design motion and approve keyframes
+Complete this step when every direction has one machine-admitted candidate and a later canonical approval bound to its candidate and proof hashes.
 
-Follow [motion-design.md](references/motion-design.md). Define phases, contacts, root path, timing, events, transitions, keyframe indices, and in-between indices for every clip.
+## 3. Approve motion sources
 
-Generate each keyframe as a new high-resolution RGBA image, using the matching canonical reference for identity and art direction and the approved action reference for motion. Generate at least two keyframes per clip. Present the complete keyframe set side by side and obtain `keyframe-set-approval` bound to the exact content hashes before continuing.
+Generate at least two new high-resolution keyframes per clip from the applicable admitted canonical and approved action evidence. Present the complete keyframe set together and record a `keyframe-set-approval` bound to the canonical admission proof and ordered keyframe bytes.
 
-Complete this step when every clip has at least two structurally valid keyframes and its entire keyframe set is approved as one hash-bound gate.
+Generate at least two new high-resolution in-betweens per clip from the same admitted canonical and adjacent approved keyframes. Add and reapprove a keyframe when an interval does not constrain the spatial change.
 
-## 4. Generate and approve the high-resolution sequence
+Review the complete sequence for motion, volume, projection, occlusion, identity, timing, contacts, and events. Record a `sequence-approval` bound to the canonical admission proof and every ordered high-resolution-frame hash.
 
-For each planned gap, generate a new high-resolution in-between from the same canonical reference and the two adjacent approved keyframes. Generate at least two in-betweens per clip. When the endpoints do not constrain a spatial change, add a keyframe, repeat the keyframe-set gate, and regenerate the affected interval.
+Complete this step when each clip has at least two keyframes and two in-betweens and all hash-bound gates match current bytes.
 
-Review each complete ordered sequence for motion, volume, perspective, foreshortening, occlusion, identity, timing, contacts, and events. Obtain `sequence-approval` bound to every ordered high-resolution-frame hash.
+## 4. Build the package
 
-Complete this step when each clip contains at least two keyframes and two in-betweens, all frames use the single `high-resolution-frame` artifact type with a `keyframe` or `in-between` role, and the ordered sequence has hash-bound approval.
+Run `build-package` with `spritesheet-production-request/v3`. Reference each prepared candidate, authoring evidence file, and admission proof in its canonical input. Require the builder to validate and package those files, replay every canonical admission, and verify approval bindings before accepting canonical bytes. Render each unique approved high-resolution source directly into its logical cell with `lanczos-premultiplied-v1`.
 
-## 5. Build the spritesheet package
+When required, reuse opening-cell pixels at the explicit closing position. Create no additional high-resolution source or render for that alias. Treat logical cells as sheet addresses, not production artifacts.
 
-Run `build-package` with a `spritesheet-production-request/v2` request. The pipeline directly renders each unique approved high-resolution source into its logical sheet cell with `lanczos-premultiplied-v1`. Smooth-raster resizing operates in premultiplied-alpha space; stored PNG files are straight RGBA.
+Complete this step when the fixed-grid sheet and `spritesheet-package/v3` `manifest.json` agree on admission proofs, dimensions, order, clips, timing, events, anchors, unused cells, and loop behavior.
 
-When a loop contract requires an explicit repeated opening cell, reuse the opening cell pixels at the closing position. This adds no high-resolution artifact and performs no second render. Logical cells are addresses inside the spritesheet, not standalone production artifacts or editable PNG stages.
+## 5. Verify and hand off
 
-The sole final deliverable is one `SpritesheetPackage`: the spritesheet, one authoritative `spritesheet-package/v2` manifest, and the content-addressed canonical and high-resolution sources referenced by that manifest. Any runtime metadata view is a projection of the manifest.
+Run `verify-package`. Require it to replay canonical admission and target-cell sampling from packaged evidence and sources. Then inspect frames at native `1x`, loops for at least three cycles, and one-shots through their transition or terminal hold.
 
-Complete this step when the fixed-grid sheet and authoritative manifest agree on dimensions, order, clips, durations, events, anchors, unused cells, and loop behavior.
+Route identity, transparency, optical, or outline defects to canonical authoring; route pose, volume, timing, contact, or transition defects to keyframe or sequence generation; route metadata defects to the production spec and package build. Repeat every invalidated proof and approval.
 
-## 6. Verify and hand off
+When integration is requested, follow [runtime-integration.md](references/runtime-integration.md), update repository contracts atomically, and validate the real runtime. Keep staging, committing, publishing, and production replacement outside scope unless requested.
 
-Run `verify-package` and retain its fresh categorized output as the validation report. Require the verifier to replay `lanczos-premultiplied-v1` from every unique approved high-resolution source and prove pixel by pixel that each populated cell equals its direct render. For an explicit repeated opening cell, require pixel equality with the opening cell. Then inspect every frame at native `1x`, loops for at least three cycles, and one-shots through their transition or terminal hold.
-
-Route corrections by source:
-
-- Canonical identity, transparency, or outline defects return to canonical authoring and invalidate all downstream approvals and package outputs.
-- Action, pose, volume, timing, or transition defects return to high-resolution keyframes or sequence generation.
-- Native target-cell readability or sampling defects return to the canonical reference or responsible high-resolution source, followed by a package rebuild.
-
-When integration is requested, follow [runtime-integration.md](references/runtime-integration.md), update the repository contracts atomically, and validate the real runtime. Keep staging, committing, publishing, and production replacement outside scope unless requested.
-
-Complete the skill only when schema validation, hash-bound gates, sampler replay, cell equality, action-specific checks, native-size visual review, and any requested runtime verification pass. Report machine-verified facts, human approvals, supplied evidence, visual findings, changes, tests, and remaining uncertainty separately.
+Complete the skill only when schema checks, admission replay, hash-bound gates, sampler replay, cell equality, action checks, native-size review, and requested runtime verification pass. Report machine facts, recorded approvals, supplied evidence, visual findings, changes, tests, and uncertainty separately.

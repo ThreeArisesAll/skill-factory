@@ -1,96 +1,94 @@
-# Spritesheet Package Evidence v2
+# Spritesheet Package Evidence v3
 
-The authoritative manifest uses `spritesheet-package/v2`. The pipeline CLI and its tests are the executable source of truth for the complete JSON schema; this reference defines the stable shape, closed vocabularies, and evidence semantics without caching every request field.
+Use the CLI and tests as the executable source of truth for exact closed fields. Use this reference for stable admission, lineage, and proof semantics.
 
 ## Formal lineage
 
-The production lineage is exactly:
+Use exactly:
 
-`ProductionSpec -> CanonicalReferenceSet -> ApprovedHighResolutionSequence -> deterministic target-cell rendering -> SpritesheetPackage`
+`ProductionSpec -> AdmittedCanonicalReferenceSet -> ApprovedHighResolutionSequence -> deterministic target-cell rendering -> SpritesheetPackage`
 
-The production artifact type vocabulary is closed:
+Keep the production artifact vocabulary closed:
 
 - `canonical-reference`
 - `high-resolution-frame`
 - `spritesheet`
 
-The review gate vocabulary is closed:
+Keep the review gate vocabulary closed:
 
 - `canonical-approval`
 - `keyframe-set-approval`
 - `sequence-approval`
 
-Sources, candidates, unoutlined authoring buffers, action references, contact sheets, and other review evidence are not production artifacts. A target cell is a logical region of the spritesheet and has no artifact record, standalone PNG, or editable production stage. The production request and manifest use closed fields; place project-specific notes outside the package instead of adding another production branch.
+Treat authoring sources, admission proofs, action references, candidates, contact sheets, and review material as evidence rather than production artifacts. Treat normalization as an in-memory operation with no file or graph node. Treat a target cell as a logical sheet region rather than an artifact or editable PNG stage. Keep project notes outside the closed package schema.
 
-## Compact manifest shape
+## Canonical admission
 
-Paths are normalized UTF-8 strings resolved relative to the manifest. Hashes are lowercase SHA-256 values over exact file bytes. Indices are zero-based. The authoritative manifest contains exactly these sections:
+Run `prepare-canonical` with `canonical-authoring-request/v3`. Require it to write `canonical-reference-candidate.png`, `canonical-reference-evidence.json`, `canonical-admission-proof.json`, and content-addressed original authoring-source evidence in one atomic output. Require `canonical-reference-evidence/v3` to bind the original source, target geometry, declared derivation algorithms, resolved outline contract, candidate, and metrics.
+
+When outline is enabled, normalize the packaged authoring source in memory and deterministically apply the required outward-outline algorithm even when the source already has visible edge linework. When disabled, replay normalization followed by the declared identity derivation. Accept no visual substitute for replay: edge appearance, embedded linework, filenames, declarations, or review cannot prove the transform ran.
+
+Generate `canonical-admission-proof/v1` only after every required evidence field, file hash, decoded property, contract value, and replayed pixel matches. Bind the proof to the canonical reference, target, outline, derivation, original authoring source, and authoring-evidence hash. Use its exact file hash as the admission revision consumed by later review gates. Package the proof, authoring evidence, and original replay source by content address.
+
+Perform machine admission before canonical review. Bind `canonical-approval` to the admitted candidate hash and admission-proof hash. Reuse an already approved canonical without changing its bytes only when its candidate, evidence, proof, source, and current request match completely. Otherwise prepare a new candidate. Treat any admission proof change as invalidating canonical approval and every dependent keyframe-set approval, sequence approval, and package.
+
+## Package manifest
+
+Use `spritesheet-package/v3` as the sole authority. Keep these semantic domains closed:
 
 ```text
-schema_version: "spritesheet-package/v2"
-contract:        dimensions, sampling, outline, animation origin, anchor, and safe bounds
-artifacts:       canonical-reference, high-resolution-frame, and spritesheet records
-clips:           direction, camera, playback, timing, events, and ordered frame IDs
-reviews:         canonical-approval, keyframe-set-approval, and sequence-approval records
-sampling:        sampler identifier and replay proof obligation
-assembly:        fixed-grid layout plus direct source-to-cell mappings
+contract:               dimensions, sampler, outline, origin, anchor, and safe bounds
+artifacts:              the three production artifact types
+canonical_admissions:   content-addressed admission proof and replay-evidence references
+clips:                  runtime behavior and ordered high-resolution-frame IDs
+reviews:                hash-bound approvals plus canonical admission-proof bindings
+sampling:               target-cell algorithm and replay obligation
+assembly:               fixed-grid layout and source-to-cell mappings
 ```
 
-Every artifact record has a unique ID, type, normalized package-relative path, SHA-256 hash, decoded width and height, and `RGBA` mode. Every `high-resolution-frame` also has exactly one role: `keyframe` or `in-between`, plus the applicable canonical-reference ID. In-betweens additionally identify the two adjacent approved keyframes that bracket them.
+Resolve input image and authoring-evidence paths as absolute regular-file paths. Store package paths as normalized relative content addresses. Hash exact file bytes with lowercase SHA-256. Use zero-based indices.
 
-The contract records `animation_origin`, `anchor`, and `safe_bounds`. Every clip records `direction`, `camera`, `root_motion`, `transition`, `terminal_hold`, one positive duration per logical position, and indexed events.
+Give every artifact a unique ID, type, package-relative path, hash, decoded size, and `RGBA` mode. Give each high-resolution frame exactly one role, `keyframe` or `in-between`, and its canonical-reference ID. Give every in-between its adjacent approved keyframe IDs.
 
-Every canonical canvas preserves the target aspect ratio, fixes its shortest side at `512 px`, and rounds the proportional long side to the nearest integer. The target shortest side is strictly less than `512 px`, the target longest side is at most `4096 px`, and the derived high-resolution longest side is at most `16384 px`.
+Record direction, camera, playback, root motion, transition, terminal hold, positive duration per logical position, indexed events, animation origin, anchor, and safe bounds in their closed v3 locations.
 
 ## Gate binding
 
-Reviews bind content, not mutable paths or labels:
+Bind reviews to current bytes and admission state:
 
-- A `canonical-approval` binds one canonical-reference SHA-256 hash.
-- A `keyframe-set-approval` binds the applicable canonical hash followed by the ordered set of all keyframe hashes for one clip and direction.
-- A `sequence-approval` binds the applicable canonical hash followed by the complete ordered list of high-resolution-frame hashes for one clip and direction.
+- Bind `canonical-approval` to one canonical-reference hash and its canonical admission proof hash.
+- Bind `keyframe-set-approval` to the canonical reference, its admission proof hash, and the ordered complete keyframe set.
+- Bind `sequence-approval` to the same canonical and admission proof plus the ordered complete high-resolution sequence.
 
-Each clip has at least two keyframes and at least two in-betweens. The keyframe-set gate precedes generation of its in-betweens; the sequence gate precedes package rendering. Replacing any bound bytes invalidates that gate and every dependent result.
+Require all canonical gates before any keyframe-set gate and all keyframe-set gates before any sequence gate. Require at least two keyframes and two in-betweens per clip. Invalidate a gate and all dependent results when any bound bytes or admission proof changes.
 
-Human approval is review evidence. A validator can verify its structure and exact hash subjects but cannot authenticate the reviewer or observe the creative act.
+Treat human review as recorded aesthetic evidence. Verify its structure and subjects mechanically; make no claim that a machine authenticated the reviewer, observed the creative act, or inferred execution history from appearance.
 
-## Deterministic rendering
+## Deterministic target rendering
 
-The sampler identifier is fixed to `lanczos-premultiplied-v1`. It decodes a straight-RGBA high-resolution PNG, resizes in premultiplied-alpha space, clears RGB beneath zero Alpha, and writes straight-RGBA pixels into the addressed cell.
+Use `lanczos-premultiplied-v1`. Decode straight RGBA, resize in premultiplied-Alpha space, clear RGB beneath zero Alpha, and write straight RGBA into the addressed cell.
 
-Each unique sequence position maps directly from one approved high-resolution source to one logical target cell. Verification replays the sampler from that source and compares the replayed RGBA pixels with the cell pixel by pixel. This proves direct-render equivalence for the packaged bytes; it makes no claim about how many physical resize operations occurred historically.
-
-A loop may declare an explicit repeated opening cell only when required by the production spec. The closing position reuses the opening cell pixels, points to the opening logical cell, and creates neither another high-resolution source nor another rendering record. Otherwise every sequence position has its own direct source mapping.
+Map each unique sequence position directly from one approved high-resolution source. Replay that source and compare its target cell pixel by pixel. For an explicit repeated opening position, reuse the opening cell pixels and create no extra high-resolution source or render record.
 
 ## Package closure
 
-One `SpritesheetPackage` contains exactly:
+Package exactly one fixed-grid spritesheet, one authoritative v3 `manifest.json`, the referenced content-addressed production PNGs, and the content-addressed admission proofs, authoring evidence, and original authoring sources required for replay. Keep runtime metadata as a projection of `manifest.json`.
 
-- One untrimmed, unrotated fixed-grid spritesheet PNG
-- One authoritative `spritesheet-package/v2` manifest
-- Content-addressed canonical-reference and high-resolution-frame PNGs referenced by that manifest
+Require every production artifact to be reachable, every declared package file to be present, and every package file to be declared. Cover populated cells exactly once except an explicit closing alias. Require unused cells to have zero Alpha and sheet dimensions to equal grid dimensions multiplied by cell dimensions.
 
-`verify-package` emits a fresh validation report to standard output. It distinguishes machine verification, declared creative relationships, and recorded human reviews; it is not cached inside the package as another authority.
+## Build and verification
 
-Runtime metadata is derived from the authoritative manifest and cannot define a competing frame order, clip range, duration, event, or anchor. Every production artifact is reachable from the formal lineage. Review evidence and unused candidates remain outside the production graph.
+Run `build-package` with `spritesheet-production-request/v3`. Require every canonical input to reference the prepared candidate, `canonical-reference-evidence.json`, and `canonical-admission-proof.json`. Validate the supplied proof bytes against a fresh replay, require every review's admission hash to match that proof, and package the candidate, proof, evidence, and original source by content address.
 
-The union of clip positions covers the declared populated cells exactly once, except an explicit repeated opening cell alias. Used cells have exact dimensions and ordering; unused cells have zero Alpha. The sheet dimensions equal `columns * frame_width` by `rows * frame_height`.
+Run `verify-package` on `spritesheet-package/v3`. Replay admission only from packaged proof and evidence, then replay every target cell. Verify at least:
 
-## Requests and validation
+- Closed schemas, vocabularies, paths, hashes, decoded properties, and physical package closure
+- Fixed canonical geometry and target-size bounds
+- Authoring-source, candidate, contract, algorithm, and admission-proof consistency
+- Exact normalization plus outline or identity replay for every canonical reference
+- Admission-bound review subjects, hashes, and ordering
+- Canonical consistency, frame roles, and adjacent-keyframe brackets
+- Clip runtime metadata, grid layout, complete cell coverage, and unused-cell transparency
+- Pixel-perfect target-cell replay and explicit opening-cell reuse
 
-`prepare-canonical` consumes `canonical-authoring-request/v2`. `build-package` consumes `spritesheet-production-request/v2`. Source, canonical-reference, and high-resolution-frame request paths must be absolute paths to RGBA PNG files; emitted package paths are normalized manifest-relative paths. Use each subcommand's `--help`, emitted diagnostics, and tests for its required current fields.
-
-`verify-package` must check at least:
-
-- Schema version and the closed artifact, review, role, and sampler vocabularies
-- Paths, hashes, decoded properties, package closure, and absence of production orphans
-- Fixed canonical canvas and target-short-side constraints
-- Hash-bound gate subjects and gate ordering
-- At least two keyframes and two in-betweens per clip
-- Canonical consistency and valid adjacent-keyframe brackets
-- Complete cell coverage, layout, clips, durations, events, origin, anchor, and safe bounds
-- Pixel-perfect replay of every direct high-resolution-source render
-- Opening-cell pixel reuse for every declared explicit loop closure
-- Physical package closure with no undeclared files
-
-Exit code `0` means every machine-verifiable package invariant passed. Report human approval and declared creative history separately from machine verification.
+Exit with `0` only when every machine-verifiable invariant passes. Report declared creative relationships and recorded human reviews separately from machine verification.

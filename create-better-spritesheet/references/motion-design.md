@@ -1,4 +1,4 @@
-# Motion Design Contract v2
+# Motion Design Contract v3
 
 Design motion information before allocating image detail.
 
@@ -52,10 +52,10 @@ Present every high-resolution keyframe for one clip and direction side by side. 
 4. Projection, foreshortening, depth scale, visible surfaces, and occlusion are possible.
 5. Center of mass, contacts, arcs, bounds, and event causality agree with the plan.
 
-This gate completes when at least two keyframes exist and `keyframe-set-approval` binds the applicable canonical hash followed by the entire ordered keyframe set.
+This gate completes when at least two keyframes exist and `keyframe-set-approval` binds the applicable canonical hash, its `canonical-admission-proof/v1` file hash, and the entire ordered keyframe set. Require the canonical admission proof and canonical approval before this gate.
 
 ## Sequence gate
 
 Generate each in-between from the same canonical reference and its two adjacent approved keyframes. Add a keyframe when the endpoints leave a spatial transition underconstrained. Review the full ordered sequence for identity, volume, projection, arcs, occlusion, timing, contacts, events, and transition continuity.
 
-This gate completes when at least two in-betweens exist and `sequence-approval` binds the same canonical hash followed by every ordered `high-resolution-frame` hash before target-cell rendering.
+This gate completes when at least two in-betweens exist and `sequence-approval` binds the same canonical hash, the same admission-proof hash, and every ordered `high-resolution-frame` hash before target-cell rendering.

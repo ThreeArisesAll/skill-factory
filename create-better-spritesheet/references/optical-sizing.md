@@ -1,46 +1,34 @@
-# Target-Size Optical Correction v2
+# Target-Size Optical Correction v3
 
-Use this branch when a deterministic target-cell preview is unclear at native size. Correct the information hierarchy in canonical authoring, then repeat every dependent approval and package build.
+Use this authoring branch when deterministic native-size preview is unclear. Correct information hierarchy in the authoring source, then rerun canonical preparation and every dependent approval.
 
 ## Diagnose
 
-Measure the `alpha > 8` character bounds, occupied width and height, and all margins in the target-cell preview. Inspect identity anchors at native `1x`; use `4x` only to locate pixel competition.
+Measure `alpha > 8` bounds, occupied size, and margins in the target preview. Inspect identity anchors at native `1x`; use enlarged views only to locate pixel competition.
 
 Classify the defect:
 
-- Edge halos or jaggedness: inspect transparency and sampler inputs.
-- Global softness: inspect runtime, canvas, CSS, and actual display scaling.
-- Smooth but crowded information: continue with static optical correction.
+- Inspect transparency and sampler inputs for halos or jaggedness.
+- Inspect runtime and actual display scaling for global softness.
+- Apply static optical correction for smooth but crowded information.
 
-Keep canvas, visual mass, center, and baseline comparable so scale changes cannot masquerade as clarity.
+Keep canvas, visual mass, center, and baseline comparable. Complete diagnosis when the competing shapes or faulty sampling input is precise.
 
-Complete diagnosis when the competing shapes or faulty sampling input are identified precisely.
+## Correct the authoring source
 
-## Author one candidate
+Create one fixed-canvas source candidate from approved identity evidence and the current canonical constraints:
 
-Use approved identity evidence, art references, and the current canonical reference as constraints. Create one static fixed-canvas candidate that preserves identity, proportions, composition, palette, and equipment while designing for the target pixel budget:
-
-- Consolidate flyaway hair, folds, laces, hardware, and microtexture into stable shapes.
-- Strengthen value or hue separation among identity anchors within the art direction.
-- Preserve antialiasing, material treatment, silhouette language, and target-size line hierarchy.
+- Consolidate microdetail into stable shapes.
+- Strengthen separation among identity anchors within the art direction.
+- Preserve proportions, composition, palette, equipment, antialiasing, materials, silhouette language, and line hierarchy.
 - Spend detail on large-form boundaries and recognition anchors.
 
-If one pass retains excess detail, make one bounded pass limited to line hierarchy, detail density, and value grouping.
+Limit a second pass to line hierarchy, detail density, and value grouping. Complete correction when one source clearly serves the target size without changing identity, visual mass, center, or baseline.
 
-Complete authoring when one candidate clearly serves the target size without changing identity, composition, visual mass, center, or baseline.
+## Prepare and approve
 
-## Validate and approve
+Run `prepare-canonical` with `canonical-authoring-request/v3`. When enabled, apply [silhouette-outline.md](silhouette-outline.md) during the same deterministic derivation. Require machine replay and `canonical-admission-proof/v1` before presenting the admitted candidate for aesthetic approval.
 
-Create transparency and comparison evidence through `prepare-canonical` using a `canonical-authoring-request/v2`. Contact sheets and previews are review evidence outside the production graph. Inspect:
+Inspect transparency, margins, edge color, native-size recognition, identity, proportions, mass, center, baseline, palette, and outline aesthetics. Treat this human review as aesthetic approval, not proof of normalization or outline execution.
 
-- Zero-Alpha corners and zero RGB beneath fully transparent pixels
-- Character bounds that leave required margins
-- Intact edge colors without key residue, fringe, or haze
-- Faster native-size identity recognition and stable line hierarchy
-- Preserved identity, proportions, visual mass, center, baseline, and palette
-
-When the outline contract is enabled, apply [silhouette-outline.md](silhouette-outline.md) within the same canonical-authoring request before approval.
-
-Approval seals the final candidate's exact pixels and hash as the new canonical reference. That content change invalidates all dependent high-resolution frames, reviews, and package outputs.
-
-Complete this branch when the user approves the candidate and the workflow returns to high-resolution keyframe generation from the new canonical reference.
+Bind approval to the exact admitted candidate hash and admission-proof hash. Invalidate all dependent frames, reviews, and package outputs when the authoring source, candidate, contract, or admission proof changes. Return to keyframe generation only after admission and approval both succeed.

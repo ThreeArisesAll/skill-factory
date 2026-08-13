@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Better Spritesheet"
-  short_description: "Create and verify v2 production spritesheet packages"
-  default_prompt: "Use $create-better-spritesheet to author and approve fixed-canvas canonical references, generate hash-approved high-resolution keyframes and in-betweens, build one spritesheet-package/v2 with deterministic target-cell rendering, and verify every cell by replaying the sampler."
+  short_description: "Build and verify evidence-admitted sprite packages"
+  default_prompt: "Use $create-better-spritesheet to prepare and machine-admit canonical candidates before approval, bind motion gates to the admission proof, build spritesheet-package/v3 manifest.json, and replay canonical admission and every target cell."

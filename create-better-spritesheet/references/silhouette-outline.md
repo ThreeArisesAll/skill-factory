@@ -1,29 +1,36 @@
-# Deterministic Silhouette Outline v2
+# Deterministic Silhouette Outline v3
 
-Use this branch only inside canonical authoring when the resolved production spec enables an outer silhouette outline. The outlined image becomes the canonical-reference candidate presented for approval. The unoutlined buffer and comparison evidence remain outside the production graph.
+Use this branch inside canonical authoring when the resolved production spec enables an outer silhouette outline. Treat the content-addressed original authoring source as replay evidence and the derived candidate as the only possible canonical-reference bytes.
 
-## Contract
+## Resolve the contract
 
-`target_width` means outward silhouette thickness in target-size pixels. Convert it internally for the fixed canonical canvas:
+Interpret `target_width` as outward silhouette thickness in target pixels. Convert it for the fixed canonical canvas:
 
 ```text
 canonical_width = round(target_width * 512 / target_short_side)
 ```
 
-Derive outline color from authoritative art rules or neighboring production assets. When color evidence is missing or conflicting, present a static comparison and ask the user to choose. The enabled request includes an RGBA color with nonzero Alpha. Keep consistently established enabled state and `target_width` without reconfirmation.
+Resolve color from authoritative art rules or neighboring production assets. Present a comparison and ask only when color evidence is missing or conflicting. Require nonzero Alpha. Execute consistently resolved `enabled` and `target_width` values directly.
 
-Place the outline behind the character so existing nontransparent source pixels remain byte-identical. Expand only the outer silhouette; preserve internal structure-line weights. Process Alpha in premultiplied-alpha space and store the resulting PNG as straight RGBA with zero RGB beneath zero Alpha.
+## Derive the candidate
 
-## Prepare and accept
+Normalize the authoring source deterministically to the fixed canvas in memory. When outline is enabled, always expand that buffer's Alpha outward by the resolved canonical width and composite the ring behind it, regardless of visible edge linework in the source. Preserve every existing nontransparent normalized pixel, internal line weight, straight RGBA storage, and zero RGB beneath zero Alpha. Keep the normalized buffer ephemeral: write neither a file nor a graph node for it.
 
-Run `prepare-canonical` with a `canonical-authoring-request/v2`; use CLI help for exact fields. Review outputs may include metrics and contact sheets, but only the approved final candidate can enter production.
+Treat visible linework, dark edge pixels, filenames, declarations, and human observation as aesthetic evidence. Prove execution only by replaying the declared normalization and outline algorithms from the evidence-bound inputs and obtaining the candidate bytes exactly.
 
-Accept when:
+Run `prepare-canonical` with `canonical-authoring-request/v3`. Require the direct outputs `canonical-reference-candidate.png`, `canonical-reference-evidence.json`, `canonical-admission-proof.json`, and content-addressed original authoring-source evidence. Require the proof to use `canonical-admission-proof/v1`. Use no alternate acceptance flag or execution-history assertion.
 
-1. Existing nontransparent source pixels are byte-identical.
-2. Alpha expands outward by the resolved canonical width and all safe margins pass.
-3. Visual mass, center, baseline, anatomy, equipment, and internal lines remain stable.
-4. Narrow gaps, limbs, and accessories avoid unintended merging, jaggedness, halos, and transparent-RGB contamination.
-5. Width, color, and sampling match the current project's art treatment.
+## Admit the candidate
 
-`canonical-approval` binds the accepted candidate's exact SHA-256 hash. Any outline correction creates a new candidate and invalidates all downstream approvals and package outputs.
+Require admission to match all of the following:
+
+1. Candidate SHA-256, decoded dimensions, and mode match the prepared candidate bytes.
+2. Authoring-source SHA-256 and target geometry match the evidence record.
+3. Authoring-source SHA-256, dimensions, and mode match its content-addressed replay bytes.
+4. Normalization and outline algorithm identifiers match the required v3 algorithms.
+5. Outline enabled state, `target_width`, color, and resolved high-resolution width match the production contract and replay.
+6. Deterministic in-memory normalization and outline derivation from the replay source reproduce the candidate byte for byte.
+
+Reject partial, stale, mismatched, or missing admission evidence. Reuse an existing approved canonical only when every admission subject matches the current request and replay succeeds. Otherwise rerun preparation and repeat dependent approvals.
+
+After machine admission succeeds, review visual mass, center, baseline, anatomy, equipment, line hierarchy, safe margins, narrow gaps, jaggedness, halos, and target-size treatment as aesthetics. Bind approval to both the exact candidate hash and admission-proof hash. Any correction changes the candidate or proof and invalidates downstream approvals and package outputs.

@@ -14,7 +14,7 @@ python3 -m venv .venv
 .venv/bin/python create-better-spritesheet/scripts/spritesheet_pipeline.py --help
 ```
 
-Run the public pipeline with real RGBA fixtures and v2 request files before submitting script changes. Exercise `prepare-canonical`, `build-package`, and `verify-package`; keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
+Run the public pipeline with real RGBA fixtures and v3 request files before submitting script changes. Exercise `prepare-canonical`, `build-package`, and `verify-package`; keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
 
 ## Coding Style & Naming Conventions
 
