@@ -9,7 +9,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+import numpy as np
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "spritesheet_pipeline.py"
 
@@ -46,6 +47,52 @@ class SpritesheetPipelineTests(unittest.TestCase):
     @staticmethod
     def write_json(path: Path, value: object) -> None:
         path.write_text(json.dumps(value), encoding="utf-8")
+
+    @staticmethod
+    def reference_premultiplied_resize(
+        image: Image.Image,
+        size: tuple[int, int],
+    ) -> Image.Image:
+        rgba = np.asarray(image, dtype=np.float32) / 255.0
+        alpha = rgba[..., 3:4]
+        premultiplied = np.concatenate((rgba[..., :3] * alpha, alpha), axis=2)
+        resized = np.stack(
+            [
+                np.asarray(
+                    Image.fromarray(premultiplied[..., channel], "F").resize(
+                        size,
+                        Image.Resampling.LANCZOS,
+                    ),
+                    dtype=np.float32,
+                )
+                for channel in range(4)
+            ],
+            axis=2,
+        )
+        resized_alpha = np.rint(np.clip(resized[..., 3:4], 0.0, 1.0) * 255.0) / 255.0
+        premultiplied_rgb = np.minimum(np.clip(resized[..., :3], 0.0, 1.0), resized_alpha)
+        rgb = np.divide(
+            premultiplied_rgb,
+            resized_alpha,
+            out=np.zeros_like(premultiplied_rgb),
+            where=resized_alpha > 1e-6,
+        )
+        return Image.fromarray(
+            np.rint(np.concatenate((rgb, resized_alpha), axis=2) * 255.0).astype(np.uint8),
+            "RGBA",
+        )
+
+    @classmethod
+    def reference_outline(cls, image: Image.Image, width: int, color: tuple[int, int, int, int]) -> Image.Image:
+        silhouette = image.getchannel("A").point(lambda value: 255 if value > 0 else 0)
+        expanded = silhouette.filter(ImageFilter.MaxFilter(width * 2 + 1))
+        ring = ImageChops.subtract(expanded, silhouette)
+        outlined = Image.new("RGBA", image.size, color)
+        outlined.putalpha(ring)
+        outlined.alpha_composite(image)
+        pixels = np.asarray(outlined).copy()
+        pixels[..., :3][pixels[..., 3] == 0] = 0
+        return Image.fromarray(pixels, "RGBA")
 
     def prepare_fixture(
         self,
@@ -106,25 +153,25 @@ class SpritesheetPipelineTests(unittest.TestCase):
         canonical_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
         admission_hash = hashlib.sha256(canonical_proof.read_bytes()).hexdigest()
         frames: list[dict[str, object]] = [
-            {"id": "k0", "role": "keyframe", "path": str(frame_paths["k0"])},
+            {"id": "k0", "role": "keyframe", "source_path": str(frame_paths["k0"])},
             {
                 "id": "i1",
                 "role": "in-between",
-                "path": str(frame_paths["i1"]),
+                "source_path": str(frame_paths["i1"]),
                 "previous_keyframe": "k0",
                 "next_keyframe": "k3",
             },
             {
                 "id": "i2",
                 "role": "in-between",
-                "path": str(frame_paths["i2"]),
+                "source_path": str(frame_paths["i2"]),
                 "previous_keyframe": "k0",
                 "next_keyframe": "k3",
             },
-            {"id": "k3", "role": "keyframe", "path": str(frame_paths["k3"])},
+            {"id": "k3", "role": "keyframe", "source_path": str(frame_paths["k3"])},
         ]
         request_data: dict[str, object] = {
-            "schema_version": "spritesheet-production-request/v3",
+            "schema_version": "spritesheet-production-request/v4",
             "contract": {
                 "frame_width": 32,
                 "frame_height": 32,
@@ -207,6 +254,65 @@ class SpritesheetPipelineTests(unittest.TestCase):
         request = root / "production.json"
         self.write_json(request, request_data)
         return request, request_data
+
+    def enable_outline_for_production_request(
+        self,
+        root: Path,
+        request: dict[str, object],
+        outline: dict[str, object],
+    ) -> None:
+        canonical_source = root / "canonical-outlined-source.png"
+        source_image = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+        ImageDraw.Draw(source_image).rectangle((100, 80, 299, 319), fill=(120, 80, 40, 255))
+        source_image.save(canonical_source)
+        canonical_request = root / "canonical-outlined-authoring.json"
+        self.write_json(
+            canonical_request,
+            {
+                "schema_version": "canonical-authoring-request/v3",
+                "canonical_id": "canonical",
+                "source": str(canonical_source),
+                "target": {"frame_width": 32, "frame_height": 32},
+                "outline": outline,
+            },
+        )
+        canonical_output = root / "canonical-outlined-prepared"
+        prepared = self.run_cli(
+            "prepare-canonical",
+            "--request",
+            str(canonical_request),
+            "--output-dir",
+            str(canonical_output),
+        )
+        self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+        canonical = canonical_output / "canonical-reference-candidate.png"
+        evidence = canonical_output / "canonical-reference-evidence.json"
+        proof = canonical_output / "canonical-admission-proof.json"
+        request["contract"]["outline"] = outline
+        request["canonical_references"][0] = {
+            "id": "canonical",
+            "path": str(canonical),
+            "evidence_path": str(evidence),
+            "proof_path": str(proof),
+        }
+        canonical_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
+        admission_hash = hashlib.sha256(proof.read_bytes()).hexdigest()
+        frame_hashes: dict[str, str] = {}
+        for index, frame in enumerate(request["clips"][0]["frames"], start=1):
+            source_path = Path(frame["source_path"])
+            source = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+            ImageDraw.Draw(source).rectangle(
+                (160 + index, 128, 351 + index, 383),
+                fill=(40 + index, 90, 140, 255),
+            )
+            source.save(source_path)
+            frame_hashes[frame["id"]] = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        for review in request["reviews"]:
+            review["subject_sha256"]["canonical"] = canonical_hash
+            review["admission_sha256"]["canonical"] = admission_hash
+            for subject_id in review["subject_ids"]:
+                if subject_id in frame_hashes:
+                    review["subject_sha256"][subject_id] = frame_hashes[subject_id]
 
     def test_public_flow_accepts_prepare_bundle_named_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -551,39 +657,238 @@ class SpritesheetPipelineTests(unittest.TestCase):
             )
             manifest_path = output / "manifest.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            self.assertEqual(manifest["schema_version"], "spritesheet-package/v3")
+            self.assertEqual(manifest["schema_version"], "spritesheet-package/v4")
             self.assertEqual(len(manifest["canonical_admissions"]), 1)
             admission = manifest["canonical_admissions"][0]
             self.assertTrue((output / admission["proof_path"]).is_file())
             self.assertNotIn("witness_path", admission)
             self.assertEqual(
                 {artifact["type"] for artifact in manifest["artifacts"]},
-                {"canonical-reference", "high-resolution-frame", "spritesheet"},
+                {"canonical-reference", "high-resolution-frame-source", "spritesheet"},
             )
             frame_artifacts = [
                 artifact
                 for artifact in manifest["artifacts"]
-                if artifact["type"] == "high-resolution-frame"
+                if artifact["type"] == "high-resolution-frame-source"
             ]
             self.assertEqual([frame["role"] for frame in frame_artifacts], ["keyframe", "in-between", "in-between", "keyframe"])
             self.assertEqual(manifest["clips"][0]["frame_ids"], ["k0", "i1", "i2", "k3"])
             self.assertEqual(manifest["clips"][0]["durations_ms"], [100, 100, 100, 100])
             self.assertEqual(manifest["contract"]["anchor"], [16, 31])
+            rendering = manifest["rendering"]
+            self.assertEqual(
+                set(rendering),
+                {
+                    "schema_version",
+                    "pipeline",
+                    "mask_policy",
+                    "outline_algorithm",
+                    "sampler",
+                    "resolved_high_resolution_outline_width",
+                    "frames",
+                    "sheet_rgba_sha256",
+                },
+            )
+            self.assertEqual(rendering["schema_version"], "spritesheet-rendering-receipt/v1")
+            self.assertEqual(rendering["outline_algorithm"], "identity/v1")
+            self.assertEqual(rendering["resolved_high_resolution_outline_width"], 0)
+            self.assertEqual([frame["source"] for frame in rendering["frames"]], ["k0", "i1", "i2", "k3"])
+            request_data = json.loads(request.read_text(encoding="utf-8"))
+            first_source_path = Path(request_data["clips"][0]["frames"][0]["source_path"])
+            with Image.open(first_source_path) as first_source:
+                first_source_rgba_sha256 = hashlib.sha256(first_source.convert("RGBA").tobytes()).hexdigest()
+            self.assertEqual(
+                rendering["frames"][0]["outlined_rgba_sha256"],
+                first_source_rgba_sha256,
+            )
             serialized = manifest_path.read_text(encoding="utf-8").lower()
             self.assertNotIn("target-frame", serialized)
             self.assertNotIn("target.png", serialized)
             self.assertEqual(list(output.rglob("*target*.png")), [])
+            self.assertEqual(list(output.rglob("*outlined*.png")), [])
 
             verified = self.run_cli("verify-package", "--manifest", str(manifest_path))
 
             self.assertEqual(verified.returncode, 0, verified.stdout + verified.stderr)
-            self.assertIn("PASS MACHINE-VERIFIED cells", verified.stdout)
-            self.assertIn("INFO DECLARED sampler", verified.stdout)
+            self.assertIn("PASS MACHINE-VERIFIED rendering", verified.stdout)
             self.assertIn("INFO REVIEWED canonical-approval", verified.stdout)
+
+    def test_build_renders_high_resolution_outline_before_target_resize(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path, request = self.make_production_request(root)
+            outline = {"enabled": True, "target_width": 2, "color": [7, 8, 9, 255]}
+
+            canonical_source = root / "outlined-canonical-source.png"
+            canonical_image = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+            ImageDraw.Draw(canonical_image).rectangle((96, 72, 303, 327), fill=(120, 80, 40, 255))
+            canonical_image.save(canonical_source)
+            canonical_request = root / "outlined-canonical-request.json"
+            self.write_json(
+                canonical_request,
+                {
+                    "schema_version": "canonical-authoring-request/v3",
+                    "canonical_id": "canonical",
+                    "source": str(canonical_source),
+                    "target": {"frame_width": 32, "frame_height": 32},
+                    "outline": outline,
+                },
+            )
+            canonical_output = root / "outlined-canonical"
+            prepared = self.run_cli(
+                "prepare-canonical",
+                "--request",
+                str(canonical_request),
+                "--output-dir",
+                str(canonical_output),
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+            canonical = canonical_output / "canonical-reference-candidate.png"
+            canonical_evidence = canonical_output / "canonical-reference-evidence.json"
+            canonical_proof = canonical_output / "canonical-admission-proof.json"
+
+            for index, frame in enumerate(request["clips"][0]["frames"], start=1):
+                source_path = Path(frame["source_path"])
+                source = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+                ImageDraw.Draw(source).rectangle(
+                    (176 + index, 128, 335 + index, 383),
+                    fill=(40 + index, 90, 140, 255),
+                )
+                source.save(source_path)
+
+            request["contract"]["outline"] = outline
+            request["canonical_references"][0] = {
+                "id": "canonical",
+                "path": str(canonical),
+                "evidence_path": str(canonical_evidence),
+                "proof_path": str(canonical_proof),
+            }
+            canonical_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
+            admission_hash = hashlib.sha256(canonical_proof.read_bytes()).hexdigest()
+            frame_hashes = {
+                frame["id"]: hashlib.sha256(Path(frame["source_path"]).read_bytes()).hexdigest()
+                for frame in request["clips"][0]["frames"]
+            }
+            for review in request["reviews"]:
+                review["subject_sha256"]["canonical"] = canonical_hash
+                review["admission_sha256"]["canonical"] = admission_hash
+                for subject_id in review["subject_ids"]:
+                    if subject_id in frame_hashes:
+                        review["subject_sha256"][subject_id] = frame_hashes[subject_id]
+            self.write_json(request_path, request)
+            output = root / "package"
+
+            built = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            first_source = Image.open(request["clips"][0]["frames"][0]["source_path"]).convert("RGBA")
+            outlined_high_resolution = self.reference_outline(first_source, 32, (7, 8, 9, 255))
+            expected_cell = self.reference_premultiplied_resize(outlined_high_resolution, (32, 32))
+            raw_target = self.reference_premultiplied_resize(first_source, (32, 32))
+            illegal_target_postprocess = self.reference_outline(raw_target, 2, (7, 8, 9, 255))
+            with Image.open(output / "spritesheet.png") as sheet:
+                first_cell = sheet.crop((0, 0, 32, 32)).convert("RGBA")
+            self.assertEqual(first_cell.tobytes(), expected_cell.tobytes())
+            self.assertNotEqual(first_cell.tobytes(), raw_target.tobytes())
+            self.assertNotEqual(first_cell.tobytes(), illegal_target_postprocess.tobytes())
+            manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+            rendered = manifest["rendering"]
+            self.assertEqual(rendered["resolved_high_resolution_outline_width"], 32)
+            self.assertEqual(
+                rendered["frames"][0]["outlined_rgba_sha256"],
+                hashlib.sha256(outlined_high_resolution.tobytes()).hexdigest(),
+            )
+            self.assertEqual(
+                rendered["frames"][0]["cell_rgba_sha256"],
+                hashlib.sha256(expected_cell.tobytes()).hexdigest(),
+            )
+            colors = first_cell.getcolors(maxcolors=first_cell.width * first_cell.height)
+            self.assertGreater(
+                sum(
+                    count
+                    for count, pixel in colors or []
+                    if pixel[:3] == (7, 8, 9) and pixel[3] > 0
+                ),
+                0,
+            )
+
+    def test_verify_rejects_tampered_rendering_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request, _ = self.make_production_request(root)
+            output = root / "package"
+            built = self.run_cli("build-package", "--request", str(request), "--output-dir", str(output))
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            manifest_path = output / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["rendering"]["frames"][0]["outlined_rgba_sha256"] = "0" * 64
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            verified = self.run_cli("verify-package", "--manifest", str(manifest_path))
+
+            self.assertEqual(verified.returncode, 1)
+            self.assertIn("FAIL MACHINE-VERIFIED rendering", verified.stdout)
+
+    def test_verify_rejects_sheet_built_by_resizing_raw_sources_without_outline(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path, request = self.make_production_request(root)
+            outline = {"enabled": True, "target_width": 2, "color": [7, 8, 9, 255]}
+            self.enable_outline_for_production_request(root, request, outline)
+            self.write_json(request_path, request)
+            output = root / "package"
+            built = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            manifest_path = output / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            sheet_path = output / "spritesheet.png"
+            with Image.open(sheet_path) as opened:
+                sheet = Image.new("RGBA", opened.size, (0, 0, 0, 0))
+            for cell in manifest["assembly"]["cells"]:
+                artifact = next(item for item in manifest["artifacts"] if item["id"] == cell["source"])
+                with Image.open(output / artifact["path"]) as source:
+                    raw_cell = source.convert("RGBA").resize((32, 32), Image.Resampling.LANCZOS)
+                sheet.alpha_composite(raw_cell, (cell["column"] * 32, cell["row"] * 32))
+            sheet.save(sheet_path)
+            sheet_artifact = next(item for item in manifest["artifacts"] if item["id"] == "spritesheet")
+            sheet_artifact["sha256"] = hashlib.sha256(sheet_path.read_bytes()).hexdigest()
+            manifest["rendering"]["sheet_rgba_sha256"] = hashlib.sha256(sheet.tobytes()).hexdigest()
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            verified = self.run_cli("verify-package", "--manifest", str(manifest_path))
+
+            self.assertEqual(verified.returncode, 1)
+            self.assertIn("FAIL MACHINE-VERIFIED cells", verified.stdout)
+
+    def test_build_rejects_outline_when_rendered_source_would_touch_border_atomically(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path, request = self.make_production_request(root)
+            outline = {"enabled": True, "target_width": 2, "color": [7, 8, 9, 255]}
+            self.enable_outline_for_production_request(root, request, outline)
+            first_frame = request["clips"][0]["frames"][0]
+            first_path = Path(first_frame["source_path"])
+            clipped = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+            ImageDraw.Draw(clipped).rectangle((4, 128, 255, 383), fill=(100, 90, 80, 255))
+            clipped.save(first_path)
+            changed_hash = hashlib.sha256(first_path.read_bytes()).hexdigest()
+            for review in request["reviews"]:
+                if first_frame["id"] in review["subject_ids"]:
+                    review["subject_sha256"][first_frame["id"]] = changed_hash
+            self.write_json(request_path, request)
+            output = root / "package"
+
+            built = self.run_cli("build-package", "--request", str(request_path), "--output-dir", str(output))
+
+            self.assertEqual(built.returncode, 1)
+            self.assertIn("must not touch the canvas border", built.stdout)
+            self.assertFalse(output.exists())
+            self.assertEqual(list(root.glob(".package-*")), [])
 
     def test_build_rejects_v1_and_invalid_graphs_without_partial_output(self) -> None:
         mutations = {
             "v1": lambda request: request.update(schema_version="spritesheet-production-request/v1"),
+            "v3": lambda request: request.update(schema_version="spritesheet-production-request/v3"),
             "bracket": lambda request: request["clips"][0]["frames"][1].update(next_keyframe="i2"),
             "role": lambda request: request["clips"][0]["frames"][1].update(role="transition"),
             "review-coverage": lambda request: request["reviews"][2].update(subject_ids=["k0", "i1"]),
@@ -608,8 +913,8 @@ class SpritesheetPipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request_path, request = self.make_production_request(root)
-            first = Path(request["clips"][0]["frames"][0]["path"])
-            second = Path(request["clips"][0]["frames"][1]["path"])
+            first = Path(request["clips"][0]["frames"][0]["source_path"])
+            second = Path(request["clips"][0]["frames"][1]["source_path"])
             second.write_bytes(first.read_bytes())
             output = root / "duplicate"
 
@@ -622,7 +927,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request_path, request = self.make_production_request(root)
-            changed = Path(request["clips"][0]["frames"][2]["path"])
+            changed = Path(request["clips"][0]["frames"][2]["source_path"])
             self.write_rgba(changed, (512, 512), 99)
             output = root / "changed"
 
@@ -632,7 +937,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertIn("subject_sha256", stale_review.stdout)
             self.assertFalse(output.exists())
 
-    def test_repeat_opening_cell_reuses_first_pixels_without_a_second_render(self) -> None:
+    def test_repeat_opening_cell_reuses_first_pixels_without_a_second_receipt_record(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request, _ = self.make_production_request(root, repeat_opening_cell=True)
@@ -645,7 +950,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertEqual(len(manifest["assembly"]["cells"]), 5)
             self.assertEqual(manifest["assembly"]["cells"][-1]["source"], "k0")
             self.assertTrue(manifest["assembly"]["cells"][-1]["repeated_opening"])
-            self.assertEqual(set(manifest["sampling"]), {"algorithm", "proof"})
+            self.assertEqual(len(manifest["rendering"]["frames"]), 4)
             with Image.open(output / "spritesheet.png") as sheet:
                 first = sheet.crop((0, 0, 32, 32))
                 closing = sheet.crop((0, 64, 32, 96))
@@ -675,6 +980,30 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertEqual(verified.returncode, 1)
             self.assertIn("FAIL MACHINE-VERIFIED cells", verified.stdout)
             self.assertIn("FAIL MACHINE-VERIFIED assembly.unused-cells", verified.stdout)
+
+    def test_verify_rejects_transparent_rgb_tampering_in_unused_cell(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request, _ = self.make_production_request(root, columns=3)
+            output = root / "package"
+            built = self.run_cli("build-package", "--request", str(request), "--output-dir", str(output))
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            sheet_path = output / "spritesheet.png"
+            with Image.open(sheet_path) as opened:
+                sheet = opened.copy()
+            sheet.putpixel((65, 33), (1, 2, 3, 0))
+            sheet.save(sheet_path)
+            manifest_path = output / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            sheet_record = next(artifact for artifact in manifest["artifacts"] if artifact["type"] == "spritesheet")
+            sheet_record["sha256"] = hashlib.sha256(sheet_path.read_bytes()).hexdigest()
+            manifest["rendering"]["sheet_rgba_sha256"] = hashlib.sha256(sheet.tobytes()).hexdigest()
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            verified = self.run_cli("verify-package", "--manifest", str(manifest_path))
+
+            self.assertEqual(verified.returncode, 1)
+            self.assertIn("FAIL MACHINE-VERIFIED sheet.replay", verified.stdout)
 
     def test_verify_rejects_orphan_artifact_and_review_binding_after_manifest_hash_change(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -794,9 +1123,9 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 request_path, request = self.make_production_request(root)
                 canonical_entry = request["canonical_references"][0]
                 if input_kind == "frame":
-                    target = Path(request["clips"][0]["frames"][0]["path"])
+                    target = Path(request["clips"][0]["frames"][0]["source_path"])
                     field_owner = request["clips"][0]["frames"][0]
-                    field = "path"
+                    field = "source_path"
                 elif input_kind == "canonical":
                     target = Path(canonical_entry["path"])
                     field_owner, field = canonical_entry, "path"
@@ -867,9 +1196,22 @@ class SpritesheetPipelineTests(unittest.TestCase):
             }
             canonical_hash = hashlib.sha256(canonical.read_bytes()).hexdigest()
             admission_hash = hashlib.sha256(proof_path.read_bytes()).hexdigest()
+            frame_hashes: dict[str, str] = {}
+            for index, frame in enumerate(request["clips"][0]["frames"], start=1):
+                source_path = Path(frame["source_path"])
+                source = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+                ImageDraw.Draw(source).rectangle(
+                    (128 + index, 128, 383 + index, 383),
+                    fill=(40 + index, 90, 140, 255),
+                )
+                source.save(source_path)
+                frame_hashes[frame["id"]] = hashlib.sha256(source_path.read_bytes()).hexdigest()
             for review in request["reviews"]:
                 review["subject_sha256"]["canonical"] = canonical_hash
                 review["admission_sha256"]["canonical"] = admission_hash
+                for subject_id in review["subject_ids"]:
+                    if subject_id in frame_hashes:
+                        review["subject_sha256"][subject_id] = frame_hashes[subject_id]
             self.write_json(request_path, request)
             output = root / "package"
 
@@ -983,7 +1325,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertIn("PNG container", rejected.stdout)
             self.assertFalse(output.exists())
 
-    def test_verify_hard_rejects_v1_and_canonical_as_a_frame_source(self) -> None:
+    def test_verify_hard_rejects_v3_and_canonical_as_a_frame_source(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request, _ = self.make_production_request(root)
@@ -992,7 +1334,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
             manifest_path = output / "manifest.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            manifest["schema_version"] = "spritesheet-package/v1"
+            manifest["schema_version"] = "spritesheet-package/v3"
             manifest["clips"][0]["frame_ids"][1] = "canonical"
             manifest["assembly"]["cells"][1]["source"] = "canonical"
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -1042,7 +1384,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             ):
                 path = root / f"{frame_id}.png"
                 self.write_rgba(path, (512, 512), index)
-                frame = {"id": frame_id, "role": role, "path": str(path)}
+                frame = {"id": frame_id, "role": role, "source_path": str(path)}
                 if role == "in-between":
                     frame.update(previous_keyframe="k4", next_keyframe="k7")
                 frames_two.append(frame)
@@ -1067,7 +1409,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             canonical_two_hash = hashlib.sha256(canonical_two.read_bytes()).hexdigest()
             admission_two_hash = hashlib.sha256(proof_two.read_bytes()).hexdigest()
             second_hashes = {
-                frame["id"]: hashlib.sha256(Path(frame["path"]).read_bytes()).hexdigest()
+                frame["id"]: hashlib.sha256(Path(frame["source_path"]).read_bytes()).hexdigest()
                 for frame in frames_two
             }
             original_canonical, original_keyframes, original_sequence = request["reviews"]
@@ -1174,7 +1516,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                 new_path = root / f"{new_id}.png"
                 self.write_rgba(new_path, (512, 512), index)
                 frame["id"] = new_id
-                frame["path"] = str(new_path)
+                frame["source_path"] = str(new_path)
             by_role = request["clips"][1]["frames"]
             for frame in by_role:
                 if frame["role"] == "in-between":
@@ -1182,7 +1524,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
                     frame["next_keyframe"] = "second-k3"
             request["contract"]["frame_count"] = 8
             hashes = {
-                frame["id"]: hashlib.sha256(Path(frame["path"]).read_bytes()).hexdigest()
+                frame["id"]: hashlib.sha256(Path(frame["source_path"]).read_bytes()).hexdigest()
                 for frame in by_role
             }
             canonical_hash = hashlib.sha256(duplicate_canonical.read_bytes()).hexdigest()

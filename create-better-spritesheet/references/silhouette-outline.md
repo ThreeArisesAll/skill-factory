@@ -1,36 +1,43 @@
-# Deterministic Silhouette Outline v3
+# Deterministic Silhouette Outline
 
-Use this branch inside canonical authoring when the resolved production spec enables an outer silhouette outline. Treat the content-addressed original authoring source as replay evidence and the derived candidate as the only possible canonical-reference bytes.
+Use this reference when the resolved production spec enables an outer silhouette outline. The same resolved visual contract serves two distinct pixel derivations: canonical preparation and deterministic frame rendering. A proof for one derivation never proves the other.
 
 ## Resolve the contract
 
-Interpret `target_width` as outward silhouette thickness in target pixels. Convert it for the fixed canonical canvas:
+Interpret `target_width` as outward silhouette thickness in target pixels. Convert it for a high-resolution source:
 
 ```text
-canonical_width = round(target_width * 512 / target_short_side)
+high_resolution_width = round(target_width * high_resolution_short_side / target_short_side)
 ```
 
-Resolve color from authoritative art rules or neighboring production assets. Present a comparison and ask only when color evidence is missing or conflicting. Require nonzero Alpha. Execute consistently resolved `enabled` and `target_width` values directly.
+Resolve color from authoritative art rules or neighboring production assets. Present a comparison and ask only when color evidence is missing or conflicting. Require nonzero source Alpha. Execute consistently resolved `enabled` and `target_width` values directly.
 
-## Derive the candidate
+## Canonical preparation
 
-Normalize the authoring source deterministically to the fixed canvas in memory. When outline is enabled, always expand that buffer's Alpha outward by the resolved canonical width and composite the ring behind it, regardless of visible edge linework in the source. Preserve every existing nontransparent normalized pixel, internal line weight, straight RGBA storage, and zero RGB beneath zero Alpha. Keep the normalized buffer ephemeral: write neither a file nor a graph node for it.
+Canonical authoring remains v3. Normalize the evidence-bound authoring source to the fixed canonical canvas in memory. Always expand that buffer's Alpha outward by the resolved width and composite the ring behind it, regardless of visible edge linework. Keep the normalized buffer ephemeral.
 
-Treat visible linework, dark edge pixels, filenames, declarations, and human observation as aesthetic evidence. Prove execution only by replaying the declared normalization and outline algorithms from the evidence-bound inputs and obtaining the candidate bytes exactly.
+Require `prepare-canonical` to emit the candidate, v3 evidence, v1 admission proof, and content-addressed source evidence. Prove execution only by replaying the declared normalization and outline algorithms and reproducing the candidate bytes exactly.
 
-Run `prepare-canonical` with `canonical-authoring-request/v3`. Require the direct outputs `canonical-reference-candidate.png`, `canonical-reference-evidence.json`, `canonical-admission-proof.json`, and content-addressed original authoring-source evidence. Require the proof to use `canonical-admission-proof/v1`. Use no alternate acceptance flag or execution-history assertion.
+This admission proves only the canonical candidate. The canonical later supplies identity, art direction, camera, and direction evidence; its silhouette ring does not propagate through image generation to a new pose.
 
-## Admit the candidate
+## Deterministic frame rendering
 
-Require admission to match all of the following:
+Use each approved raw high-resolution frame source only after background removal, Alpha cleanup, crop placement, normalization, and optical correction are complete. Treat that final Alpha as the authoritative pose silhouette.
 
-1. Candidate SHA-256, decoded dimensions, and mode match the prepared candidate bytes.
-2. Authoring-source SHA-256 and target geometry match the evidence record.
-3. Authoring-source SHA-256, dimensions, and mode match its content-addressed replay bytes.
-4. Normalization and outline algorithm identifiers match the required v3 algorithms.
-5. Outline enabled state, `target_width`, color, and resolved high-resolution width match the production contract and replay.
-6. Deterministic in-memory normalization and outline derivation from the replay source reproduce the candidate byte for byte.
+For each unique raw source, derive the output in memory:
 
-Reject partial, stale, mismatched, or missing admission evidence. Reuse an existing approved canonical only when every admission subject matches the current request and replay succeeds. Otherwise rerun preparation and repeat dependent approvals.
+1. Expand the authoritative Alpha outward by the resolved high-resolution width.
+2. Subtract the original Alpha to obtain the outer ring.
+3. Composite the resolved color behind every existing nontransparent source pixel.
+4. Preserve internal linework, straight RGBA storage, and zero RGB beneath zero Alpha.
+5. Resize the outlined high-resolution buffer exactly once with the declared premultiplied-Alpha sampler into the target cell.
 
-After machine admission succeeds, review visual mass, center, baseline, anatomy, equipment, line hierarchy, safe margins, narrow gaps, jaggedness, halos, and target-size treatment as aesthetics. Bind approval to both the exact candidate hash and admission-proof hash. Any correction changes the candidate or proof and invalidates downstream approvals and package outputs.
+Keep the outlined high-resolution buffer ephemeral. Bind the source hash, mask policy, algorithm, resolved width, sampler, outlined-buffer hash, target-cell hash, and final sheet hash through the manifest's top-level `spritesheet-rendering-receipt/v1` rendering object; the production contract remains authoritative for outline color. Verification must replay the complete batch and reproduce the final spritesheet exactly.
+
+When outline is disabled, use the declared identity operation before the same single-resize path. A target cell and an assembled sheet are outputs, never outline authoring inputs.
+
+## Review boundary
+
+Machine replay proves that the deterministic ring was derived from the declared authoritative Alpha and reached the final sheet through the declared sampler and layout. It does not prove that the Alpha represents the intended body, that image generation obeyed the canonical, or that the result is aesthetically good.
+
+Review raw Alpha for missing limbs, detached noise, background remnants, accidental transparency, narrow gaps, effect boundaries, and adequate margin. Review rendered target cells for line hierarchy, clipped rings, jaggedness, halos, clogged gaps, flicker, and native-size readability. Correct a mask defect in the raw source; correct a deterministic ring or clipping defect in the renderer or outline contract.

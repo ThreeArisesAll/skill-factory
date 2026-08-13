@@ -23,17 +23,17 @@ from image_utils import (
 from PIL import Image, ImageChops, ImageFilter
 
 CANONICAL_REQUEST_SCHEMA = "canonical-authoring-request/v3"
-PRODUCTION_REQUEST_SCHEMA = "spritesheet-production-request/v3"
-PACKAGE_SCHEMA = "spritesheet-package/v3"
+PRODUCTION_REQUEST_SCHEMA = "spritesheet-production-request/v4"
+PACKAGE_SCHEMA = "spritesheet-package/v4"
 EVIDENCE_SCHEMA = "canonical-reference-evidence/v3"
 ADMISSION_PROOF_SCHEMA = "canonical-admission-proof/v1"
 NORMALIZATION_ALGORITHM = "normalize-to-canvas/lanczos-premultiplied-v1"
 OUTLINE_ALGORITHM = "outward-silhouette-maxfilter/v1"
 IDENTITY_ALGORITHM = "identity/v1"
 SAMPLER = "lanczos-premultiplied-v1"
-SAMPLER_PROOF = (
-    "Each cell must exactly equal the recorded algorithm applied directly to its unique high-resolution source."
-)
+RENDERING_RECEIPT_SCHEMA = "spritesheet-rendering-receipt/v1"
+RENDERING_PIPELINE = "high-resolution-outline-then-target-resize/v1"
+MASK_POLICY = "nonzero-alpha/v1"
 HIGH_RESOLUTION_SHORT_SIDE = 512
 FORBIDDEN_TERMS = ("pre-master", "canonical-master", "target-frame", "canonical-lock")
 OUTLINE_KEYS = {"enabled", "target_width", "color"}
@@ -161,6 +161,38 @@ def apply_outline(
     outlined.putalpha(ring)
     outlined.alpha_composite(image)
     return clear_transparent_rgb(outlined), resolved_width
+
+
+def render_high_resolution_source(
+    source: Image.Image,
+    outline: dict[str, Any],
+    target_size: tuple[int, int],
+) -> tuple[Image.Image, Image.Image, int]:
+    alpha = source.getchannel("A")
+    if alpha.getbbox() is None:
+        raise ContractError("high-resolution frame source must contain nonzero alpha")
+    if outline["enabled"]:
+        outlined, resolved_width = apply_outline(
+            source,
+            outline["target_width"],
+            min(target_size),
+            outline["color"],
+        )
+    else:
+        outlined = clear_transparent_rgb(source)
+        resolved_width = 0
+    outlined_alpha = outlined.getchannel("A")
+    width, height = outlined.size
+    touches_border = (
+        outlined_alpha.crop((0, 0, width, 1)).getbbox() is not None
+        or outlined_alpha.crop((0, height - 1, width, height)).getbbox() is not None
+        or outlined_alpha.crop((0, 0, 1, height)).getbbox() is not None
+        or outlined_alpha.crop((width - 1, 0, width, height)).getbbox() is not None
+    )
+    if touches_border:
+        raise ContractError("rendered high-resolution frame must not touch the canvas border")
+    cell = resize_premultiplied(outlined, target_size)
+    return outlined, cell, resolved_width
 
 
 def atomic_directory(output_dir: Path, build: Callable[[Path], None]) -> None:
@@ -806,12 +838,12 @@ def parse_production_request(request_path: Path) -> dict[str, Any]:
             role = frame.get("role")
             if role not in ("keyframe", "in-between"):
                 raise ContractError(f"frame {frame_id!r} role must be keyframe or in-between")
-            expected_frame_keys = {"id", "role", "path"}
+            expected_frame_keys = {"id", "role", "source_path"}
             if role == "in-between":
                 expected_frame_keys |= {"previous_keyframe", "next_keyframe"}
             require_exact_keys(frame, expected_frame_keys, f"frame {frame_id!r}")
-            path = require_absolute_path(frame.get("path"), f"frame {frame_id!r}.path")
-            image = open_rgba(path, f"frame {frame_id!r}.path")
+            path = require_absolute_path(frame.get("source_path"), f"frame {frame_id!r}.source_path")
+            image = open_rgba(path, f"frame {frame_id!r}.source_path")
             if image.size != expected_high_resolution_size:
                 raise ContractError(f"frame {frame_id!r} has wrong high-resolution canvas")
             images[frame_id] = image
@@ -985,7 +1017,7 @@ def build_package(request_path: Path, output_dir: Path) -> None:
                 artifact_records.append(
                     image_record(
                         artifact_id,
-                        "high-resolution-frame",
+                        "high-resolution-frame-source",
                         relative,
                         image,
                         digest,
@@ -999,13 +1031,28 @@ def build_package(request_path: Path, output_dir: Path) -> None:
                     ),
                 )
 
-        sampled = {
-            frame_id: resize_premultiplied(
+        sampled: dict[str, Image.Image] = {}
+        receipt_frames: list[dict[str, Any]] = []
+        resolved_outline_width: int | None = None
+        for frame_id in parsed["frame_ids"]:
+            outlined, cell, frame_outline_width = render_high_resolution_source(
                 parsed["images"][frame_id],
+                parsed["contract"]["outline"],
                 (parsed["frame_width"], parsed["frame_height"]),
             )
-            for frame_id in parsed["frame_ids"]
-        }
+            if resolved_outline_width is None:
+                resolved_outline_width = frame_outline_width
+            elif resolved_outline_width != frame_outline_width:
+                raise ContractError("resolved high-resolution outline width must be consistent")
+            sampled[frame_id] = cell
+            receipt_frames.append(
+                {
+                    "source": frame_id,
+                    "source_sha256": parsed["hashes"][frame_id],
+                    "outlined_rgba_sha256": hashlib.sha256(outlined.tobytes()).hexdigest(),
+                    "cell_rgba_sha256": hashlib.sha256(cell.tobytes()).hexdigest(),
+                },
+            )
         cells: list[dict[str, Any]] = []
         for clip in parsed["clips"]:
             frames = clip.pop("frames")
@@ -1029,7 +1076,8 @@ def build_package(request_path: Path, output_dir: Path) -> None:
             sheet.alpha_composite(sampled[cell["source"]], (x, y))
             cell.update({"index": index, "column": column, "row": row})
         sheet_path = destination / "spritesheet.png"
-        clear_transparent_rgb(sheet).save(sheet_path)
+        sheet = clear_transparent_rgb(sheet)
+        sheet.save(sheet_path)
         artifact_records.append(
             image_record(
                 "spritesheet",
@@ -1046,9 +1094,19 @@ def build_package(request_path: Path, output_dir: Path) -> None:
             "canonical_admissions": admission_records,
             "clips": parsed["clips"],
             "reviews": parsed["reviews"],
-            "sampling": {
-                "algorithm": SAMPLER,
-                "proof": SAMPLER_PROOF,
+            "rendering": {
+                "schema_version": RENDERING_RECEIPT_SCHEMA,
+                "pipeline": RENDERING_PIPELINE,
+                "mask_policy": MASK_POLICY,
+                "outline_algorithm": (
+                    OUTLINE_ALGORITHM
+                    if parsed["contract"]["outline"]["enabled"]
+                    else IDENTITY_ALGORITHM
+                ),
+                "sampler": SAMPLER,
+                "resolved_high_resolution_outline_width": resolved_outline_width or 0,
+                "frames": receipt_frames,
+                "sheet_rgba_sha256": hashlib.sha256(sheet.tobytes()).hexdigest(),
             },
             "assembly": {
                 "sheet": "spritesheet",
@@ -1089,7 +1147,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         data = {}
     check(data.get("schema_version") == PACKAGE_SCHEMA, "schema_version", f"required={PACKAGE_SCHEMA!r}")
     check(
-        set(data) == {"schema_version", "contract", "artifacts", "canonical_admissions", "clips", "reviews", "sampling", "assembly"},
+        set(data) == {"schema_version", "contract", "artifacts", "canonical_admissions", "clips", "reviews", "rendering", "assembly"},
         "$ fields",
         "manifest top-level fields are closed",
     )
@@ -1113,6 +1171,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
     check(contract.get("high_resolution_short_side") == 512, "contract.high_resolution_short_side", "required=512")
     check(contract.get("sampler") == SAMPLER, "contract.sampler", f"required={SAMPLER}")
     check(set(contract) == CONTRACT_KEYS, "contract.fields", f"required={sorted(CONTRACT_KEYS)}")
+    normalized_outline: dict[str, Any] | None = None
     try:
         normalized_outline = validate_outline_contract(contract.get("outline"), "contract.outline")
         if (
@@ -1128,16 +1187,13 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         validate_bounds(contract.get("safe_bounds"), "contract.safe_bounds", width, height)
     except (ContractError, TypeError) as error:
         check(False, "contract.runtime", str(error))
-    declarations.append(
-        "INFO DECLARED sampler: the manifest declares the sampler; verification recomputes current cell pixels and does not prove historical resize count",
-    )
     artifacts_value = data.get("artifacts")
     check(isinstance(artifacts_value, list), "artifacts", "must be an array")
     artifacts: dict[str, dict[str, Any]] = {}
     images: dict[str, Image.Image] = {}
     artifact_relative_paths: set[str] = set()
     package_root = base_dir.resolve()
-    allowed_types = {"canonical-reference", "high-resolution-frame", "spritesheet"}
+    allowed_types = {"canonical-reference", "high-resolution-frame-source", "spritesheet"}
     if isinstance(artifacts_value, list):
         for index, raw in enumerate(artifacts_value):
             location = f"artifacts[{index}]"
@@ -1192,7 +1248,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
             images[artifact_id] = image
             base_artifact_keys = {"id", "type", "path", "sha256", "width", "height", "mode"}
             expected_artifact_keys = base_artifact_keys
-            if artifact_type == "high-resolution-frame":
+            if artifact_type == "high-resolution-frame-source":
                 expected_artifact_keys = base_artifact_keys | {"role", "canonical_reference"}
                 if raw.get("role") == "in-between":
                     expected_artifact_keys |= {"previous_keyframe", "next_keyframe"}
@@ -1208,7 +1264,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
                 f"{location}.image-metadata",
                 "dimensions and mode must match the decoded RGBA image",
             )
-            if dimensions_valid and artifact_type in ("canonical-reference", "high-resolution-frame"):
+            if dimensions_valid and artifact_type in ("canonical-reference", "high-resolution-frame-source"):
                 try:
                     expected_high_resolution_size, _ = resolve_high_resolution_dimensions(width, height)
                 except (ValueError, OverflowError) as error:
@@ -1462,10 +1518,10 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
                 check(
                     isinstance(frame_id, str)
                     and frame_id in artifacts
-                    and artifacts[frame_id].get("type") == "high-resolution-frame"
+                    and artifacts[frame_id].get("type") == "high-resolution-frame-source"
                     and artifacts[frame_id].get("role") == role,
                     f"frame[{frame_id}].artifact",
-                    "must reference a matching high-resolution-frame artifact",
+                    "must reference a matching high-resolution-frame-source artifact",
                 )
                 check(
                     frame.get("canonical_reference") == canonical_id,
@@ -1537,8 +1593,8 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
     ]
     check(
         len(frame_pixel_hashes) == len(frame_ids) and len(set(frame_pixel_hashes)) == len(frame_pixel_hashes),
-        "high-resolution-frame.pixels",
-        "all high-resolution frames must have distinct pixels",
+        "high-resolution-frame-source.pixels",
+        "all high-resolution frame sources must have distinct pixels",
     )
     for canonical_id in set(canonical_ids):
         if canonical_id in images:
@@ -1614,6 +1670,41 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         "must reference the reserved spritesheet artifact ID and type",
     )
     sheet = images.get(sheet_id) if isinstance(sheet_id, str) else None
+    replayed_cells: dict[str, Image.Image] = {}
+    receipt_frames: list[dict[str, Any]] = []
+    resolved_outline_width: int | None = None
+    rendering_replay_valid = normalized_outline is not None and dimensions_valid
+    if rendering_replay_valid:
+        for frame_id in frame_ids:
+            source = images.get(frame_id)
+            artifact = artifacts.get(frame_id, {})
+            if source is None:
+                rendering_replay_valid = False
+                continue
+            try:
+                outlined, cell, frame_outline_width = render_high_resolution_source(
+                    source,
+                    normalized_outline,
+                    (width, height),
+                )
+            except ContractError as error:
+                check(False, f"rendering.frames[{frame_id}]", str(error))
+                rendering_replay_valid = False
+                continue
+            if resolved_outline_width is None:
+                resolved_outline_width = frame_outline_width
+            elif resolved_outline_width != frame_outline_width:
+                check(False, "rendering.resolved_high_resolution_outline_width", "must be consistent")
+                rendering_replay_valid = False
+            replayed_cells[frame_id] = cell
+            receipt_frames.append(
+                {
+                    "source": frame_id,
+                    "source_sha256": artifact.get("sha256"),
+                    "outlined_rgba_sha256": hashlib.sha256(outlined.tobytes()).hexdigest(),
+                    "cell_rgba_sha256": hashlib.sha256(cell.tobytes()).hexdigest(),
+                },
+            )
     replay_safe = (
         dimensions_valid
         and layout_valid
@@ -1624,18 +1715,21 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         and rows * height <= MAX_HIGH_RESOLUTION_SIDE
     )
     check(replay_safe, "assembly.safe-dimensions", "sheet dimensions must be bounded for deterministic replay")
+    replayed_sheet: Image.Image | None = None
     if replay_safe and sheet is not None:
         check(sheet.size == (columns * width, rows * height), "assembly.sheet.dimensions", "must match the fixed grid")
         pixel_match = True
         used: set[tuple[int, int]] = set()
+        replayed_sheet = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
         if isinstance(cells, list):
             for index, (source, _) in enumerate(expected_sources):
                 column, row = cell_position(index, columns, rows, order)
                 used.add((column, row))
-                if source not in images:
+                if source not in replayed_cells:
                     pixel_match = False
                     continue
-                expected = resize_premultiplied(images[source], (width, height)).tobytes()
+                replayed_sheet.alpha_composite(replayed_cells[source], (column * width, row * height))
+                expected = replayed_cells[source].tobytes()
                 actual = sheet.crop(
                     (column * width, row * height, (column + 1) * width, (row + 1) * height),
                 ).tobytes()
@@ -1644,6 +1738,12 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
             pixel_match,
             "cells",
             "each cell must exactly equal the recorded algorithm applied directly to its unique high-resolution source",
+        )
+        replayed_sheet = clear_transparent_rgb(replayed_sheet)
+        check(
+            sheet.tobytes() == replayed_sheet.tobytes(),
+            "sheet.replay",
+            "sheet RGBA pixels must exactly match deterministic full-sheet replay",
         )
         unused_empty = True
         for row in range(rows):
@@ -1657,6 +1757,30 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         check(unused_empty, "assembly.unused-cells", "unused cell alpha must be zero")
     else:
         check(False, "assembly.sheet", "sheet or layout is unavailable")
+    rendering = data.get("rendering") if isinstance(data.get("rendering"), dict) else {}
+    expected_rendering = {
+        "schema_version": RENDERING_RECEIPT_SCHEMA,
+        "pipeline": RENDERING_PIPELINE,
+        "mask_policy": MASK_POLICY,
+        "outline_algorithm": (
+            OUTLINE_ALGORITHM
+            if isinstance(normalized_outline, dict) and normalized_outline.get("enabled")
+            else IDENTITY_ALGORITHM
+        ),
+        "sampler": SAMPLER,
+        "resolved_high_resolution_outline_width": resolved_outline_width or 0,
+        "frames": receipt_frames,
+        "sheet_rgba_sha256": (
+            hashlib.sha256(replayed_sheet.tobytes()).hexdigest()
+            if replayed_sheet is not None
+            else None
+        ),
+    }
+    check(
+        rendering_replay_valid and rendering == expected_rendering,
+        "rendering",
+        "receipt must exactly match independent outline, resize, and sheet replay",
+    )
     referenced = set(frame_ids) | set(canonical_ids)
     if isinstance(sheet_id, str):
         referenced.add(sheet_id)
@@ -1678,14 +1802,6 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
         "package.files",
         "package must contain only regular declared files and the artifacts directory, with no symlinks",
     )
-    sampling = data.get("sampling") if isinstance(data.get("sampling"), dict) else {}
-    check(sampling.get("algorithm") == SAMPLER, "sampling.algorithm", f"required={SAMPLER}")
-    check(sampling.get("proof") == SAMPLER_PROOF, "sampling.proof", "must state the exact replay obligation")
-    check(
-        set(sampling) == {"algorithm", "proof"},
-        "sampling.fields",
-        "sampling records only the replayable algorithm and proof obligation",
-    )
     declarations.append(
         "INFO DECLARED generation: canonical references are declared visual references and in-between brackets are declared creative relationships",
     )
@@ -1694,7 +1810,7 @@ def verify_package(manifest_path: Path, *, emit: bool = True) -> bool:
             print(failure)
         if not failures:
             print(
-                "PASS MACHINE-VERIFIED cells: each cell exactly equals the recorded algorithm applied directly to its unique high-resolution source",
+                "PASS MACHINE-VERIFIED rendering: each cell exactly equals deterministic high-resolution outline-or-identity and target-size replay",
             )
         for declaration in declarations:
             print(declaration)
@@ -1711,8 +1827,8 @@ def parse_args() -> argparse.Namespace:
         epilog=(
             "Public schemas:\n"
             "  canonical-authoring-request/v3 -> canonical review candidate + replay evidence\n"
-            "  spritesheet-production-request/v3 -> admission-bound immutable spritesheet package\n"
-            "  spritesheet-package/v3 -> independently replayed authoritative manifest"
+            "  spritesheet-production-request/v4 -> admission-bound immutable spritesheet package\n"
+            "  spritesheet-package/v4 -> independently replayed authoritative manifest"
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1734,19 +1850,19 @@ def parse_args() -> argparse.Namespace:
         "build-package",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Consume spritesheet-production-request/v3. Required sections:\n"
+            "Consume spritesheet-production-request/v4. Required sections:\n"
             "  contract: dimensions, 512 high-resolution side, sampler, conditional outline, origin, anchor, safe bounds\n"
             "  canonical_references: id + absolute regular candidate, evidence_path, and proof_path\n"
-            "  clips: runtime metadata + ordered keyframe/in-between records with absolute RGBA PNG paths\n"
+            "  clips: runtime metadata + ordered keyframe/in-between records with absolute RGBA PNG source_path values\n"
             "  reviews: hash-bound canonical, keyframe-set, and sequence approvals\n"
             "  grid: columns + row-major or column-major order"
         ),
     )
-    build.add_argument("--request", required=True, type=Path, help="spritesheet-production-request/v3 JSON")
+    build.add_argument("--request", required=True, type=Path, help="spritesheet-production-request/v4 JSON")
     build.add_argument("--output-dir", required=True, type=Path, help="new atomic package directory")
     verify = subparsers.add_parser(
         "verify-package",
-        description="Verify a spritesheet-package/v3 manifest, replay canonical admission and every cell, and emit MACHINE-VERIFIED, DECLARED, and REVIEWED results.",
+        description="Verify a spritesheet-package/v4 manifest, replay canonical admission and every cell, and emit MACHINE-VERIFIED, DECLARED, and REVIEWED results.",
     )
     verify.add_argument("--manifest", required=True, type=Path, help="package-relative authoritative manifest")
     return parser.parse_args()

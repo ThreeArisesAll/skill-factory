@@ -1,17 +1,17 @@
-# Spritesheet Package Evidence v3
+# Spritesheet Package Evidence v4
 
-Use the CLI and tests as the executable source of truth for exact closed fields. Use this reference for stable admission, lineage, and proof semantics.
+Use the CLI and tests as the executable source of truth for exact closed fields. Use this reference for stable admission, review, rendering, and proof semantics.
 
 ## Formal lineage
 
 Use exactly:
 
-`ProductionSpec -> AdmittedCanonicalReferenceSet -> ApprovedHighResolutionSequence -> deterministic target-cell rendering -> SpritesheetPackage`
+`ProductionSpec -> AdmittedCanonicalReferenceSet -> ApprovedRawHighResolutionSequence -> deterministic batch rendering -> SpritesheetPackage`
 
-Keep the production artifact vocabulary closed:
+Keep the production vocabulary closed:
 
 - `canonical-reference`
-- `high-resolution-frame`
+- `high-resolution-frame-source`
 - `spritesheet`
 
 Keep the review gate vocabulary closed:
@@ -20,75 +20,93 @@ Keep the review gate vocabulary closed:
 - `keyframe-set-approval`
 - `sequence-approval`
 
-Treat authoring sources, admission proofs, action references, candidates, contact sheets, and review material as evidence rather than production artifacts. Treat normalization as an in-memory operation with no file or graph node. Treat a target cell as a logical sheet region rather than an artifact or editable PNG stage. Keep project notes outside the closed package schema.
+Treat canonical authoring sources and admission material, action references, complete frame-description plans and their user decisions, image-generation outputs before final Alpha cleanup, contact sheets, and review presentation material as evidence rather than production artifacts. Treat canonical normalization and outlined high-resolution frame buffers as ephemeral in-memory operations. Treat a target cell as a logical sheet region rather than an artifact or editable PNG stage. Keep project notes outside the closed package schema.
 
 ## Canonical admission
 
-Run `prepare-canonical` with `canonical-authoring-request/v3`. Require it to write `canonical-reference-candidate.png`, `canonical-reference-evidence.json`, `canonical-admission-proof.json`, and content-addressed original authoring-source evidence in one atomic output. Require `canonical-reference-evidence/v3` to bind the original source, target geometry, declared derivation algorithms, resolved outline contract, candidate, and metrics.
+Canonical authoring remains `canonical-authoring-request/v3`, `canonical-reference-evidence/v3`, and `canonical-admission-proof/v1`. Run `prepare-canonical` and require it to write `canonical-reference-candidate.png`, `canonical-reference-evidence.json`, `canonical-admission-proof.json`, and content-addressed original authoring-source evidence in one atomic output.
 
-When outline is enabled, normalize the packaged authoring source in memory and deterministically apply the required outward-outline algorithm even when the source already has visible edge linework. When disabled, replay normalization followed by the declared identity derivation. Accept no visual substitute for replay: edge appearance, embedded linework, filenames, declarations, or review cannot prove the transform ran.
+When outline is enabled, normalize the packaged canonical authoring source in memory and deterministically apply the required outward-outline algorithm even when the source already has visible edge linework. When disabled, replay normalization followed by the declared identity derivation. Generate the proof only after every required evidence field, file hash, decoded property, contract value, and replayed pixel matches.
 
-Generate `canonical-admission-proof/v1` only after every required evidence field, file hash, decoded property, contract value, and replayed pixel matches. Bind the proof to the canonical reference, target, outline, derivation, original authoring source, and authoring-evidence hash. Use its exact file hash as the admission revision consumed by later review gates. Package the proof, authoring evidence, and original replay source by content address.
+Perform machine admission before canonical review. Bind `canonical-approval` to the admitted candidate hash and admission-proof hash. Reuse an approved canonical only when its exact candidate, evidence, proof, source, and current request match completely.
 
-Perform machine admission before canonical review. Bind `canonical-approval` to the admitted candidate hash and admission-proof hash. Reuse an already approved canonical without changing its bytes only when its candidate, evidence, proof, source, and current request match completely. Otherwise prepare a new candidate. Treat any admission proof change as invalidating canonical approval and every dependent keyframe-set approval, sequence approval, and package.
+The admitted canonical is an identity, art-direction, camera, and direction reference for generating poses. Its outline proof applies only to its own candidate pixels. Record whether generation used or obeyed the canonical as declared creative lineage; never infer that a new pose inherited canonical pixels or its formal silhouette ring.
 
-## Package manifest
+## Authoritative raw sources
 
-Use `spritesheet-package/v3` as the sole authority. Keep these semantic domains closed:
+A high-resolution frame source becomes eligible for review only after every operation that can change its Alpha boundary has completed. This includes background removal, Alpha cleanup, crop placement, canvas normalization, and optical correction. Its resulting Alpha is the authoritative pose silhouette consumed by deterministic rendering.
 
-```text
-contract:               dimensions, sampler, outline, origin, anchor, and safe bounds
-artifacts:              the three production artifact types
-canonical_admissions:   content-addressed admission proof and replay-evidence references
-clips:                  runtime behavior and ordered high-resolution-frame IDs
-reviews:                hash-bound approvals plus canonical admission-proof bindings
-sampling:               target-cell algorithm and replay obligation
-assembly:               fixed-grid layout and source-to-cell mappings
-```
+Give every v4 request frame a unique ID, role (`keyframe` or `in-between`), and absolute regular-file `source_path`. Give every packaged raw source a package-relative content-addressed path, lowercase SHA-256, decoded size, `RGBA` mode, and canonical-reference ID. Give every in-between its adjacent approved keyframe IDs. Only an explicit loop-closing alias may reuse its clip's opening raw source and rendered cell.
 
-Resolve input image and authoring-evidence paths as absolute regular-file paths. Store package paths as normalized relative content addresses. Hash exact file bytes with lowercase SHA-256. Use zero-based indices.
-
-Give every artifact a unique ID, type, package-relative path, hash, decoded size, and `RGBA` mode. Give each high-resolution frame exactly one role, `keyframe` or `in-between`, and its canonical-reference ID. Give every in-between its adjacent approved keyframe IDs.
-
-Record direction, camera, playback, root motion, transition, terminal hold, positive duration per logical position, indexed events, animation origin, anchor, and safe bounds in their closed v3 locations.
+No per-frame admission object is required. Review gates bind the exact raw source bytes; the batch rendering receipt and replay prove the later pixel derivation.
 
 ## Gate binding
 
-Bind reviews to current bytes and admission state:
+Bind reviews to current raw bytes and canonical admission state:
 
-- Bind `canonical-approval` to one canonical-reference hash and its canonical admission proof hash.
-- Bind `keyframe-set-approval` to the canonical reference, its admission proof hash, and the ordered complete keyframe set.
-- Bind `sequence-approval` to the same canonical and admission proof plus the ordered complete high-resolution sequence.
+- Bind `canonical-approval` to one canonical-reference hash and its canonical admission-proof hash.
+- Bind `keyframe-set-approval` to the canonical reference, its admission-proof hash, and the ordered complete raw keyframe-source hashes.
+- Bind `sequence-approval` to the same canonical and admission proof plus the ordered complete raw high-resolution frame source hashes.
 
-Require all canonical gates before any keyframe-set gate and all keyframe-set gates before any sequence gate. Require at least two keyframes and two in-betweens per clip. Invalidate a gate and all dependent results when any bound bytes or admission proof changes.
+Require all canonical gates before a keyframe-set gate and all keyframe-set gates before a sequence gate. Require at least two keyframes and two in-betweens per clip. Any bound byte or proof change invalidates its gate and every dependent result.
 
-Treat human review as recorded aesthetic evidence. Verify its structure and subjects mechanically; make no claim that a machine authenticated the reviewer, observed the creative act, or inferred execution history from appearance.
+Classify gate conclusions precisely:
 
-## Deterministic target rendering
+- `REVIEWED`: identity, motion, projection, authoritative mask quality, outline suitability, and aesthetics judged from the bound bytes
+- `DECLARED`: the generator used or obeyed the canonical and action evidence
+- `MACHINE-VERIFIED`: schemas, hashes, geometry, deterministic pixel derivation, assembly, and package closure reproduced by code
 
-Use `lanczos-premultiplied-v1`. Decode straight RGBA, resize in premultiplied-Alpha space, clear RGB beneath zero Alpha, and write straight RGBA into the addressed cell.
+Review structure and bound subjects mechanically. Make no claim that a machine authenticated the reviewer, observed a creative act, or inferred generation history from appearance.
 
-Map each unique sequence position directly from one approved high-resolution source. Replay that source and compare its target cell pixel by pixel. For an explicit repeated opening position, reuse the opening cell pixels and create no extra high-resolution source or render record.
+Before keyframe generation, require the workflow-level complete frame-description review defined in [motion-design.md](motion-design.md). It does not add a package review-gate value or artifact type: the descriptions are `DECLARED` intent, the user's explicit approval of the current complete plan is `REVIEWED`, and any later deviation requires revision and reapproval before generation resumes.
 
-## Package closure
+## Deterministic batch rendering
 
-Package exactly one fixed-grid spritesheet, one authoritative v3 `manifest.json`, the referenced content-addressed production PNGs, and the content-addressed admission proofs, authoring evidence, and original authoring sources required for replay. Keep runtime metadata as a projection of `manifest.json`.
+Use one closed rendering equation for each unique approved raw source:
 
-Require every production artifact to be reachable, every declared package file to be present, and every package file to be declared. Cover populated cells exactly once except an explicit closing alias. Require unused cells to have zero Alpha and sheet dimensions to equal grid dimensions multiplied by cell dimensions.
+```text
+authoritative mask = final Alpha of raw high-resolution frame source
+outlined high-resolution buffer = outline(raw source, authoritative mask, resolved outline)
+target cell = lanczos-premultiplied-v1(outlined high-resolution buffer, target geometry)
+spritesheet = fixed-grid assembly(target cells, layout)
+```
+
+When outline is disabled, replace the outline step with its declared identity operation. Apply the outline or identity operation in memory, then resize exactly once in premultiplied-Alpha space. Clear RGB beneath zero Alpha and write straight RGBA into the addressed cell. Never apply a silhouette outline to a target cell or assembled sheet.
+
+For an explicit repeated opening position, reuse the opening target-cell pixels and create no additional raw source or render. Logical cells remain sheet addresses.
+
+Embed one `spritesheet-rendering-receipt/v1` object in the manifest's top-level `rendering` field. Bind the exact raw source hashes, authoritative-Alpha policy, outline or identity algorithm, resolved high-resolution outline width, sampler, each ephemeral outlined-buffer decoded-RGBA hash, each target-cell decoded-RGBA hash, and the final sheet decoded-RGBA hash. Bind ordered logical uses, cell geometry, layout, and aliases in `assembly`. The outlined high-resolution buffers remain ephemeral.
+
+## Package manifest and closure
+
+Use `spritesheet-package/v4` as the sole package authority. Keep these semantic domains closed:
+
+```text
+contract:          dimensions, outline, origin, anchor, and safe bounds
+sources:           canonical references and raw high-resolution frame sources
+canonical state:   admission proofs, replay evidence, and canonical approvals
+clips:             runtime behavior and ordered raw-source IDs
+reviews:           hash-bound keyframe and sequence reviews
+rendering:         spritesheet-rendering-receipt/v1 batch inputs, algorithms, and decoded-RGBA hashes
+assembly:          fixed-grid source-to-cell mappings and explicit aliases
+```
+
+Resolve input files as absolute regular-file paths. Store package paths as normalized relative content addresses. Package exactly one fixed-grid spritesheet, one authoritative v4 `manifest.json`, referenced content-addressed source PNGs, and canonical admission material required for replay. Keep runtime metadata as a projection of `manifest.json`.
+
+Require every packaged source to be reachable, every declared file to be present, and every package file to be declared. Cover populated cells exactly once except an explicit closing alias. Require unused cells to have zero Alpha and sheet dimensions to equal grid dimensions multiplied by cell dimensions.
 
 ## Build and verification
 
-Run `build-package` with `spritesheet-production-request/v3`. Require every canonical input to reference the prepared candidate, `canonical-reference-evidence.json`, and `canonical-admission-proof.json`. Validate the supplied proof bytes against a fresh replay, require every review's admission hash to match that proof, and package the candidate, proof, evidence, and original source by content address.
+Run `build-package` with `spritesheet-production-request/v4`. Require every canonical input to reference the prepared v3 candidate and evidence plus its v1 admission proof. Require every motion frame to provide the `source_path` of an approved raw high-resolution frame source. Replay canonical admission, validate review bindings, render every unique source in memory, assemble the sheet, and emit the v4 manifest with its top-level `spritesheet-rendering-receipt/v1` rendering object.
 
-Run `verify-package` on `spritesheet-package/v3`. Replay admission only from packaged proof and evidence, then replay every target cell. Verify at least:
+Run `verify-package` on `spritesheet-package/v4`. Replay canonical admission from packaged evidence, then replay the entire deterministic batch rendering from packaged raw sources and compare the final sheet pixel for pixel. Verify at least:
 
-- Closed schemas, vocabularies, paths, hashes, decoded properties, and physical package closure
-- Fixed canonical geometry and target-size bounds
-- Authoring-source, candidate, contract, algorithm, and admission-proof consistency
-- Exact normalization plus outline or identity replay for every canonical reference
-- Admission-bound review subjects, hashes, and ordering
-- Canonical consistency, frame roles, and adjacent-keyframe brackets
-- Clip runtime metadata, grid layout, complete cell coverage, and unused-cell transparency
-- Pixel-perfect target-cell replay and explicit opening-cell reuse
+- Closed schemas, vocabularies, paths, hashes, decoded properties, and package closure
+- Canonical authoring-source, candidate, contract, algorithm, and admission-proof consistency
+- Raw-source identity, role, canonical association, dimensions, mode, and authoritative Alpha
+- Admission-bound review subjects, hashes, ordering, and adjacent-keyframe brackets
+- Outline or identity rendering for every unique raw source before a single target resize
+- Clip metadata, grid layout, complete cell coverage, transparent unused cells, and explicit aliases
+- Receipt completeness and exact final spritesheet replay
 
-Exit with `0` only when every machine-verifiable invariant passes. Report declared creative relationships and recorded human reviews separately from machine verification.
+Exit with `0` only when every machine-verifiable invariant passes. Report recorded reviews, declared creative relationships, and machine-verified facts separately.
