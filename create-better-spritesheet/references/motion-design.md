@@ -1,84 +1,80 @@
 # Motion Design Contract v4
 
-Design motion information before allocating image detail.
+Design motion information before allocating image detail. Use the [approval protocol](approval-protocol.md) for every gate in this sequence.
 
-## Action reference
+## Action evidence
 
-When the user has supplied no action reference and has not explicitly declined one, ask for video, gameplay capture, GIF, ordered frames, a pose sheet, photography, or a precisely identifiable animation. Prefer evidence with a similar action, camera, body type, projection, and rhythm; its art style may differ.
+When the user supplies no action reference and has not declined one, ask for video, gameplay capture, GIF, ordered frames, a pose sheet, photography, or a precisely identifiable animation. Prefer evidence with a similar action, camera, body type, projection, and rhythm; art style may differ.
 
-When the user explicitly declines an action reference, record authorization to design from written intent and present a provisional phase, keyframe, and timing plan for approval before image generation.
+When the user cannot supply evidence, follow [reference-search.md](reference-search.md). When the user declines action evidence, record authorization to design from written intent. In either case, require an approved motion blueprint before image generation.
 
-When the user cannot supply a reference without declining one, follow [reference-search.md](reference-search.md), screen Pinterest candidates, and recommend two to four. For a walk, include [walk-cycle-reference.png](../assets/walk-cycle-reference.png) as the default structural candidate. If the search finds no usable evidence, request explicit authorization to design from written intent and present the provisional plan.
+Extract phases, duration, rhythm, holds, root motion, center of mass, contacts, arcs, camera, direction, depth travel, newly visible surfaces, occlusion, and gameplay events. Use the admitted canonical for identity, art direction, camera, and direction. Treat generator use and obedience as `DECLARED` relationships.
 
-Extract phases, duration, rhythm, holds, root motion, center of mass, contacts, arcs, camera, direction, depth travel, newly visible surfaces, occlusion, and gameplay events. Use the admitted canonical as identity, art-direction, camera, and direction evidence. Treat generator use and obedience as declared rather than machine-verified relationships.
+## Action topology
 
-## Clip plan
+Choose topology from motion behavior rather than a universal frame quota. Combine topologies when an action genuinely contains multiple structures.
 
-Record for every clip:
+| Topology | Required structural anchors | Spacing emphasis |
+| --- | --- | --- |
+| Cyclic locomotion | Distinct contacts, support transfers, directional extremes, and a provable loop seam | Weight transfer, footfall rhythm, center-of-mass rise and fall |
+| Cyclic ambient or mechanical | Opposing extremes and a reversible or explicitly resettable path | Ease profile, pause distribution, seam continuity |
+| Anticipation-action-recovery | Preparation, causal action or impact, and recovery or exit | Acceleration into the event and readable aftermath |
+| Ballistic or traversal | Launch, trajectory-defining state, apex or direction change, and landing or exit | Root displacement, airtime, contact timing |
+| Sustained hold or channel | Entry, stable hold definition, controlled variation when needed, and exit | Hold duration, secondary motion, transition edges |
+| Terminal state | Cause, loss of control or transition, and terminal pose | Irreversible state change and terminal hold |
 
-- State intent, direction, camera, entry, exit, loop, and transition behavior
+A topology may need two anchors or many. Add a keyframe wherever the existing anchors fail to determine silhouette, spatial path, projection, contact, event causality, or transition behavior. Add an in-between only when it expresses necessary timing or spatial information. Do not satisfy an abstract keyframe or in-between count.
+
+## Motion-blueprint gate
+
+Before generating motion images, present one revision-labeled blueprint for every clip and direction in the current batch. Record:
+
+- Intent, topology, direction, camera, entry, exit, loop, and transition behavior
 - Root-motion or in-place policy; anchor, baseline, overflow, and effect bounds
-- Phases, center-of-mass path, contacts, arcs, projection, depth, and occlusion
-- Total duration, per-position durations, deliberate holds, and gameplay events
-- At least two keyframe indices and at least two in-between indices
+- Named phases, structural anchors, center-of-mass path, contacts, arcs, projection, depth, and occlusion
+- Total duration, rhythm, holds, gameplay events, and event causality
+- The evidence supporting each structural decision and every deliberately delegated choice
 
-Allocate positions by perceptual importance. Anticipation explains what is about to happen, the action or extreme explains what happens, and recovery or the terminal pose explains what follows.
+Complete the gate only when the current blueprint has explicit approval under [approval-protocol.md](approval-protocol.md). Keep the blueprint and decision outside the closed v4 production-request and package schemas; bind them as delivery evidence under [production-delivery.md](production-delivery.md).
 
-## Complete frame-description gate
+## Keyframe authoring and gate
 
-Run this gate for every clip and direction, regardless of whether motion comes from supplied evidence or written intent. Before generating any keyframe image, create one revision-labeled, complete, ordered table covering every playback position. For each position, record:
+Generate the structural keyframes required by the approved topology and blueprint. For every keyframe, define its phase, pose, joint articulation, head-ribcage-pelvis orientation, projection, foreshortening, depth order, occlusion, root, center of mass, contacts, equipment or effect state, framing, duration, and event relationship.
+
+Complete background removal, Alpha cleanup, crop placement, canvas normalization, and optical correction before review. The resulting Alpha is the authoritative pose silhouette.
+
+Present every finalized raw high-resolution keyframe source for one clip and direction together. Approve the exact ordered hashes only when the set:
+
+1. Determines the topology and communicates action and direction.
+2. Preserves identity, proportions, equipment, and art treatment from the canonical.
+3. Maintains coherent body planes, projection, foreshortening, visible surfaces, and occlusion.
+4. Establishes center of mass, contacts, arcs, bounds, authoritative Alpha, and event causality.
+
+Complete the formal `keyframe-set-approval` only when it binds the applicable canonical hash, its `canonical-admission-proof/v1` file hash, and the entire ordered current keyframe-source set. Add a keyframe and repeat the gate when any interval remains underconstrained.
+
+## Spacing-plan gate
+
+After keyframe-set approval, derive one revision-labeled `spacing-plan/v1` from the approved blueprint and keyframes. Cover every playback position and record:
 
 - Stable frame ID, zero-based index, and role: `keyframe`, `in-between`, or `closing alias`
-- Motion phase, action beat, and narrative or gameplay purpose
-- Full-body pose, joint articulation, facing, and equipment or effect state
-- Head, ribcage, and pelvis orientation in three-dimensional space
-- Projection, foreshortening, depth scale, newly visible surfaces, front-to-back order, and occlusion
-- Root and center-of-mass position, baseline, support and contact state, movement arc, and framing overflow
-- Spatial change from the previous position and into the next, including speed trend and directional continuity
-- Duration or hold, event assignment, and adjacent keyframe IDs for every in-between
+- Adjacent approved keyframe IDs for each in-between
+- Spatial change, movement arc, speed trend, easing, contact transition, and directional continuity
+- Duration or hold, event assignment, root and center-of-mass position, and framing overflow
+- Pose, projection, depth order, occlusion, newly visible surfaces, equipment, and effect state where these change
 
-List an explicit repeated opening position as `closing alias of <frame-id>`. It has no authored-frame role, new pose, raw source, or independent motion description.
+Represent an explicit repeated opening position as `closing alias of <frame-id>`. It has no new pose, raw source, or render.
 
-Present the whole table to the user in one review and ask for explicit approval or requested modifications. Pause every image-generation call. When the user changes any entry, invalidate the prior approval, update all affected relationships, publish the entire revised table rather than a diff, and request approval again. Generate the first keyframe only after the latest complete table is explicitly approved. If production later needs to depart from an approved description, revise and reapprove the complete affected clip table before resuming.
+Present the entire current plan and complete its approval under [approval-protocol.md](approval-protocol.md) before generating any in-between. Keep the plan and decision outside the closed v4 schemas; bind them as delivery evidence under [production-delivery.md](production-delivery.md).
 
-Treat the descriptions as `DECLARED` production intent and the user's explicit decision on the complete current table as `REVIEWED`. Structure may be checked mechanically, but neither generation order nor model obedience is machine-proven by the finished images. Keep the plan outside the closed v4 package schema and keep resolved outline settings outside this confirmation.
+## Sequence authoring and gate
 
-## Action branches
+Generate each planned raw in-between from the same admitted canonical and its adjacent approved keyframes. Finalize every Alpha-changing operation before review. Review the complete ordered raw sequence for topology, identity, volume, projection, arcs, occlusion, spacing, timing, contacts, events, mask correctness, outline suitability, and transition continuity.
 
-### Walk and run
+Complete `sequence-approval` only when it binds the applicable canonical and admission-proof hashes plus every ordered current raw high-resolution frame-source hash. Build no package while this binding or any upstream approval is invalid.
 
-Define contact, down, passing, and up phases with left-right order. Declare in-place or root-motion playback. Running normally uses shorter contacts, longer airborne intervals, and stronger torso counter-rotation. Use the bundled walk reference for phase order, center-of-mass rise and fall, arm counter-swing, and loop structure rather than character design.
+## Common action interpretation
 
-### Attack, cast, and interaction
-
-Separate anticipation, action, and recovery. Mark hit, release, or interaction completion. Keep weapons, body, and effects on coherent arcs. A smear is a controlled effect, not a replacement for a readable pose.
-
-### Jump, fall, and land
-
-Separate takeoff, rise, apex, fall, and land. Align airborne positions by root or center of mass. Declare displacement. Landing shows compression, contact, and the following transition.
-
-### Hurt, knockdown, and death
-
-Make impact direction and pose silhouette readable before recoil or state change. Synchronize baseline changes with anchors and collision events. Treat death as a one-shot terminal state unless runtime requirements specify a loop.
-
-## Raw-source finalization
-
-Complete every silhouette-changing operation before presenting a motion gate: background removal, Alpha cleanup, crop placement, canvas normalization, and optical correction. The final Alpha of each raw high-resolution frame source is authoritative for later deterministic outline rendering. A review may judge whether that mask is semantically correct; appearance cannot prove how it was created.
-
-## Keyframe-set gate
-
-Present every finalized raw high-resolution keyframe source for one clip and direction side by side. Approve the exact ordered hashes only when:
-
-1. The pose silhouette communicates action and direction.
-2. Identity, proportions, equipment, and art treatment match the canonical reference.
-3. Ribcage, pelvis, head, and joints form coherent three-dimensional planes.
-4. Projection, foreshortening, depth scale, visible surfaces, and occlusion are possible.
-5. Center of mass, contacts, arcs, bounds, authoritative Alpha, and event causality agree with the plan.
-
-This gate completes when at least two keyframes exist and `keyframe-set-approval` binds the applicable canonical hash, its `canonical-admission-proof/v1` file hash, and the entire ordered raw keyframe-source set. Require canonical admission and canonical approval before this gate.
-
-## Sequence gate
-
-Generate each raw in-between using the same canonical reference and its two adjacent approved keyframes. Add a keyframe when the endpoints leave a spatial transition underconstrained. Finalize every in-between's authoritative Alpha, then review the full ordered raw sequence for identity, volume, projection, arcs, occlusion, timing, contacts, events, mask correctness, outline suitability, and transition continuity.
-
-This gate completes when at least two in-betweens exist and `sequence-approval` binds the same canonical hash, the same admission-proof hash, and every ordered raw high-resolution frame source hash before deterministic batch rendering.
+- For walk and run, establish contact order, support transfer, passing behavior, vertical center-of-mass path, arm counter-swing, and loop closure. Running usually shortens ground contact and increases airborne time and torso counter-rotation.
+- For attacks, casts, and interactions, separate preparation, causal action, and recovery; mark hits, releases, and completion. Keep body, equipment, and effects on coherent arcs.
+- For jumps, falls, and landings, distinguish launch, rise, apex, fall, and contact as required by the trajectory. Align airborne poses by root or center of mass and declare displacement.
+- For hurt, knockdown, and death, make impact direction and state change readable. Synchronize baseline changes with anchors and collision events; use a terminal hold unless runtime behavior requires otherwise.

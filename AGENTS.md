@@ -11,10 +11,11 @@ There is no repository-wide build system or dependency manifest. The image tools
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install numpy Pillow
-.venv/bin/python create-better-spritesheet/scripts/spritesheet_pipeline.py --help
+.venv/bin/python create-better-spritesheet/scripts/spritesheet_production.py --help
+.venv/bin/python create-better-spritesheet/scripts/spritesheet_delivery.py --help
 ```
 
-Run the public pipeline with real RGBA fixtures and v4 production request files before submitting script changes. Canonical authoring requests and evidence remain v3, and canonical admission proofs remain v1. Exercise `prepare-canonical`, `build-package`, and `verify-package`; keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
+Exercise the public production seam through `spritesheet_production.py advance|verify` with real RGBA fixtures. Exercise evidence work through `spritesheet_delivery.py diagnose|seal-delivery|verify`. Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` as the compatibility and internal adapter surface: canonical authoring requests and evidence remain v3, canonical admission proofs remain v1, and pixel packages remain v4. Keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
 
 ## Coding Style & Naming Conventions
 

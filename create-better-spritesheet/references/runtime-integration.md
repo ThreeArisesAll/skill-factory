@@ -1,6 +1,6 @@
 # Runtime Integration Contract
 
-Use this workflow only when the user explicitly requests replacement or integration of runtime assets.
+Use this workflow only when the user explicitly requests replacement or integration of runtime assets. Record that authority under [approval-protocol.md](approval-protocol.md).
 
 ## Inspect the live system first
 
@@ -29,9 +29,9 @@ When integration is authorized, update every genuinely interdependent item toget
 
 Keep the new asset consistent with neighboring characters or states in visual mass, contact principles, and gameplay readability. Prefer shared contract updates. Use character-specific compensation only when the design genuinely requires it.
 
-## Match rendering to the art treatment
+## Match the production profile
 
-Smooth raster characters generally use linear interpolation, antialiasing, and non-integer positions. Pixel art generally uses nearest-neighbor sampling, integer scaling, and pixel alignment. Read the current engine and project rules before choosing settings; do not treat one engine's option names as a universal contract.
+The package builder currently implements the `smooth-raster/v1` profile defined in [quality-contract.md](quality-contract.md). Integrate its output with linear interpolation, antialiasing, and non-integer positions when the live project permits them. Read the current engine and project rules before choosing settings; do not treat one engine's option names as a universal contract.
 
 For example, a Phaser configuration for smooth raster art may include:
 
@@ -41,7 +41,7 @@ antialias: true,
 roundPixels: false,
 ```
 
-CSS generally uses `image-rendering: auto` for smooth raster presentation. Pixel art uses `pixelated` or an equivalent project-approved setting. Inspect both test galleries and production entry points so a preview with incorrect filtering is not mistaken for an asset defect.
+CSS generally uses `image-rendering: auto` for `smooth-raster/v1` presentation. Pixel art requires a separate profile with nearest-neighbor sampling, integer scaling, pixel alignment, and its own executable verification; do not integrate a `smooth-raster/v1` package by switching only the runtime filter. Inspect both test galleries and production entry points so a preview with incorrect filtering is not mistaken for an asset defect.
 
 ## Validate
 
@@ -56,4 +56,4 @@ Inspect the project-supported real viewport, camera, and device for:
 - Filtering, transparent edges, and cropping
 - Consistency with neighboring characters and scenes
 
-Distinguish automated passes, conditional skips, and visual judgments that still require human confirmation. Only the real render at the production entry point can demonstrate runtime compatibility.
+Distinguish automated passes, conditional skips, and visual judgments that still require human confirmation. Record externally produced real-entry-point evidence as `runtime-playback-proof/v1` with classification `SUPPLIED`. The delivery verifier checks its bindings and recorded checks; it does not claim to have observed the runtime. See [production-delivery.md](production-delivery.md).

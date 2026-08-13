@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Better Spritesheet"
-  short_description: "Build and replay deterministic sprite packages"
-  default_prompt: "Use $create-better-spritesheet to admit canonical references, obtain user approval for the complete ordered frame-description plan before keyframe generation, approve authoritative raw high-resolution frame sources, build spritesheet-package/v4 with deterministic in-memory outline and single-resize rendering, and replay its spritesheet-rendering-receipt/v1 to the final sheet."
+  short_description: "Create and verify sprite-sheet packages"
+  default_prompt: "Use $create-better-spritesheet to create, rebuild, diagnose, review, or integrate these sprite-sheet artifacts."

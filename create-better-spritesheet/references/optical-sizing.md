@@ -23,13 +23,13 @@ Use canonical authoring when the defect belongs to identity, art direction, or t
 - Preserve proportions, composition, palette, equipment, antialiasing, materials, silhouette language, and line hierarchy.
 - Spend detail on large-form boundaries and recognition anchors.
 
-Run `prepare-canonical` with `canonical-authoring-request/v3`. Require v3 evidence and `canonical-admission-proof/v1`, then repeat canonical approval and all dependent raw-source reviews. Canonical optical correction does not mechanically alter existing pose sources.
+Advance the production job to repeat canonical preparation with `canonical-authoring-request/v3`. Require v3 evidence and `canonical-admission-proof/v1`, then apply [approval-protocol.md](approval-protocol.md) to the changed canonical and every dependent review. Canonical optical correction does not mechanically alter existing pose sources.
 
 ## Correct a raw frame source
 
-Use raw frame-source authoring when one pose has unclear shapes, an incorrect mask, accidental transparency, poor crop placement, or inadequate outline margin. Finish the correction before approval so the final Alpha remains the authoritative pose silhouette. Repeat every review bound to changed bytes.
+Use raw frame-source authoring when one pose has unclear shapes, an incorrect mask, accidental transparency, poor crop placement, or inadequate outline margin. Finish the correction before approval so the final Alpha remains the authoritative pose silhouette. Apply [approval-protocol.md](approval-protocol.md) to every review bound to changed bytes.
 
-Do not add the formal silhouette ring while editing a raw source. Deterministic frame rendering derives that ring in memory from the approved authoritative Alpha and resizes the result exactly once.
+Do not add the formal silhouette ring while editing a raw source. Follow the deterministic derivation owned by [lineage-evidence.md](lineage-evidence.md).
 
 ## Verify native-size treatment
 

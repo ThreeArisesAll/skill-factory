@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Walk cycle structural phases</title>
+  <desc id="desc">Original teaching diagram of contact, down, passing, up, and next contact positions in a generic side-view walk.</desc>
+  <metadata>
+    <provenance xmlns="https://threeaa.dev/skill-factory/provenance" author="ThreeAA skill-factory refactor" date="2026-08-13" source="original geometric SVG" license="repository terms"/>
+  </metadata>
+  <rect width="1200" height="320" rx="24" fill="#f7f4ec"/>
+  <path d="M56 244H1144" fill="none" stroke="#31566d" stroke-width="4" stroke-linecap="round"/>
+  <path d="M184 48H1016" fill="none" stroke="#d2a44e" stroke-width="3" stroke-dasharray="10 12"/>
+  <g fill="none" stroke="#173947" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(120 0)">
+      <circle cx="70" cy="82" r="22" fill="#f7f4ec"/>
+      <path d="M66 106L58 168M58 168L18 238M58 168L119 238M62 126L17 174M62 126L108 156"/>
+      <circle cx="58" cy="168" r="6" fill="#d9694f" stroke="none"/>
+    </g>
+    <g transform="translate(340 14)">
+      <circle cx="70" cy="82" r="22" fill="#f7f4ec"/>
+      <path d="M67 106L62 168M62 168L28 238M62 168L101 238M64 128L24 164M64 128L104 166"/>
+      <circle cx="62" cy="168" r="6" fill="#d9694f" stroke="none"/>
+    </g>
+    <g transform="translate(560 0)">
+      <circle cx="70" cy="82" r="22" fill="#f7f4ec"/>
+      <path d="M69 106L70 168M70 168L64 238M70 168L101 204L91 238M70 127L42 170M70 127L96 166"/>
+      <circle cx="70" cy="168" r="6" fill="#d9694f" stroke="none"/>
+    </g>
+    <g transform="translate(780 -14)">
+      <circle cx="70" cy="82" r="22" fill="#f7f4ec"/>
+      <path d="M72 106L78 168M78 168L110 238M78 168L43 205L52 238M75 127L40 164M75 127L111 162"/>
+      <circle cx="78" cy="168" r="6" fill="#d9694f" stroke="none"/>
+    </g>
+    <g transform="translate(1000 0) scale(-1 1)">
+      <circle cx="-70" cy="82" r="22" fill="#f7f4ec"/>
+      <path d="M-66 106L-58 168M-58 168L-18 238M-58 168L-119 238M-62 126L-17 174M-62 126L-108 156"/>
+      <circle cx="-58" cy="168" r="6" fill="#d9694f" stroke="none"/>
+    </g>
+  </g>
+  <g fill="#173947" font-family="system-ui, sans-serif" font-size="19" font-weight="700" text-anchor="middle">
+    <text x="190" y="286">CONTACT</text>
+    <text x="410" y="286">DOWN</text>
+    <text x="630" y="286">PASSING</text>
+    <text x="850" y="286">UP</text>
+    <text x="1070" y="286">NEXT CONTACT</text>
+  </g>
+  <g fill="#31566d" font-family="system-ui, sans-serif" font-size="14" text-anchor="middle">
+    <text x="600" y="28">STRUCTURE, NOT PERFORMANCE OR CHARACTER DESIGN</text>
+  </g>
+</svg>

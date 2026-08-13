@@ -1,63 +1,51 @@
 # Action Reference Search
 
-Run this workflow only when the user cannot provide an action reference but still wants reference discovery. Do not run it when the user explicitly says no action reference is needed. Do not ask for separate search permission. Proactively search Pinterest, then ask the user to approve a candidate.
+Run this workflow only when the user cannot provide action evidence and still wants reference discovery. Skip it when the user explicitly declines action evidence. Search without a separate permission prompt, then use the [approval protocol](approval-protocol.md) before adopting a candidate.
 
-## Search Pinterest
+## Search
 
-Use an available web or browser tool to search Pinterest directly. If Pinterest pages are inaccessible, require login, or load incomplete results, use web or image search restricted to `pinterest.com` and open the specific Pin.
+Use available web or browser search. Pinterest may be useful for discovery, but prefer the original creator or source page whenever it is available. If a Pinterest page is inaccessible, requires login, or loads incomplete results, use web or image search restricted to `pinterest.com` and open the specific Pin.
 
-Construct two to four narrow queries from the motion contract. Prefer English action terms:
+Construct two to four narrow queries from the motion blueprint. Prefer English action terms:
 
 - `<action> animation reference`
-- `<action> keyframes`
-- `<action> cycle contact passing high point`
+- `<action> key poses`
+- `<action> contact passing extreme`
 - `<direction or camera> <action> animation reference`
 - `<body type or equipment> <action> motion reference`
 
-Substitute the actual action, direction, camera, body type, equipment, and loop or one-shot semantics. Do not use a broad term such as `animation` or `character movement` as the only query.
+Substitute the actual action, direction, camera, body type, equipment, and loop or one-shot behavior. A broad term such as `animation` alone is insufficient.
 
 ## Clarity and value gate
 
-Use the built-in [walk-cycle-reference.png](../assets/walk-cycle-reference.png) as the screening benchmark. Prefer references that provide:
+Use the original [walk-cycle-phases.svg](../assets/walk-cycle-phases.svg) as a terminology and screening aid for cyclic locomotion, not as observed performance evidence. Prefer external references that provide:
 
 - Native resolution sufficient to read joints, contacts, and silhouettes
-- An unambiguous pose sequence or labeled key phases
+- An unambiguous pose sequence or labeled structural anchors
 - Stable camera, character scale, ground line, and travel direction
 - Unobstructed limbs with readable near-far relationships and equipment arcs
-- Anticipation, main action, extreme, recovery, or a complete loop
-- Clean composition without watermarks, text, or decoration blocking the motion
+- The topology's causal phases, transitions, or complete loop
+- Creator or source attribution and composition unobstructed by decoration
 
-Reject candidates with tiny thumbnails, unclear pose order, severely cropped limbs, inconsistent perspective or scale, duplicate-image collages, AI anatomy errors, or only finished art style without usable motion information. A single pose may supplement one extreme but cannot prove a complete action by itself.
+Reject candidates with tiny thumbnails, unclear pose order, severely cropped limbs, inconsistent perspective or scale, duplicate-image collages, implausible anatomy, or only finished art style without usable motion information. A single pose may support one anchor but cannot establish a complete action.
 
-## Present candidates to the user
+## Present candidates
 
-Present the two to four most valuable candidates instead of returning an entire results page. For each candidate, provide:
+Present the two to four most useful candidates rather than an entire result page. For each candidate, provide:
 
-- An accessible Pin or original-source link
+- An accessible original-source or Pin link
 - A thumbnail preview or clear content description
-- The phases, direction, rhythm, or event decisions it supports
-- The motion information it still lacks
+- The topology, phases, rhythm, direction, or event decisions it supports
+- The motion information it lacks
 
-Recommend one candidate and ask the user which reference to adopt. Before approval, perform motion analysis and keyframe planning only; do not generate the full frame sequence.
+Recommend one candidate and present the complete current set for approval. Before approval, analyze motion and draft the motion blueprint only; generate no motion images.
 
-Use Pinterest only to discover motion references. Whenever possible, open the original source linked by the Pin and record the creator or source page. Use external images to analyze motion, rhythm, and pose; do not copy character identity, clothing, brand elements, or art style. Do not save third-party images into the repository or Skill assets unless the user requests it.
+Use external images to study motion, rhythm, and pose. Do not copy character identity, clothing, brand elements, or art style. Do not save third-party images into the repository or Skill assets unless the user requests it and rights are clear.
 
-## Built-in walk-cycle reference
+## Built-in educational diagram
 
-`assets/walk-cycle-reference.png` is the user-provided built-in reference. Its dimensions are `1145×337`, and its SHA-256 is `b85df770ed6528e2c16ba4817752a533af424b9c2fbe11520564484652c191fc`. Its original external provenance has not been confirmed.
+`assets/walk-cycle-phases.svg` is an original, pure-SVG teaching diagram shipped with this Skill. It names five structural positions in a generic side-view walk half-cycle: contact, down, passing, up, and the next contact. Use it to explain terminology, support query construction, and screen whether a candidate exposes contact order, support transfer, center-of-mass change, and loop continuity.
 
-The image presents two alternating half-cycles through nine side-view poses:
+Audit its embedded SVG provenance metadata: author `ThreeAA skill-factory refactor`, date `2026-08-13`, source `original geometric SVG`, license `repository terms`.
 
-1. CONTACT
-2. RECOIL
-3. PASSING
-4. HIGH-POINT
-5. CONTACT
-6. RECOIL
-7. PASSING
-8. HIGH-POINT
-9. CONTACT, repeating the first footfall phase for explicit loop closure
-
-Inspect this image before producing any walk cycle. Use it to evaluate contact order, center-of-mass rise and fall, counter-swinging arms, stride arcs, and loop phases. Character identity, body proportions, clothing, and final art treatment remain governed by the project references.
-
-When the user cannot provide a walk reference, use the built-in image as the default usable reference while searching Pinterest for a closer match to the target camera, body type, speed, and equipment. If the search yields nothing more valuable, report that result and recommend the built-in image.
+The diagram is deliberately schematic. It provides no character identity, body mechanics, timing, performance style, or production-ready pose evidence. Use supplied or discovered motion evidence for those decisions, or obtain explicit authorization to design them from written intent.

@@ -530,7 +530,7 @@ class SpritesheetPipelineTests(unittest.TestCase):
             prepared = self.run_cli("prepare-canonical", "--request", str(request), "--output-dir", str(output))
 
             self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
-            evidence = json.loads((output / "canonical-reference-evidence.json").read_text())
+            _ = json.loads((output / "canonical-reference-evidence.json").read_text())
             plain_request = root / "plain-request.json"
             self.write_json(
                 plain_request,
