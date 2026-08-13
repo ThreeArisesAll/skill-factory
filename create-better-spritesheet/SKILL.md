@@ -1,70 +1,60 @@
 ---
 name: create-better-spritesheet
-description: "Create, rebuild, diagnose, review, or integrate high-fidelity 2D character sprite-sheet packages and their runtime metadata."
+description: "Create, rebuild, diagnose, or review high-fidelity 2D character sprite-sheet production, with complete motion-plan approval, deterministic smooth-raster rendering, and replayable delivery evidence."
 ---
 
 # Create Better Spritesheet
 
-Route the request internally. Infer the route from the requested outcome and the live artifacts; never ask the user to choose a mode:
+Use this Skill for character identity, animation planning, sprite-source review, deterministic sheet production, delivery verification, or diagnosis. Infer the route from the requested outcome and live artifacts; do not ask the user to choose an internal mode.
 
-- **Create**: establish or reuse an exact valid canonical, then establish motion, sequence, and package evidence.
-- **Rebuild**: start at the earliest changed or invalidated input and regenerate every dependent result.
-- **Diagnose**: locate the owning source, rendering, metadata, or runtime defect and stop after diagnosis unless correction is requested.
-- **Review**: evaluate supplied artifacts and evidence without changing them.
-- **Integrate**: update a live runtime only when replacement or integration is explicitly requested.
+The installed create/rebuild adapter is `smooth-raster/v2`. Pixel art and other raster paradigms have different authoring and sampling rules: review them without conversion, but return `UNSUPPORTED_CAPABILITY` for create/rebuild until a matching production adapter exists.
 
-Use the production seam for stateful work and the delivery seam for evidence work:
+## Public seams
+
+Use the stateful seam for production and read-only verification:
 
 ```bash
 <python> <skill-dir>/scripts/spritesheet_production.py advance|verify
+```
+
+Use the evidence seam for deterministic diagnostics, sealing, and independent replay:
+
+```bash
 <python> <skill-dir>/scripts/spritesheet_delivery.py diagnose|seal-delivery|verify
 ```
 
-Resolve `<python>` to a Python 3.10+ interpreter that can import NumPy and Pillow before invoking either seam. If no compatible interpreter is available, report the missing runtime and stop; never treat an environment failure as image evidence.
+Resolve `<python>` to Python 3.10+ with NumPy and Pillow. Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` as an internal and compatibility adapter, not the primary production workflow.
 
-Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` as a compatibility and internal-adapter surface. Use it directly only for scoped pixel-contract work, never as the primary production workflow. Treat CLI behavior and tests as authoritative for exact schemas and layout. Read each directly relevant reference before acting:
+Read the references required by the current route:
 
-- [quality-contract.md](references/quality-contract.md) — resolve the production contract, style profile, quality gates, and correction owner.
-- [approval-protocol.md](references/approval-protocol.md) — present, pause, record, invalidate, and serialize every approval.
-- [production-interface.md](references/production-interface.md) — invoke the stateful production job, answer checkpoints, and verify a subject.
-- [motion-design.md](references/motion-design.md) — design an action topology, motion blueprint, keyframes, spacing, and in-betweens.
-- [reference-search.md](references/reference-search.md) — discover action evidence when the user cannot supply it.
-- [lineage-evidence.md](references/lineage-evidence.md) — prepare canonical evidence, bind approved sources, build, and replay the package.
-- [production-delivery.md](references/production-delivery.md) — assemble job evidence around the pixel package and determine the achieved delivery state.
-- [silhouette-outline.md](references/silhouette-outline.md) — apply an enabled silhouette outline to canonical and frame high-resolution buffers.
-- [optical-sizing.md](references/optical-sizing.md) — diagnose and correct native-size readability.
-- [runtime-integration.md](references/runtime-integration.md) — project metadata and validate a requested live integration.
+- [art-direction-contract.md](references/art-direction-contract.md) for identity, visual consistency, paradigm boundaries, and native-size review.
+- [motion-plan-contract.md](references/motion-plan-contract.md) for topology, animation principles, position roles, direction continuity, and the complete pre-image plan.
+- [approval-protocol.md](references/approval-protocol.md) for approval subjects, pauses, invalidation, and recovery.
+- [smooth-raster-profile.md](references/smooth-raster-profile.md) for Alpha, outline, scaling, optical correction, and visual quality gates.
+- [production-interface.md](references/production-interface.md) for intent, checkpoint, response, and typed failure behavior.
+- [pixel-evidence.md](references/pixel-evidence.md) for package v5 lineage, aliases, receipts, diagnostics, and replay boundaries.
+- [production-delivery.md](references/production-delivery.md) for the sealed v2 evidence closure and claim classifications.
+- [reference-search.md](references/reference-search.md) only when usable action evidence is missing and discovery is wanted.
+- [runtime-integration.md](references/runtime-integration.md) only when the user explicitly authorizes changes to a target runtime.
+- [compatibility.md](references/compatibility.md) when inspecting or migrating v1/v4 jobs, packages, commands, or deliveries.
 
-## Create sequence
+## Create and rebuild workflow
 
-1. Resolve one authoritative production contract and the applicable action topology. The installed executable profile is `smooth-raster/v1`, bound to `smooth-raster-pixel-protocol/v3`.
-2. **Canonical gate:** reuse only an exact, fully admitted, currently approved canonical whose bound inputs and pixel protocol match. Otherwise prepare the source, run the pre-admission low-Alpha boundary gate, apply the evidence-bound Alpha and outline policy, replay admission, and perform the complete canonical visual preflight before presenting one neutral canonical per required camera or direction for approval. Inspect both the high-resolution master and native target preview on white, dark, and checkerboard transparency-visualization backgrounds. A visible white fringe, jagged step, directional thickness spike, square corner, or outline bulge is a hard blocker: correct the owning source, Alpha policy, outline contract, or renderer; regenerate its evidence; and withhold the canonical approval gate.
-3. **Motion-blueprint gate:** produce and approve the complete motion blueprint before generating motion images.
-4. **Keyframe gate:** generate the topology's necessary keyframes, finalize their Alpha boundaries, and obtain the hash-bound keyframe-set approval.
-5. **Spacing-plan gate:** derive and approve the complete `spacing-plan/v1` from the approved keyframes before generating in-betweens.
-6. **Sequence gate:** generate the planned in-betweens, finalize Alpha boundaries, review the complete sequence, and obtain the hash-bound `sequence-approval`. Treat temporal outline flicker as a hard blocker and withhold sequence approval until the owning source or renderer is corrected.
-7. Build the package, replay verification, and inspect the complete diagnostic presentation at native size.
-8. **Package-review gate:** approve the exact verified package, diagnostics, and presentation subjects before sealing the delivery. Correct defects at their owning stage and repeat every invalidated descendant.
-9. Integrate only when authorized, update interdependent runtime contracts atomically, and validate the real production entry point.
+1. Resolve the production profile, target cell contract, required canonical views, art-direction contract, actions, directions, and delivery scope. Reuse already resolved outline settings unless current evidence conflicts.
+2. Prepare and replay-admit one high-resolution canonical per required direction-camera view. Inspect high-resolution and native-size previews on white, dark, and checkerboard backgrounds. Ask for canonical approval only when the complete view set is eligible.
+3. Build one complete `motion-plan/v2` covering every clip and every logical playback position. Present the full current plan and obtain explicit approval before accepting or producing any keyframe or in-between image. Any material plan revision invalidates image work and requires presentation and approval of the complete revised plan.
+4. Accept the planned high-resolution keyframe sources through raw RGBA admission. Present and approve the complete keyframe set.
+5. Accept the planned in-between sources, if any, through the same admission. Represent holds and loop closure as aliases with no new image source. Present and approve the complete ordered sequence.
+6. Build `spritesheet-package/v5`, replay deterministic rendering and assembly, compute diagnostics, and enforce configured mechanical thresholds before opening package review.
+7. Present the exact identity, motion plan, package, diagnostics, native-size board, onion skin, and playback previews. Record one complete package decision with an observation for every required subject.
+8. Seal `spritesheet-production-delivery/v2` and independently verify its file closure, approvals, raw-source admissions, package replay, and diagnostics recomputed from final sheet pixels.
 
-Complete each step only when its referenced contract says the current evidence satisfies the step and every required approval is valid. Preserve resolved production decisions unless current evidence conflicts with them.
+Stop at the current checkpoint whenever input, approval, or eligibility is missing. Do not generate images while the motion-plan gate is unresolved. Do not patch target cells or a finished sheet; correct the earliest owning source or contract and rebuild descendants.
 
-## Rebuild, diagnose, and review
+## Diagnose and review
 
-For a rebuild, compare current hashes, contracts, and approvals to the requested change. Resume at the earliest invalid node in the create sequence; retain only evidence whose bound inputs remain exact.
+Keep the subject byte-for-byte read-only. Verify from the outer delivery inward when available; otherwise start from the package manifest. Classify each conclusion as `MACHINE-VERIFIED`, `REVIEWED`, `DECLARED`, `SUPPLIED`, or unresolved. Report the earliest owning defect, affected descendants, and whether correction was requested; diagnosis alone does not authorize modification.
 
-For diagnosis or review, inspect the same lineage in order and classify each conclusion as `MACHINE-VERIFIED`, `REVIEWED`, `DECLARED`, `SUPPLIED`, or unresolved. Report the earliest owning defect and its invalidation impact. Keep diagnosis and review read-only unless the user also requests correction.
+## Completion
 
-Return typed `UNSUPPORTED_CAPABILITY` for pixel-art create or rebuild because no pixel-art production adapter is installed. Diagnose and review pixel-art artifacts read-only when requested.
-
-## Completion and handoff
-
-Report the highest achieved output state from [production-delivery.md](references/production-delivery.md) only when its evidence passes:
-
-- `package-ready`
-- `runtime-metadata-complete`
-- `runtime-verified`
-
-For diagnosis or review that reaches none of these states, report `no delivery state achieved`.
-
-Also report the route taken, applicable profile, supplied evidence, approvals, machine verification, visual findings, changes, tests, and remaining uncertainty as separate facts. Keep staging, committing, publishing, and production replacement outside scope unless requested.
+Report `package-ready` only when a sealed delivery passes independent verification. A bare package may be pixel-verified but has no delivery state. Separate machine results, human visual acceptance, declared intent, supplied external evidence, and unresolved uncertainty. Do not stage, commit, publish, replace runtime assets, or create a pull request unless separately requested.

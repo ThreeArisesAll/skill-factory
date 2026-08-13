@@ -1,54 +1,38 @@
 # Approval Protocol
 
-Use this protocol for every user or reviewer gate in canonical, motion, sequence, and integration work. A gate is valid only when all five properties below are satisfied.
+An approval gate is valid only when its input is eligible, its complete subject is presented, the named authority explicitly approves that exact revision, and every bound hash or semantic dependency remains current.
 
-Treat canonical, motion-blueprint, keyframe-set, spacing-plan, sequence, and package review as distinct gates. Completion of one never substitutes for another; dependency order controls when each may open. A gate may open only after its subject passes every owning machine check and required agent preflight. A known visual hard blocker makes the subject ineligible for presentation or approval.
+## Current gates
 
-## Authority
+| Gate | Eligible input | Complete approval subject | Continue only when | Invalidated by |
+| --- | --- | --- | --- | --- |
+| Canonical | Prepared views and replayed admission proofs | All required direction-camera views, six review composites per view, and identity contract | Exact complete view set is approved | Canonical bytes, view binding, identity contract, Alpha or outline policy, admission proof |
+| Motion plan | Approved canonical set and action evidence or written-design authority | Entire `motion-plan/v2`, all clips, directions, and logical positions | Exact complete plan is approved | Any clip or position content, order, timing, event, role, view, topology, or plan assumption |
+| Keyframe set | Approved motion plan and admitted planned keyframe sources | All current keyframes for the batch with exact source hashes | Entire set is approved | Any keyframe byte, source admission, canonical, or motion-plan change |
+| Sequence | Approved keyframes and admitted planned in-betweens | Complete ordered logical sequence, including aliases, timing, and events | Entire sequence is approved | Any concrete source, alias, order, duration, event, plan, or upstream approval change |
+| Package | Verified v5 package and complete diagnostic presentation | Identity, motion plan, package, diagnostics, native-size board, onion skin, contact sheet, and previews | Every required subject has one acceptable observation | Subject hash, diagnostic asset, package replay, quality policy, or presentation change |
 
-Identify who can approve the subject before requesting a decision. Use the user as the default authority. Accept repository policy, an attached decision record, or a named delegate only when the user or authoritative project rules grant that authority for the exact subject.
+## Present and pause
 
-Reuse an already resolved decision when its subject and bound inputs are unchanged. Ask only when authority is absent, evidence conflicts, or a material choice remains unresolved.
+Present the full current subject, not a diff or selected subset. Include its stable gate, revision, material assumptions, unresolved consequences, and exact hashes where the checkpoint provides them. Ask for approval or requested changes.
 
-## Presentation
+Pause all dependent work while a gate is unresolved. In particular, produce or accept no motion image before motion-plan approval, build no package before sequence approval, and seal no delivery before package approval. Silence, discussion, or approval of a prior revision is not approval.
 
-Present one complete current approval subject with:
+Withhold a visual approval question when a known hard blocker exists. Correct the owner, regenerate the complete affected presentation, and then open the gate. Do not ask a person to approve something the machine contract already rejects.
 
-- A stable gate name and revision
-- The full ordered subject, not a partial diff
-- Material assumptions and unresolved consequences
-- Exact hashes for byte-bound image gates
-- A direct request to approve the current revision or request changes
+## Reuse and invalidation
 
-For visual gates, present the complete evidence set together at a comparable scale and preserve any required native-pixel inspection. Do not omit a required background, resolution, or bound subject. For plan gates, present every item and relationship governed by the decision. A recommendation may accompany the subject but cannot replace the explicit decision.
+Reuse an unchanged upstream approval. Do not ask again merely because a descendant changed. Conversely, invalidate transitively when the approved subject or a bound input changes. A revised motion plan always requires presentation and explicit approval of the complete revised plan before any image work resumes.
 
-Withhold a visual approval question when preflight finds a white fringe, jagged step, directional thickness spike, square corner, outline bulge, or temporal outline flicker. Route the defect to its owning source, Alpha policy, outline contract, or renderer; regenerate the complete affected presentation and machine evidence before the gate may open.
+When a generated source deviates from the approved plan, choose one explicit path:
 
-## Pause
+1. Reject or regenerate the source under the unchanged plan; or
+2. Revise the plan, invalidate all image descendants, present the complete revision, and obtain new approval.
 
-Pause every dependent production action while a material gate is unresolved. Continue only work that cannot alter or presuppose the pending subject. In particular:
+Never silently reinterpret an approved plan to fit generated output.
 
-- Pause motion image generation until both the canonical and motion blueprint are approved.
-- Pause in-between generation until the keyframe set and spacing plan are approved.
-- Pause package building until canonical, keyframe-set, and sequence approvals bind current bytes.
-- Pause delivery sealing until package review binds the exact verified package, diagnostics, and complete presentation.
-- Pause production replacement until integration authority is explicit.
+## Response contract
 
-Silence, discussion, approval of selected items, or approval of an earlier revision does not complete the gate.
+The current checkpoint's `response_schema` is the executable response contract. Copy its `checkpoint_id`, `job_revision`, and `context_sha256`; provide only the requested input or decision fields. A stale or malformed response must leave committed state unchanged.
 
-## Invalidation
-
-Invalidate an approval when its presented subject, bound bytes, governing contract, admission proof, ordering, or material assumption changes. Invalidate every dependent approval and output transitively. Recompute the complete current subject, increment its revision, present it again, and request a new decision.
-
-Do not reopen an unchanged upstream decision merely because a descendant changed. Route a defect to its owning stage so invalidation remains as narrow as the dependency graph permits.
-
-## Serialization
-
-Distinguish executable approval fields from the richer workflow ledger:
-
-- Populate each closed executable approval object with exactly the fields its schema accepts. Store `canonical-approval`, `keyframe-set-approval`, and `sequence-approval` in `spritesheet-production-request/v4` and the resulting `spritesheet-package/v4` manifest as defined by the CLI.
-- Record the gate name, revision, authority, full decision context, presentation subjects, and decision time when available in the applicable approval ledger or `review-packet/v1`. Do not add ledger or timestamp fields to a closed schema that does not accept them.
-- Serialize identity, motion, spacing, diagnostic, review-presentation, and runtime-playback evidence through `spritesheet-production-delivery/v1` as defined in [production-delivery.md](production-delivery.md). Keep these records outside the closed v4 request and package schemas.
-- Keep runtime replacement authority outside the pixel package manifest unless the target repository defines its own authoritative record.
-
-Classify a recorded human decision as `REVIEWED`. Classify schema, hash, binding, geometry, and replay checks as `MACHINE-VERIFIED`. Classify metadata meaning and claims about generative model inputs or obedience as `DECLARED` unless a human review explicitly covers them. Classify externally produced runtime evidence as `SUPPLIED`; verification may check its schema, hashes, bindings, assets, and recorded check results without claiming direct observation of the runtime.
+Human approval is `REVIEWED`. Hashes, schemas, replay, geometry, and deterministic measurements are `MACHINE-VERIFIED`. Intended pose meaning, generator obedience, and metadata semantics are `DECLARED` unless a review explicitly covers them. External runtime evidence is `SUPPLIED` until independently observed under the target system.

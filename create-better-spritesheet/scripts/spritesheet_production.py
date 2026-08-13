@@ -18,7 +18,11 @@ def parse_args() -> argparse.Namespace:
     advance = subparsers.add_parser("advance", help="create, resume, or respond to one atomic job")
     advance.add_argument("--job", required=True, type=Path)
     source = advance.add_mutually_exclusive_group(required=True)
-    source.add_argument("--intent", type=Path, help="spritesheet-production-intent/v1 JSON")
+    source.add_argument(
+        "--intent",
+        type=Path,
+        help="spritesheet-production-intent/v2 JSON (v1 remains supported)",
+    )
     source.add_argument("--response", type=Path, help="checkpoint-bound response JSON")
     advance.add_argument("--json", action="store_true", required=True)
     verify = subparsers.add_parser("verify", help="read-only verification of a package manifest or delivery directory")

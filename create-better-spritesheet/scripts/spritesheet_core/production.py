@@ -22,6 +22,7 @@ from .protocol import (
     MAX_FRAME_COUNT,
     MAX_JSON_FILE_BYTES,
     PRODUCTION_REQUEST_SCHEMA,
+    PRODUCTION_REQUEST_SCHEMA_V5,
     SAMPLER,
     normalize_clip_metadata,
     read_request,
@@ -42,6 +43,7 @@ from .rendering import open_rgba_snapshot, resolve_high_resolution_dimensions
 class ProductionModel(Mapping[str, Any]):
     """Validated production state with mapping compatibility for stable internals."""
 
+    schema_version: str
     contract: dict[str, Any]
     frame_width: int
     frame_height: int
@@ -63,6 +65,7 @@ class ProductionModel(Mapping[str, Any]):
     order: str
 
     _FIELDS = (
+        "schema_version",
         "contract",
         "frame_width",
         "frame_height",
@@ -96,7 +99,12 @@ class ProductionModel(Mapping[str, Any]):
         return len(self._FIELDS)
 def parse_production_request(request_path: Path) -> ProductionModel:
     budget = ResourceBudget()
-    request = read_request(request_path, PRODUCTION_REQUEST_SCHEMA, budget=budget)
+    request = read_request(
+        request_path,
+        {PRODUCTION_REQUEST_SCHEMA, PRODUCTION_REQUEST_SCHEMA_V5},
+        budget=budget,
+    )
+    is_v5 = request["schema_version"] == PRODUCTION_REQUEST_SCHEMA_V5
     require_exact_keys(
         request,
         {"schema_version", "contract", "canonical_references", "clips", "reviews", "grid"},
@@ -224,6 +232,7 @@ def parse_production_request(request_path: Path) -> ProductionModel:
     ]
     clip_review_scopes: list[tuple[str, list[str]]] = []
     clip_ids_seen: set[str] = set()
+    logical_ids_seen: set[str] = set()
     for clip_index, raw_clip in enumerate(clips_value):
         clip = require_object(raw_clip, f"clips[{clip_index}]")
         clip_id = require_string(clip.get("id"), f"clips[{clip_index}].id")
@@ -243,6 +252,8 @@ def parse_production_request(request_path: Path) -> ProductionModel:
             raise ContractError(f"clip {clip_id!r} loop and repeat_opening_cell must be boolean")
         if repeat and not loop:
             raise ContractError("repeat_opening_cell is allowed only for a loop")
+        if is_v5 and repeat:
+            raise ContractError("v5 requires an explicit closing alias instead of repeat_opening_cell")
         raw_frames = clip.get("frames")
         if not isinstance(raw_frames, list) or not raw_frames:
             raise ContractError(f"clip {clip_id!r} frames must be a non-empty array")
@@ -257,16 +268,29 @@ def parse_production_request(request_path: Path) -> ProductionModel:
         )
         normalized_frames: list[dict[str, Any]] = []
         local_keyframe_indices: list[int] = []
+        local_concrete_ids: set[str] = set()
         for frame_index, raw_frame in enumerate(raw_frames):
             frame = require_object(raw_frame, f"clips[{clip_index}].frames[{frame_index}]")
             frame_id = require_string(frame.get("id"), f"clips[{clip_index}].frames[{frame_index}].id")
             if frame_id == "spritesheet":
                 raise ContractError("'spritesheet' is a reserved artifact id")
-            if frame_id in images:
+            if frame_id in logical_ids_seen or frame_id in images:
                 raise ContractError(f"duplicate artifact id: {frame_id}")
+            logical_ids_seen.add(frame_id)
             role = frame.get("role")
+            if is_v5 and role == "alias":
+                require_exact_keys(frame, {"id", "role", "source_id", "alias_kind"}, f"frame {frame_id!r}")
+                source_id = require_string(frame.get("source_id"), f"frame {frame_id!r}.source_id")
+                if source_id not in local_concrete_ids:
+                    raise ContractError(f"alias {frame_id!r} must reference an earlier concrete source in its clip")
+                if frame.get("alias_kind") not in {"hold", "closing"}:
+                    raise ContractError(f"alias {frame_id!r}.alias_kind is invalid")
+                if frame.get("alias_kind") == "closing" and (not loop or frame_index != len(raw_frames) - 1):
+                    raise ContractError("a closing alias must be the final position of a loop")
+                normalized_frames.append(dict(frame))
+                continue
             if role not in ("keyframe", "in-between"):
-                raise ContractError(f"frame {frame_id!r} role must be keyframe or in-between")
+                raise ContractError(f"frame {frame_id!r} role must be keyframe, in-between, or a v5 alias")
             expected_frame_keys = {"id", "role", "source_path"}
             if role == "in-between":
                 expected_frame_keys |= {"previous_keyframe", "next_keyframe"}
@@ -284,12 +308,13 @@ def parse_production_request(request_path: Path) -> ProductionModel:
             hashes[frame_id] = image_snapshot.sha256
             artifact_bytes[frame_id] = image_snapshot.data
             frame_ids.append(frame_id)
+            local_concrete_ids.add(frame_id)
             if role == "keyframe":
                 local_keyframe_indices.append(frame_index)
                 if "previous_keyframe" in frame or "next_keyframe" in frame:
                     raise ContractError(f"keyframe {frame_id!r} cannot declare brackets")
             normalized_frames.append(dict(frame))
-        if len(local_keyframe_indices) < 2:
+        if not is_v5 and len(local_keyframe_indices) < 2:
             raise ContractError(f"clip {clip_id!r} requires at least two distinct keyframes")
         for frame_index, frame in enumerate(normalized_frames):
             if frame["role"] != "in-between":
@@ -306,7 +331,7 @@ def parse_production_request(request_path: Path) -> ProductionModel:
             )
             if not valid:
                 raise ContractError(f"in-between {frame['id']!r} has incorrect adjacent keyframe brackets")
-        if sum(frame["role"] == "in-between" for frame in normalized_frames) < 2:
+        if not is_v5 and sum(frame["role"] == "in-between" for frame in normalized_frames) < 2:
             raise ContractError(f"clip {clip_id!r} requires at least two distinct in-betweens")
         total_cells += len(normalized_frames) + int(repeat)
         clip_review_scopes.extend(
@@ -315,7 +340,16 @@ def parse_production_request(request_path: Path) -> ProductionModel:
                     "keyframe-set-approval",
                     [canonical_id, *[frame["id"] for frame in normalized_frames if frame["role"] == "keyframe"]],
                 ),
-                ("sequence-approval", [canonical_id, *[frame["id"] for frame in normalized_frames]]),
+                (
+                    "sequence-approval",
+                    [
+                        canonical_id,
+                        *dict.fromkeys(
+                            frame["source_id"] if frame["role"] == "alias" else frame["id"]
+                            for frame in normalized_frames
+                        ),
+                    ],
+                ),
             ),
         )
         clips.append(
@@ -338,12 +372,12 @@ def parse_production_request(request_path: Path) -> ProductionModel:
         for artifact_id, image in images.items()
     }
     high_resolution_pixel_hashes = [pixel_hashes[frame_id] for frame_id in frame_ids]
-    if len(set(high_resolution_pixel_hashes)) != len(high_resolution_pixel_hashes):
+    if not is_v5 and len(set(high_resolution_pixel_hashes)) != len(high_resolution_pixel_hashes):
         raise ContractError("all high-resolution frame images must have distinct pixels")
     canonical_pixel_hashes = [pixel_hashes[canonical_id] for canonical_id in canonical]
     if len(set(canonical_pixel_hashes)) != len(canonical_pixel_hashes):
         raise ContractError("canonical references must have distinct pixels; share one ID when content is shared")
-    if set(canonical_pixel_hashes) & set(high_resolution_pixel_hashes):
+    if not is_v5 and set(canonical_pixel_hashes) & set(high_resolution_pixel_hashes):
         raise ContractError("canonical reference must not be pixel-identical to a high-resolution frame")
 
     reviews = validate_review_requests(
@@ -361,6 +395,7 @@ def parse_production_request(request_path: Path) -> ProductionModel:
     if order not in ("row-major", "column-major"):
         raise ContractError("grid.order must be row-major or column-major")
     return ProductionModel(
+        schema_version=request["schema_version"],
         contract=dict(contract),
         frame_width=frame_width,
         frame_height=frame_height,

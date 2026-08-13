@@ -32,7 +32,9 @@ from spritesheet_core.protocol import (
     OUTLINE_ALGORITHM,
     OUTLINE_KEYS,
     PACKAGE_SCHEMA,
+    PACKAGE_SCHEMA_V5,
     PRODUCTION_REQUEST_SCHEMA,
+    PRODUCTION_REQUEST_SCHEMA_V5,
     RENDERING_PIPELINE,
     RENDERING_RECEIPT_SCHEMA,
     SAMPLER,
@@ -86,7 +88,9 @@ __all__ = [
     "OUTLINE_ALGORITHM",
     "OUTLINE_KEYS",
     "PACKAGE_SCHEMA",
+    "PACKAGE_SCHEMA_V5",
     "PRODUCTION_REQUEST_SCHEMA",
+    "PRODUCTION_REQUEST_SCHEMA_V5",
     "RENDERING_PIPELINE",
     "RENDERING_RECEIPT_SCHEMA",
     "SAMPLER",
@@ -132,8 +136,9 @@ def parse_args() -> argparse.Namespace:
         epilog=(
             "Public schemas:\n"
             "  canonical-authoring-request/v3 -> canonical review candidate + replay evidence\n"
-            "  spritesheet-production-request/v4 -> admission-bound immutable spritesheet package\n"
-            "  spritesheet-package/v4 -> independently replayed authoritative manifest"
+            "  spritesheet-production-request/v5 -> alias-aware immutable spritesheet package\n"
+            "  spritesheet-package/v5 -> independently replayed authoritative manifest\n"
+            "Compatibility: request/package v4 remain supported for existing callers."
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -155,19 +160,19 @@ def parse_args() -> argparse.Namespace:
         "build-package",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Consume spritesheet-production-request/v4. Required sections:\n"
+            "Consume spritesheet-production-request/v5 or compatible v4. Required sections:\n"
             "  contract: dimensions, 512 high-resolution side, sampler, conditional outline, origin, anchor, safe bounds\n"
             "  canonical_references: id + absolute regular candidate, evidence_path, and proof_path\n"
-            "  clips: runtime metadata + ordered keyframe/in-between records with absolute RGBA PNG source_path values\n"
+            "  clips: runtime metadata + ordered concrete sources and optional v5 logical aliases\n"
             "  reviews: hash-bound canonical, keyframe-set, and sequence approvals\n"
             "  grid: columns + row-major or column-major order"
         ),
     )
-    build.add_argument("--request", required=True, type=Path, help="spritesheet-production-request/v4 JSON")
+    build.add_argument("--request", required=True, type=Path, help="spritesheet-production-request/v5 or v4 JSON")
     build.add_argument("--output-dir", required=True, type=Path, help="new atomic package directory")
     verify = subparsers.add_parser(
         "verify-package",
-        description="Verify a spritesheet-package/v4 manifest, replay canonical admission and every cell, and emit MACHINE-VERIFIED, DECLARED, and REVIEWED results.",
+        description="Verify a spritesheet-package/v5 or v4 manifest, replay canonical admission and every cell, and emit MACHINE-VERIFIED, DECLARED, and REVIEWED results.",
     )
     verify.add_argument("--manifest", required=True, type=Path, help="package-relative authoritative manifest")
     return parser.parse_args()

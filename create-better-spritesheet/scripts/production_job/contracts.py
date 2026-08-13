@@ -45,6 +45,14 @@ def _string(value: Any, location: str) -> str:
 
 
 def validate_intent(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict) and value.get("schema_version") == "spritesheet-production-intent/v2":
+        from .v2 import validate_intent as validate_v2_intent
+
+        return validate_v2_intent(value)
+    return _validate_v1_intent(value)
+
+
+def _validate_v1_intent(value: Any) -> dict[str, Any]:
     intent = _object(value, "intent")
     _closed(intent, {
         "schema_version", "mode", "identity", "clips", "target",

@@ -9,13 +9,18 @@ from .errors import EvidenceError
 from .io import canonical_sha256, validate_sha256
 
 IDENTITY_SCHEMA = "identity-bible/v1"
+IDENTITY_SCHEMA_V2 = "identity-bible/v2"
 BLUEPRINT_SCHEMA = "motion-blueprint/v1"
+MOTION_PLAN_SCHEMA_V2 = "motion-plan/v2"
+RAW_FRAME_ADMISSION_SCHEMA = "raw-frame-admission/v1"
 SPACING_SCHEMA = "spacing-plan/v1"
 DIAGNOSTICS_SCHEMA = "motion-diagnostics/v1"
+DIAGNOSTICS_SCHEMA_V2 = "motion-diagnostics/v2"
 REVIEW_SCHEMA = "review-packet/v1"
 RUNTIME_SCHEMA = "runtime-playback-proof/v1"
 RUNTIME_PROJECTION_SCHEMA = "spritesheet-runtime-projection/v1"
 DELIVERY_SCHEMA = "spritesheet-production-delivery/v1"
+DELIVERY_SCHEMA_V2 = "spritesheet-production-delivery/v2"
 DELIVERY_STATUSES = {"package-ready", "runtime-metadata-complete", "runtime-verified"}
 EVIDENCE_KINDS = {
     "canonical-board",
@@ -179,6 +184,319 @@ def validate_identity(value: dict[str, Any]) -> None:
         },
         "identity bible.approval",
     )
+
+
+def validate_identity_v2(value: dict[str, Any]) -> None:
+    _keys(
+        value,
+        {"schema_version", "identity_id", "content", "approval"},
+        "identity bible",
+    )
+    identity_id = _string(value.get("identity_id"), "identity bible.identity_id")
+    content = _object(value.get("content"), "identity bible.content")
+    rule_fields = {
+        "proportion_rules",
+        "palette_rules",
+        "material_rules",
+        "lighting_and_shadow_rules",
+        "recognition_constraints",
+        "allowed_variations",
+        "forbidden_drifts",
+    }
+    _keys(
+        content,
+        {"subject", "art_direction", "canonical_views", "equipment", *rule_fields},
+        "identity bible.content",
+    )
+    _string(content.get("subject"), "identity bible.content.subject")
+    _string(content.get("art_direction"), "identity bible.content.art_direction")
+    canonical_ids: set[str] = set()
+    view_keys: set[tuple[str, str]] = set()
+    canonical_views = _array(
+        content.get("canonical_views"), "identity bible.content.canonical_views"
+    )
+    if not canonical_views:
+        raise EvidenceError("SCHEMA_INVALID", "identity bible requires canonical views")
+    for index, raw in enumerate(canonical_views):
+        location = f"identity bible.content.canonical_views[{index}]"
+        item = _object(raw, location)
+        _keys(
+            item,
+            {
+                "canonical_id",
+                "direction",
+                "camera",
+                "candidate_sha256",
+                "admission_proof_sha256",
+            },
+            location,
+        )
+        canonical_id = _string(item.get("canonical_id"), f"{location}.canonical_id")
+        direction = _string(item.get("direction"), f"{location}.direction")
+        camera = _string(item.get("camera"), f"{location}.camera")
+        if canonical_id in canonical_ids or (direction, camera) in view_keys:
+            raise EvidenceError(
+                "SCHEMA_INVALID", "identity canonical IDs and direction-camera views must be unique"
+            )
+        canonical_ids.add(canonical_id)
+        view_keys.add((direction, camera))
+        validate_sha256(item.get("candidate_sha256"), f"{location}.candidate_sha256")
+        validate_sha256(
+            item.get("admission_proof_sha256"), f"{location}.admission_proof_sha256"
+        )
+    for field in rule_fields:
+        rules = _string_array(content.get(field), f"identity bible.content.{field}")
+        if field in {"proportion_rules", "recognition_constraints"} and not rules:
+            raise EvidenceError(
+                "SCHEMA_INVALID", f"identity bible.content.{field} must be non-empty"
+            )
+    equipment_ids: set[str] = set()
+    for index, raw in enumerate(
+        _array(content.get("equipment"), "identity bible.content.equipment")
+    ):
+        location = f"identity bible.content.equipment[{index}]"
+        item = _object(raw, location)
+        _keys(item, {"id", "side", "invariants"}, location)
+        equipment_id = _string(item.get("id"), f"{location}.id")
+        if equipment_id in equipment_ids:
+            raise EvidenceError("SCHEMA_INVALID", "identity equipment IDs must be unique")
+        equipment_ids.add(equipment_id)
+        _string(item.get("side"), f"{location}.side")
+        if not _string_array(item.get("invariants"), f"{location}.invariants"):
+            raise EvidenceError("SCHEMA_INVALID", f"{location}.invariants must be non-empty")
+    _approval(
+        value.get("approval"),
+        {
+            "schema_version": IDENTITY_SCHEMA_V2,
+            "identity_id": identity_id,
+            "content": content,
+        },
+        "identity bible.approval",
+    )
+
+
+def validate_motion_plan_v2(value: dict[str, Any]) -> None:
+    _keys(
+        value,
+        {"schema_version", "motion_plan_id", "content", "approval"},
+        "motion plan",
+    )
+    plan_id = _string(value.get("motion_plan_id"), "motion plan.motion_plan_id")
+    content = _object(value.get("content"), "motion plan.content")
+    _keys(content, {"identity_bible_sha256", "clips"}, "motion plan.content")
+    validate_sha256(
+        content.get("identity_bible_sha256"),
+        "motion plan.content.identity_bible_sha256",
+    )
+    clips = _array(content.get("clips"), "motion plan.content.clips")
+    if not clips:
+        raise EvidenceError("SCHEMA_INVALID", "motion plan must contain clips")
+    clip_ids: set[str] = set()
+    global_position_ids: set[str] = set()
+    for clip_index, raw_clip in enumerate(clips):
+        location = f"motion plan.content.clips[{clip_index}]"
+        clip = _object(raw_clip, location)
+        _keys(
+            clip,
+            {
+                "id",
+                "canonical_view",
+                "direction",
+                "camera",
+                "topology",
+                "intent",
+                "entry",
+                "exit",
+                "loop",
+                "root_motion",
+                "transition",
+                "terminal_hold",
+                "action_evidence",
+                "positions",
+            },
+            location,
+        )
+        clip_id = _string(clip.get("id"), f"{location}.id")
+        if clip_id in clip_ids:
+            raise EvidenceError("SCHEMA_INVALID", "motion plan clip IDs must be unique")
+        clip_ids.add(clip_id)
+        for field in (
+            "canonical_view",
+            "direction",
+            "camera",
+            "topology",
+            "intent",
+            "entry",
+            "exit",
+            "root_motion",
+            "transition",
+        ):
+            _string(clip.get(field), f"{location}.{field}")
+        _boolean(clip.get("loop"), f"{location}.loop")
+        _boolean(clip.get("terminal_hold"), f"{location}.terminal_hold")
+        evidence = _array(clip.get("action_evidence"), f"{location}.action_evidence")
+        if not evidence:
+            raise EvidenceError("SCHEMA_INVALID", f"{location}.action_evidence must be non-empty")
+        evidence_ids: set[str] = set()
+        for evidence_index, raw_evidence in enumerate(evidence):
+            evidence_location = f"{location}.action_evidence[{evidence_index}]"
+            item = _object(raw_evidence, evidence_location)
+            _keys(item, {"evidence_id", "ref", "relationship"}, evidence_location)
+            evidence_id = _string(item.get("evidence_id"), f"{evidence_location}.evidence_id")
+            if evidence_id in evidence_ids or item.get("relationship") not in {
+                "supplied-reference",
+                "written-intent",
+            }:
+                raise EvidenceError("SCHEMA_INVALID", "motion-plan action evidence is invalid")
+            evidence_ids.add(evidence_id)
+            _string(item.get("ref"), f"{evidence_location}.ref")
+        positions = _array(clip.get("positions"), f"{location}.positions")
+        if not positions:
+            raise EvidenceError("SCHEMA_INVALID", f"{location}.positions must be non-empty")
+        concrete_ids: set[str] = set()
+        for position_index, raw_position in enumerate(positions):
+            position_location = f"{location}.positions[{position_index}]"
+            position = _object(raw_position, position_location)
+            role = position.get("role")
+            if role in {"keyframe", "in-between"}:
+                text_fields = {
+                    "id",
+                    "phase",
+                    "action_beat",
+                    "purpose",
+                    "pose",
+                    "orientation",
+                    "projection",
+                    "foreshortening",
+                    "depth_and_occlusion",
+                    "root_and_center_of_mass",
+                    "arc",
+                    "spacing",
+                    "transition_from_previous",
+                    "transition_to_next",
+                }
+                array_fields = {
+                    "newly_visible_surfaces",
+                    "contacts",
+                    "equipment_state",
+                    "effect_state",
+                    "events",
+                }
+                _keys(
+                    position,
+                    {"role", "duration_ms", "index", *text_fields, *array_fields},
+                    position_location,
+                )
+                for field in text_fields:
+                    _string(position.get(field), f"{position_location}.{field}")
+                for field in array_fields:
+                    _string_array(position.get(field), f"{position_location}.{field}")
+                concrete_ids.add(position["id"])
+            elif role == "alias":
+                _keys(
+                    position,
+                    {
+                        "id",
+                        "role",
+                        "alias_of",
+                        "alias_kind",
+                        "phase",
+                        "purpose",
+                        "duration_ms",
+                        "events",
+                        "transition_from_previous",
+                        "transition_to_next",
+                        "index",
+                    },
+                    position_location,
+                )
+                for field in (
+                    "id",
+                    "alias_of",
+                    "phase",
+                    "purpose",
+                    "transition_from_previous",
+                    "transition_to_next",
+                ):
+                    _string(position.get(field), f"{position_location}.{field}")
+                if position.get("alias_kind") not in {"hold", "closing"}:
+                    raise EvidenceError("SCHEMA_INVALID", f"{position_location}.alias_kind is invalid")
+                if position.get("alias_of") not in concrete_ids:
+                    raise EvidenceError(
+                        "SCHEMA_INVALID", "motion-plan aliases must reference an earlier concrete position"
+                    )
+                if position["alias_kind"] == "closing" and (
+                    not clip["loop"] or position_index != len(positions) - 1
+                ):
+                    raise EvidenceError(
+                        "SCHEMA_INVALID", "a closing alias must be the final loop position"
+                    )
+                _string_array(position.get("events"), f"{position_location}.events")
+            else:
+                raise EvidenceError("SCHEMA_INVALID", f"{position_location}.role is invalid")
+            position_id = _string(position.get("id"), f"{position_location}.id")
+            if position_id in global_position_ids:
+                raise EvidenceError("SCHEMA_INVALID", "motion-plan position IDs must be globally unique")
+            global_position_ids.add(position_id)
+            _integer(position.get("index"), f"{position_location}.index")
+            if position["index"] != position_index:
+                raise EvidenceError("SCHEMA_INVALID", "motion-plan position indexes must be contiguous")
+            _integer(position.get("duration_ms"), f"{position_location}.duration_ms", minimum=1)
+        if not concrete_ids:
+            raise EvidenceError("SCHEMA_INVALID", f"{location} requires a concrete position")
+    _approval(
+        value.get("approval"),
+        {
+            "schema_version": MOTION_PLAN_SCHEMA_V2,
+            "motion_plan_id": plan_id,
+            "content": content,
+        },
+        "motion plan.approval",
+    )
+
+
+def validate_raw_frame_admission(value: dict[str, Any]) -> None:
+    _keys(
+        value,
+        {"schema_version", "frame_id", "canonical_view", "plan_binding", "source", "alpha", "policy"},
+        "raw frame admission",
+    )
+    _string(value.get("frame_id"), "raw frame admission.frame_id")
+    _string(value.get("canonical_view"), "raw frame admission.canonical_view")
+    binding = _object(value.get("plan_binding"), "raw frame admission.plan_binding")
+    _keys(binding, {"motion_plan_sha256", "position_sha256"}, "raw frame admission.plan_binding")
+    validate_sha256(binding.get("motion_plan_sha256"), "raw frame admission.plan_binding.motion_plan_sha256")
+    validate_sha256(binding.get("position_sha256"), "raw frame admission.plan_binding.position_sha256")
+    source = _object(value.get("source"), "raw frame admission.source")
+    _keys(source, {"sha256", "rgba_sha256", "width", "height", "mode"}, "raw frame admission.source")
+    validate_sha256(source.get("sha256"), "raw frame admission.source.sha256")
+    validate_sha256(source.get("rgba_sha256"), "raw frame admission.source.rgba_sha256")
+    _integer(source.get("width"), "raw frame admission.source.width", minimum=1)
+    _integer(source.get("height"), "raw frame admission.source.height", minimum=1)
+    if source.get("mode") != "RGBA":
+        raise EvidenceError("SCHEMA_INVALID", "raw frame admission source mode must be RGBA")
+    alpha = _object(value.get("alpha"), "raw frame admission.alpha")
+    _keys(alpha, {"nonzero_bounds", "margins", "opaque_pixels", "partial_alpha_pixels", "transparent_rgb_pixels_observed", "centroid"}, "raw frame admission.alpha")
+    for field in ("nonzero_bounds", "margins"):
+        array = _array(alpha.get(field), f"raw frame admission.alpha.{field}")
+        if len(array) != 4 or any(type(item) is not int or item < 0 for item in array):
+            raise EvidenceError("SCHEMA_INVALID", f"raw frame admission.alpha.{field} must contain four non-negative integers")
+    centroid = _array(alpha.get("centroid"), "raw frame admission.alpha.centroid")
+    if len(centroid) != 2 or any(not isinstance(item, (int, float)) or isinstance(item, bool) or not math.isfinite(item) for item in centroid):
+        raise EvidenceError("SCHEMA_INVALID", "raw frame admission alpha centroid is invalid")
+    for field in ("opaque_pixels", "partial_alpha_pixels", "transparent_rgb_pixels_observed"):
+        _integer(alpha.get(field), f"raw frame admission.alpha.{field}")
+    policy = _object(value.get("policy"), "raw frame admission.policy")
+    _keys(policy, {"transparent_rgb", "minimum_margin", "normalized", "status"}, "raw frame admission.policy")
+    if (
+        policy.get("transparent_rgb") != "reject"
+        or policy.get("normalized") is not False
+        or alpha.get("transparent_rgb_pixels_observed") != 0
+        or policy.get("status") != "passed"
+    ):
+        raise EvidenceError("SCHEMA_INVALID", "raw frame admission policy is invalid")
+    _integer(policy.get("minimum_margin"), "raw frame admission.policy.minimum_margin")
+    _boolean(policy.get("normalized"), "raw frame admission.policy.normalized")
 
 
 def validate_blueprint(value: dict[str, Any]) -> None:
@@ -419,18 +737,23 @@ def validate_spacing(value: dict[str, Any]) -> None:
 
 
 def validate_diagnostics(value: dict[str, Any]) -> None:
+    expected_keys = {
+        "schema_version",
+        "package_manifest",
+        "assets",
+        "previews",
+        "clips",
+        "observations",
+    }
+    if value.get("schema_version") == DIAGNOSTICS_SCHEMA_V2:
+        expected_keys |= {"measurement_contract"}
     _keys(
         value,
-        {
-            "schema_version",
-            "package_manifest",
-            "assets",
-            "previews",
-            "clips",
-            "observations",
-        },
+        expected_keys,
         "motion diagnostics",
     )
+    if value.get("schema_version") == DIAGNOSTICS_SCHEMA_V2 and value.get("measurement_contract") != "spritesheet-motion-metrics/v2":
+        raise EvidenceError("SCHEMA_INVALID", "motion diagnostics measurement_contract is invalid")
     _ref(value.get("package_manifest"), "motion diagnostics.package_manifest")
     assets = _object(value.get("assets"), "motion diagnostics.assets")
     _keys(
@@ -1116,15 +1439,85 @@ def validate_delivery(value: dict[str, Any], *, request: bool = False) -> None:
             seen_files.add(item["ref"])
 
 
+def validate_delivery_v2(value: dict[str, Any], *, request: bool = False) -> None:
+    fields = {
+        "schema_version",
+        "job_id",
+        "status",
+        "identity_bible",
+        "motion_plan",
+        "raw_frame_admissions",
+        "pixel_package",
+        "motion_diagnostics",
+        "review_packet",
+        "quality_policy",
+    }
+    if not request:
+        fields.add("files")
+    _keys(value, fields, "delivery")
+    _string(value.get("job_id"), "delivery.job_id")
+    if value.get("status") != "package-ready":
+        raise EvidenceError(
+            "SCHEMA_INVALID", "delivery/v2 currently supports package-ready only"
+        )
+    _ref(value.get("identity_bible"), "delivery.identity_bible", request=request)
+    _ref(value.get("motion_plan"), "delivery.motion_plan", request=request)
+    admissions = _array(
+        value.get("raw_frame_admissions"), "delivery.raw_frame_admissions"
+    )
+    if not admissions:
+        raise EvidenceError(
+            "STATE_EVIDENCE_MISSING", "delivery requires raw frame admissions"
+        )
+    for index, item in enumerate(admissions):
+        _ref(item, f"delivery.raw_frame_admissions[{index}]", request=request)
+    package = _object(value.get("pixel_package"), "delivery.pixel_package")
+    _keys(package, {"manifest", "package_tree_sha256"}, "delivery.pixel_package")
+    _ref(package.get("manifest"), "delivery.pixel_package.manifest", request=request)
+    validate_sha256(
+        package.get("package_tree_sha256"), "delivery.pixel_package.package_tree_sha256"
+    )
+    _ref(value.get("motion_diagnostics"), "delivery.motion_diagnostics", request=request)
+    _ref(value.get("review_packet"), "delivery.review_packet", request=request)
+    quality_policy = _object(value.get("quality_policy"), "delivery.quality_policy")
+    _keys(
+        quality_policy,
+        {"transparent_rgb", "minimum_margin", "maximum_alpha_centroid_step"},
+        "delivery.quality_policy",
+    )
+    if quality_policy.get("transparent_rgb") != "reject":
+        raise EvidenceError("SCHEMA_INVALID", "delivery.quality_policy.transparent_rgb is invalid")
+    _integer(quality_policy.get("minimum_margin"), "delivery.quality_policy.minimum_margin")
+    _integer(
+        quality_policy.get("maximum_alpha_centroid_step"),
+        "delivery.quality_policy.maximum_alpha_centroid_step",
+    )
+    if not request:
+        seen_files: set[str] = set()
+        for index, item in enumerate(_array(value.get("files"), "delivery.files")):
+            _ref(item, f"delivery.files[{index}]", request=False)
+            if item["ref"] == "delivery.json" or item["ref"] in seen_files:
+                raise EvidenceError(
+                    "SCHEMA_INVALID",
+                    "delivery.files must be unique and exclude delivery.json",
+                )
+            seen_files.add(item["ref"])
+
+
 VALIDATORS = {
     IDENTITY_SCHEMA: validate_identity,
+    IDENTITY_SCHEMA_V2: validate_identity_v2,
     BLUEPRINT_SCHEMA: validate_blueprint,
+    MOTION_PLAN_SCHEMA_V2: validate_motion_plan_v2,
+    RAW_FRAME_ADMISSION_SCHEMA: validate_raw_frame_admission,
     SPACING_SCHEMA: validate_spacing,
     DIAGNOSTICS_SCHEMA: validate_diagnostics,
+    DIAGNOSTICS_SCHEMA_V2: validate_diagnostics,
     REVIEW_SCHEMA: validate_review,
     RUNTIME_SCHEMA: validate_runtime,
     RUNTIME_PROJECTION_SCHEMA: validate_runtime_projection,
     DELIVERY_SCHEMA: validate_delivery,
+    DELIVERY_SCHEMA_V2: validate_delivery_v2,
 }
 
 

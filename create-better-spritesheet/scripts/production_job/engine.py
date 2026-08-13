@@ -34,8 +34,20 @@ from .legacy import run_legacy
 
 STATE = "state.json"
 STATE_KEYS = {"schema_version", "pixel_protocol_id", "revision", "material_revision", "phase", "intent", "inputs", "approvals", "outputs", "intent_material_sha256", "checkpoint_id", "context_sha256", "checkpoint", "spacing_plan"}
-PHASES = {"initializing", "awaiting-canonical-review", "awaiting-production-blueprint-review", "awaiting-keyframe-input", "awaiting-keyframe-review", "awaiting-spacing-plan-input", "awaiting-spacing-plan-review", "awaiting-sequence-input", "awaiting-sequence-review", "awaiting-package-review", "package-ready", "review-complete", "diagnosis-complete"}
-GATE_BY_PHASE = {"awaiting-canonical-review": "canonical", "awaiting-production-blueprint-review": "motion-blueprint", "awaiting-keyframe-review": "keyframe-set", "awaiting-spacing-plan-review": "spacing-plan", "awaiting-sequence-review": "sequence", "awaiting-package-review": "package"}
+PHASES = {"initializing", "awaiting-canonical-review", "awaiting-production-blueprint-review", "awaiting-motion-plan-review", "awaiting-keyframe-input", "awaiting-keyframe-review", "awaiting-spacing-plan-input", "awaiting-spacing-plan-review", "awaiting-sequence-input", "awaiting-sequence-review", "awaiting-package-review", "package-ready", "review-complete", "diagnosis-complete"}
+GATE_BY_PHASE = {"awaiting-canonical-review": "canonical", "awaiting-production-blueprint-review": "motion-blueprint", "awaiting-motion-plan-review": "motion-plan", "awaiting-keyframe-review": "keyframe-set", "awaiting-spacing-plan-review": "spacing-plan", "awaiting-sequence-review": "sequence", "awaiting-package-review": "package"}
+
+
+def _is_v2(state: dict[str, Any]) -> bool:
+    return state.get("schema_version") == "spritesheet-production-job/v3"
+
+
+def _response_schema(state: dict[str, Any]) -> str:
+    if _is_v2(state):
+        from .v2 import RESPONSE_SCHEMA as V2_RESPONSE_SCHEMA
+
+        return V2_RESPONSE_SCHEMA
+    return RESPONSE_SCHEMA
 
 
 def _failure_point(stage: str) -> None:
@@ -48,10 +60,11 @@ def _checkpoint(state: dict[str, Any]) -> None:
     state.pop("checkpoint", None)
     context = {key: value for key, value in state.items() if key not in {"checkpoint_id", "context_sha256"}}
     phase = state["phase"]
-    kind = "input" if phase in {"awaiting-keyframe-input", "awaiting-spacing-plan-input", "awaiting-sequence-input"} else "review" if phase in {"awaiting-canonical-review", "awaiting-production-blueprint-review", "awaiting-keyframe-review", "awaiting-spacing-plan-review", "awaiting-sequence-review", "awaiting-package-review"} else "none"
+    kind = "input" if phase in {"awaiting-keyframe-input", "awaiting-spacing-plan-input", "awaiting-sequence-input"} else "review" if phase in {"awaiting-canonical-review", "awaiting-production-blueprint-review", "awaiting-motion-plan-review", "awaiting-keyframe-review", "awaiting-spacing-plan-review", "awaiting-sequence-review", "awaiting-package-review"} else "none"
     questions = {
         "awaiting-canonical-review": "Approve the complete prepared canonical reference set?",
         "awaiting-production-blueprint-review": "Approve the complete identity and motion blueprint?",
+        "awaiting-motion-plan-review": "Approve the complete motion plan for every playback position before any motion image is produced?",
         "awaiting-keyframe-input": "Provide one absolute RGBA PNG path for every keyframe position.",
         "awaiting-keyframe-review": "Approve the complete keyframe set?",
         "awaiting-spacing-plan-input": "Provide the complete playback spacing plan.",
@@ -129,7 +142,11 @@ def _checkpoint(state: dict[str, Any]) -> None:
         if phase == "awaiting-package-review":
             payload_properties["observations"] = {"type": "array", "minItems": 1, "maxItems": 256, "items": {"type": "object", "additionalProperties": False, "required": ["subject_id", "classification", "disposition", "statement"], "properties": {"subject_id": {"enum": state["outputs"]["package_review_subject_ids"]}, "classification": {"const": "reviewed"}, "disposition": {"const": "acceptable"}, "statement": {"type": "string", "minLength": 1, "maxLength": 4096}}}}
             payload_required.append("observations")
-            payload_properties["return_to"] = {"enum": ["keyframes", "spacing-plan", "sequence"]}
+            payload_properties["return_to"] = {
+                "enum": ["keyframes", "sequence"]
+                if _is_v2(state)
+                else ["keyframes", "spacing-plan", "sequence"]
+            }
     else:
         payload_properties = {}
         payload_required = []
@@ -150,13 +167,13 @@ def _checkpoint(state: dict[str, Any]) -> None:
         common = {"gate": {"const": "package"}, "authority": payload_properties["authority"], "evidence": payload_properties["evidence"]}
         payload_schema = {"oneOf": [
             {"type": "object", "additionalProperties": False, "required": ["gate", "decision", "authority", "evidence", "observations"], "properties": {**common, "decision": {"const": "approved"}, "observations": {"type": "array", "minItems": len(subject_ids), "maxItems": len(subject_ids), "items": approved_observation}}},
-            {"type": "object", "additionalProperties": False, "required": ["gate", "decision", "authority", "evidence", "observations", "return_to"], "properties": {**common, "decision": {"const": "changes-requested"}, "observations": {"type": "array", "minItems": 1, "maxItems": 256, "items": changes_observation}, "return_to": {"enum": ["keyframes", "spacing-plan", "sequence"]}}},
+            {"type": "object", "additionalProperties": False, "required": ["gate", "decision", "authority", "evidence", "observations", "return_to"], "properties": {**common, "decision": {"const": "changes-requested"}, "observations": {"type": "array", "minItems": 1, "maxItems": 256, "items": changes_observation}, "return_to": {"enum": ["keyframes", "sequence"] if _is_v2(state) else ["keyframes", "spacing-plan", "sequence"]}}},
         ]}
     response_schema = None if kind == "none" else {
         "type": "object", "additionalProperties": False,
         "required": ["schema_version", "checkpoint_id", "job_revision", "context_sha256", "kind", "payload"],
         "properties": {
-            "schema_version": {"const": RESPONSE_SCHEMA}, "checkpoint_id": {"const": state["checkpoint_id"]},
+            "schema_version": {"const": _response_schema(state)}, "checkpoint_id": {"const": state["checkpoint_id"]},
             "job_revision": {"const": state["revision"]}, "context_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
             "kind": {"const": kind}, "payload": payload_schema,
         },
@@ -211,11 +228,33 @@ def _checkpoint_presentation(state: dict[str, Any], phase: str) -> dict[str, Any
         clips = state["intent"]["clips"]
         unresolved = [f"clip {clip['id']} has no supplied action evidence and delegates motion to written intent" for clip in clips if not clip.get("action_evidence")]
         return {**base, "identity_content": identity_content, "blueprint_contents": blueprint_contents, "canonical_references": [{**item, "candidate_sha256": sha256_file(Path(item["path"])), "proof_sha256": sha256_file(Path(item["proof_path"]))} for item in state["outputs"]["canonical_references"]], "unresolved_consequences": unresolved}
+    if phase == "awaiting-motion-plan-review":
+        _, plans = _draft_evidence_content(state)
+        return {
+            **base,
+            "motion_plan": plans[0],
+            "canonical_references": [
+                {
+                    **item,
+                    "candidate_sha256": sha256_file(Path(item["path"])),
+                    "proof_sha256": sha256_file(Path(item["proof_path"])),
+                }
+                for item in state["outputs"]["canonical_references"]
+            ],
+        }
     if phase == "awaiting-keyframe-review":
         return {**base, "keyframes": _bound_paths(state["inputs"]["keyframes"])}
     if phase == "awaiting-spacing-plan-review":
         return {**base, "spacing_plan": state["spacing_plan"], "evidence_contents": state["outputs"].get("spacing_plan_drafts", [])}
     if phase == "awaiting-sequence-review":
+        if _is_v2(state):
+            _, plans = _draft_evidence_content(state)
+            return {
+                **base,
+                "keyframes": _bound_paths(state["inputs"]["keyframes"]),
+                "in_betweens": _bound_paths(state["inputs"]["sequence"]),
+                "motion_plan": plans[0],
+            }
         return {**base, "keyframes": _bound_paths(state["inputs"]["keyframes"]), "in_betweens": _bound_paths(state["inputs"]["sequence"]), "spacing_plan": state["spacing_plan"]}
     if phase == "awaiting-package-review":
         return {**base, "required_subject_ids": state["outputs"]["package_review_subject_ids"], "subject_sha256": state["outputs"]["package_review_subject_sha256"], "assets": state["outputs"]["package_review_assets"]}
@@ -224,6 +263,19 @@ def _checkpoint_presentation(state: dict[str, Any], phase: str) -> dict[str, Any
 
 def _draft_evidence_content(state: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     intent = state["intent"]
+    if _is_v2(state):
+        from .v2 import IDENTITY_SCHEMA, identity_content, motion_plan_content
+
+        canonicals = {item["id"]: item for item in state["outputs"]["canonical_references"]}
+        identity = identity_content(intent, canonicals, sha256_file)
+        identity_id = f"identity-{state['material_revision']}"
+        identity_path_value = state.get("outputs", {}).get("identity_bible")
+        identity_sha256 = (
+            sha256_file(Path(identity_path_value))
+            if identity_path_value and Path(identity_path_value).exists()
+            else digest_value({"schema_version": IDENTITY_SCHEMA, "identity_id": identity_id, "content": identity})
+        )
+        return identity, [motion_plan_content(intent, identity_sha256)]
     declarations = intent["identity"]["declarations"]
     canonicals = {item["id"]: item for item in state["outputs"]["canonical_references"]}
     identity_content = {
@@ -246,9 +298,10 @@ def _draft_evidence_content(state: dict[str, Any]) -> tuple[dict[str, Any], list
 def _validate_state(state: dict[str, Any]) -> None:
     if state.get("schema_version") == "spritesheet-production-job/v1":
         raise ProductionError("JOB_PROTOCOL_STALE", "job state predates the current pixel protocol binding")
-    if state.get("schema_version") == JOB_SCHEMA and state.get("pixel_protocol_id") != PIXEL_PROTOCOL_ID:
+    supported_job_schemas = {JOB_SCHEMA, "spritesheet-production-job/v3"}
+    if state.get("schema_version") in supported_job_schemas and state.get("pixel_protocol_id") != PIXEL_PROTOCOL_ID:
         raise ProductionError("JOB_PROTOCOL_STALE", "job state does not bind the current pixel protocol")
-    if set(state) - STATE_KEYS or state.get("schema_version") != JOB_SCHEMA or state.get("phase") not in PHASES or type(state.get("revision")) is not int or state["revision"] < 1 or type(state.get("material_revision")) is not int or state["material_revision"] < 1:
+    if set(state) - STATE_KEYS or state.get("schema_version") not in supported_job_schemas or state.get("phase") not in PHASES or type(state.get("revision")) is not int or state["revision"] < 1 or type(state.get("material_revision")) is not int or state["material_revision"] < 1:
         raise ProductionError("JOB_STATE_CORRUPT", "job state fields or phase are invalid")
     checkpoint = state.get("checkpoint")
     if not isinstance(checkpoint, dict) or set(checkpoint) != {"id", "job_revision", "kind", "context_sha256", "question", "response_schema", "presentation"} or checkpoint.get("id") != state.get("checkpoint_id") or checkpoint.get("job_revision") != state.get("revision") or checkpoint.get("context_sha256") != state.get("context_sha256"):
@@ -277,8 +330,9 @@ def _save(job: Path, state: dict[str, Any]) -> None:
 
 
 def _new_state(intent: dict[str, Any]) -> dict[str, Any]:
+    job_schema = "spritesheet-production-job/v3" if intent.get("schema_version") == "spritesheet-production-intent/v2" else JOB_SCHEMA
     return {
-        "schema_version": JOB_SCHEMA,
+        "schema_version": job_schema,
         "pixel_protocol_id": PIXEL_PROTOCOL_ID,
         "revision": 1,
         "material_revision": 1,
@@ -304,8 +358,9 @@ def _intent_material_digest(intent: dict[str, Any]) -> str:
 def _response(value: dict[str, Any], state: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     if set(value) != {"schema_version", "checkpoint_id", "job_revision", "context_sha256", "kind", "payload"}:
         raise ProductionError("INVALID_CONTRACT", "response contains unsupported or missing fields")
-    if value.get("schema_version") != RESPONSE_SCHEMA:
-        raise ProductionError("INVALID_CONTRACT", f"response schema_version must be {RESPONSE_SCHEMA!r}")
+    expected_response_schema = _response_schema(state)
+    if value.get("schema_version") != expected_response_schema:
+        raise ProductionError("INVALID_CONTRACT", f"response schema_version must be {expected_response_schema!r}")
     if (
         value.get("checkpoint_id") != state.get("checkpoint_id")
         or value.get("job_revision") != state.get("revision")
@@ -502,15 +557,38 @@ def _approved_evidence(job: Path, state: dict[str, Any], approval: dict[str, Any
     identity_path = artifacts / "identity-bible.json"
     identity_id = f"identity-{state['material_revision']}"
     if identity_only:
+        identity_schema = "identity-bible/v2" if _is_v2(state) else "identity-bible/v1"
         identity_approval = {
-            "status": "approved", "subject_sha256": digest_value({"schema_version": "identity-bible/v1", "identity_id": identity_id, "content": identity_content}),
+            "status": "approved", "subject_sha256": digest_value({"schema_version": identity_schema, "identity_id": identity_id, "content": identity_content}),
             "reviewer": approval["authority"], "evidence": approval["evidence"],
         }
         write_canonical_json(identity_path, {
-            "schema_version": "identity-bible/v1", "identity_id": identity_id,
+            "schema_version": identity_schema, "identity_id": identity_id,
             "content": identity_content, "approval": identity_approval,
         })
         state["outputs"]["identity_bible"] = str(identity_path)
+        return
+    if _is_v2(state):
+        identity_sha = sha256_file(identity_path)
+        content = {**blueprint_contents[0], "identity_bible_sha256": identity_sha}
+        path = artifacts / "motion-plan.json"
+        plan_id = f"motion-plan-r{state['material_revision']}"
+        write_canonical_json(path, {
+            "schema_version": "motion-plan/v2",
+            "motion_plan_id": plan_id,
+            "content": content,
+            "approval": {
+                "status": "approved",
+                "subject_sha256": digest_value({
+                    "schema_version": "motion-plan/v2",
+                    "motion_plan_id": plan_id,
+                    "content": content,
+                }),
+                "reviewer": approval["authority"],
+                "evidence": approval["evidence"],
+            },
+        })
+        state["outputs"]["motion_plan"] = str(path)
         return
     identity_sha = sha256_file(identity_path)
     blueprint_paths: list[str] = []
@@ -671,9 +749,18 @@ def _expect_assets(job: Path, state: dict[str, Any], payload: dict[str, Any], ex
             raise ProductionError("INVALID_CONTRACT", f"assets[{index}] is not an expected readable absolute file")
         frozen_dir = _artifacts(job, state) / "frozen-inputs"
         try:
-            mapped[str(raw["id"])] = freeze_regular(path, frozen_dir)
+            frozen = freeze_regular(path, frozen_dir)
         except (OSError, ValueError) as error:
             raise ProductionError("INVALID_INPUT_FILE", "asset could not be frozen safely") from error
+        if _is_v2(state):
+            from .raw_admission import admit_raw_frame
+
+            admitted, admission = admit_raw_frame(job, state, str(raw["id"]), Path(frozen))
+            mapped[str(raw["id"])] = admitted
+            admissions = state["outputs"].setdefault("raw_frame_admissions", {})
+            admissions[str(raw["id"])] = admission
+        else:
+            mapped[str(raw["id"])] = frozen
     if set(mapped) != expected_ids:
         raise ProductionError("INVALID_CONTRACT", "input assets do not exactly cover the requested positions")
     return mapped
@@ -696,6 +783,8 @@ def _derive_brackets(positions: list[dict[str, Any]], index: int, loop: bool = F
 
 
 def _legacy_request(state: dict[str, Any]) -> dict[str, Any]:
+    if _is_v2(state):
+        return _v5_request(state)
     intent = _effective_intent(state)
     validate_legacy_topology(intent)
     paths = {**state["inputs"]["keyframes"], **state["inputs"]["sequence"]}
@@ -768,6 +857,110 @@ def _legacy_request(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _v5_request(state: dict[str, Any]) -> dict[str, Any]:
+    intent = state["intent"]
+    paths = {**state["inputs"]["keyframes"], **state["inputs"]["sequence"]}
+    canonical = {item["id"]: item for item in state["outputs"]["canonical_references"]}
+    source_hashes = {artifact_id: sha256_file(Path(path)) for artifact_id, path in paths.items()}
+    canonical_hashes = {item_id: sha256_file(Path(item["path"])) for item_id, item in canonical.items()}
+    admission_hashes = {item_id: sha256_file(Path(item["proof_path"])) for item_id, item in canonical.items()}
+    clips: list[dict[str, Any]] = []
+    for clip in intent["clips"]:
+        frames: list[dict[str, Any]] = []
+        events: list[dict[str, Any]] = []
+        for index, position in enumerate(clip["positions"]):
+            for event in position["events"]:
+                events.append({"name": event, "position": index})
+            if position["role"] == "alias":
+                frames.append({
+                    "id": position["id"],
+                    "role": "alias",
+                    "source_id": position["alias_of"],
+                    "alias_kind": position["alias_kind"],
+                })
+                continue
+            frame = {
+                "id": position["id"],
+                "role": position["role"],
+                "source_path": paths[position["id"]],
+            }
+            if position["role"] == "in-between":
+                frame["previous_keyframe"], frame["next_keyframe"] = _derive_brackets(
+                    clip["positions"], index, clip["loop"],
+                )
+            frames.append(frame)
+        clips.append({
+            "id": clip["id"],
+            "canonical_reference": clip["canonical_view"],
+            "direction": clip["direction"],
+            "camera": clip["camera"],
+            "loop": clip["loop"],
+            "repeat_opening_cell": False,
+            "root_motion": clip["root_motion"],
+            "transition": clip["transition"],
+            "terminal_hold": clip["terminal_hold"],
+            "durations_ms": [position["duration_ms"] for position in clip["positions"]],
+            "events": events,
+            "frames": frames,
+        })
+    approvals = state["approvals"]
+    reviews: list[dict[str, Any]] = []
+    order = 1
+    for canonical_id in canonical:
+        approval = approvals["canonical"]
+        reviews.append(_review_record(
+            f"canonical-review-{canonical_id}", "canonical-approval", [canonical_id],
+            canonical_hashes, admission_hashes, approval["authority"], approval["evidence"], order,
+        ))
+        order += 1
+    for clip in intent["clips"]:
+        canonical_id = clip["canonical_view"]
+        key_ids = [position["id"] for position in clip["positions"] if position["role"] == "keyframe"]
+        approval = approvals["keyframes"]
+        reviews.append(_review_record(
+            f"keyframe-review-{clip['id']}", "keyframe-set-approval", [canonical_id, *key_ids],
+            {**canonical_hashes, **source_hashes}, admission_hashes,
+            approval["authority"], approval["evidence"], order,
+        ))
+        order += 1
+    for clip in intent["clips"]:
+        canonical_id = clip["canonical_view"]
+        source_ids = list(dict.fromkeys(
+            position["alias_of"] if position["role"] == "alias" else position["id"]
+            for position in clip["positions"]
+        ))
+        approval = approvals["sequence"]
+        reviews.append(_review_record(
+            f"sequence-review-{clip['id']}", "sequence-approval", [canonical_id, *source_ids],
+            {**canonical_hashes, **source_hashes}, admission_hashes,
+            approval["authority"], approval["evidence"], order,
+        ))
+        order += 1
+    target = intent["target"]
+    frame_count = sum(len(clip["positions"]) for clip in intent["clips"])
+    return {
+        "schema_version": "spritesheet-production-request/v5",
+        "contract": {
+            "frame_width": target["frame_width"],
+            "frame_height": target["frame_height"],
+            "frame_count": frame_count,
+            "high_resolution_short_side": 512,
+            "sampler": "lanczos-premultiplied-v1",
+            "outline": intent["rendering_profile"]["outline"],
+            "animation_origin": target["animation_origin"],
+            "anchor": target["anchor"],
+            "safe_bounds": target["safe_bounds"],
+        },
+        "canonical_references": [
+            {key: item[key] for key in ("id", "path", "evidence_path", "proof_path")}
+            for item in canonical.values()
+        ],
+        "clips": clips,
+        "reviews": reviews,
+        "grid": {"columns": target.get("columns", min(frame_count, 8)), "order": "row-major"},
+    }
+
+
 def _review_record(review_id: str, gate: str, ids: list[str], hashes: dict[str, str], admissions: dict[str, str], reviewer: str, evidence: str, order: int) -> dict[str, Any]:
     return {
         "id": review_id, "gate": gate, "subject_ids": ids,
@@ -777,12 +970,44 @@ def _review_record(review_id: str, gate: str, ids: list[str], hashes: dict[str, 
     }
 
 
+def _enforce_v2_quality_thresholds(
+    state: dict[str, Any], diagnostics: dict[str, Any]
+) -> None:
+    maximum_step = state["intent"]["rendering_profile"]["quality_thresholds"][
+        "maximum_alpha_centroid_step"
+    ]
+    for clip in diagnostics["clips"]:
+        centroids = [cell["alpha_centroid"] for cell in clip["cells"]]
+        for index, (previous, current) in enumerate(
+            zip(centroids, centroids[1:]), start=1
+        ):
+            if previous is None or current is None:
+                raise ProductionError(
+                    "QUALITY_GATE_FAILED",
+                    "every logical position must retain visible Alpha",
+                    {"clip_id": clip["clip_id"], "position": index},
+                )
+            step = max(abs(current[0] - previous[0]), abs(current[1] - previous[1]))
+            if step > maximum_step:
+                raise ProductionError(
+                    "QUALITY_GATE_FAILED",
+                    "a logical-position Alpha centroid step exceeds the configured mechanical limit",
+                    {
+                        "clip_id": clip["clip_id"],
+                        "position": index,
+                        "measured_step": step,
+                        "maximum_alpha_centroid_step": maximum_step,
+                    },
+                )
+
+
 def _build(job: Path, state: dict[str, Any]) -> None:
     artifacts = _artifacts(job, state)
-    request_path = artifacts / "production-request-v4.json"
+    request_name = "production-request-v5.json" if _is_v2(state) else "production-request-v4.json"
+    request_path = artifacts / request_name
     package_path = artifacts / "package"
     staging = Path(tempfile.mkdtemp(prefix=".production-build-", dir=job))
-    staged_request = staging / "production-request-v4.json"
+    staged_request = staging / request_name
     staged_package = staging / "package"
     try:
         atomic_json(staged_request, _legacy_request(state))
@@ -802,6 +1027,8 @@ def _build(job: Path, state: dict[str, Any]) -> None:
     _failure_point("diagnostics")
     state["outputs"]["diagnostics"] = str(diagnostics / "motion-diagnostics.json")
     diagnostic_document = read_json(diagnostics / "motion-diagnostics.json")
+    if _is_v2(state):
+        _enforce_v2_quality_thresholds(state, diagnostic_document)
     presentation_refs = [item["ref"] for item in diagnostic_document["assets"].values()]
     presentation_refs.extend(item["asset"]["ref"] for item in diagnostic_document["previews"])
     state["outputs"]["review_presentation"] = [str(diagnostics / reference) for reference in presentation_refs]
@@ -810,13 +1037,21 @@ def _build(job: Path, state: dict[str, Any]) -> None:
         "diagnostics": sha256_file(diagnostics / "motion-diagnostics.json"),
         **{reference: sha256_file(diagnostics / reference) for reference in presentation_refs},
     }
-    subject_hashes = {
-        "identity": sha256_file(Path(state["outputs"]["identity_bible"])),
-        **{f"blueprint-{index}": sha256_file(Path(path)) for index, path in enumerate(state["outputs"]["motion_blueprints"])},
-        **{f"spacing-{index}": sha256_file(Path(path)) for index, path in enumerate(state["outputs"]["spacing_plans"])},
-        "diagnostics": sha256_file(diagnostics / "motion-diagnostics.json"),
-        "package": sha256_file(package_path / "manifest.json"),
-    }
+    if _is_v2(state):
+        subject_hashes = {
+            "identity": sha256_file(Path(state["outputs"]["identity_bible"])),
+            "motion-plan": sha256_file(Path(state["outputs"]["motion_plan"])),
+            "diagnostics": sha256_file(diagnostics / "motion-diagnostics.json"),
+            "package": sha256_file(package_path / "manifest.json"),
+        }
+    else:
+        subject_hashes = {
+            "identity": sha256_file(Path(state["outputs"]["identity_bible"])),
+            **{f"blueprint-{index}": sha256_file(Path(path)) for index, path in enumerate(state["outputs"]["motion_blueprints"])},
+            **{f"spacing-{index}": sha256_file(Path(path)) for index, path in enumerate(state["outputs"]["spacing_plans"])},
+            "diagnostics": sha256_file(diagnostics / "motion-diagnostics.json"),
+            "package": sha256_file(package_path / "manifest.json"),
+        }
     state["outputs"]["package_review_subject_ids"] = list(subject_hashes)
     state["outputs"]["package_review_subject_sha256"] = subject_hashes
     state["outputs"]["package_review_assets"] = [
@@ -837,7 +1072,10 @@ def _seal_delivery(job: Path, state: dict[str, Any]) -> None:
     manifest = Path(state["outputs"]["package_manifest"])
     diagnostics = Path(state["outputs"]["diagnostics"])
     approval = state["approvals"]["package"]
+    is_v2 = _is_v2(state)
     validate_document(read_json(Path(state["outputs"]["identity_bible"])))
+    if is_v2:
+        validate_document(read_json(Path(state["outputs"]["motion_plan"])))
     current_bindings = {
         "manifest": sha256_file(manifest),
         "diagnostics": sha256_file(diagnostics),
@@ -845,14 +1083,48 @@ def _seal_delivery(job: Path, state: dict[str, Any]) -> None:
     }
     if current_bindings != state["outputs"].get("package_review_sha256"):
         raise ProductionError("STALE_CHECKPOINT", "package review subjects changed after presentation")
+    if is_v2:
+        current_subject_hashes = {
+            "identity": sha256_file(Path(state["outputs"]["identity_bible"])),
+            "motion-plan": sha256_file(Path(state["outputs"]["motion_plan"])),
+            "diagnostics": sha256_file(diagnostics),
+            "package": sha256_file(manifest),
+        }
+    else:
+        current_subject_hashes = {
+            "identity": sha256_file(Path(state["outputs"]["identity_bible"])),
+            **{
+                f"blueprint-{index}": sha256_file(Path(path))
+                for index, path in enumerate(state["outputs"]["motion_blueprints"])
+            },
+            **{
+                f"spacing-{index}": sha256_file(Path(path))
+                for index, path in enumerate(state["outputs"]["spacing_plans"])
+            },
+            "diagnostics": sha256_file(diagnostics),
+            "package": sha256_file(manifest),
+        }
+    if current_subject_hashes != state["outputs"].get("package_review_subject_sha256"):
+        raise ProductionError(
+            "STALE_CHECKPOINT", "a required package review subject changed after presentation"
+        )
     subjects = []
-    for identifier, schema, path in [
-        ("identity", "identity-bible/v1", Path(state["outputs"]["identity_bible"])),
-        *[(f"blueprint-{index}", "motion-blueprint/v1", Path(path)) for index, path in enumerate(state["outputs"]["motion_blueprints"])],
-        *[(f"spacing-{index}", "spacing-plan/v1", Path(path)) for index, path in enumerate(state["outputs"]["spacing_plans"])],
-        ("diagnostics", "motion-diagnostics/v1", diagnostics),
-        ("package", "spritesheet-package/v4", manifest),
-    ]:
+    if is_v2:
+        subject_sources = [
+            ("identity", "identity-bible/v2", Path(state["outputs"]["identity_bible"])),
+            ("motion-plan", "motion-plan/v2", Path(state["outputs"]["motion_plan"])),
+            ("diagnostics", "motion-diagnostics/v2", diagnostics),
+            ("package", "spritesheet-package/v5", manifest),
+        ]
+    else:
+        subject_sources = [
+            ("identity", "identity-bible/v1", Path(state["outputs"]["identity_bible"])),
+            *[(f"blueprint-{index}", "motion-blueprint/v1", Path(path)) for index, path in enumerate(state["outputs"]["motion_blueprints"])],
+            *[(f"spacing-{index}", "spacing-plan/v1", Path(path)) for index, path in enumerate(state["outputs"]["spacing_plans"])],
+            ("diagnostics", "motion-diagnostics/v1", diagnostics),
+            ("package", "spritesheet-package/v4", manifest),
+        ]
+    for identifier, schema, path in subject_sources:
         subjects.append({"id": identifier, "schema_version": schema, "sha256": sha256_file(path)})
     evidence = []
     for path_value in state["outputs"]["review_presentation"]:
@@ -867,16 +1139,77 @@ def _seal_delivery(job: Path, state: dict[str, Any]) -> None:
     review = {**review_subject, "decision": {"status": "approved", "subject_sha256": digest_value(review_subject), "reviewer": approval["authority"], "evidence": approval["evidence"]}}
     review_path = artifacts / "review-packet.json"
     write_canonical_json(review_path, review)
-    request = {"schema_version": "spritesheet-production-delivery/v1", "job_id": job.name, "status": "package-ready", "identity_bible": {"path": state["outputs"]["identity_bible"], "sha256": sha256_file(Path(state["outputs"]["identity_bible"]))}, "motion_blueprints": [{"path": path, "sha256": sha256_file(Path(path))} for path in state["outputs"]["motion_blueprints"]], "spacing_plans": [{"path": path, "sha256": sha256_file(Path(path))} for path in state["outputs"]["spacing_plans"]], "pixel_package": {"manifest": {"path": str(manifest), "sha256": sha256_file(manifest)}, "package_tree_sha256": package_tree_sha256(manifest.parent)}, "motion_diagnostics": {"path": str(diagnostics), "sha256": sha256_file(diagnostics)}, "review_packet": {"path": str(review_path), "sha256": sha256_file(review_path)}, "runtime": {"scope": "not-requested", "contract": None, "projection": None, "proof": None}}
+    common_request = {
+        "job_id": job.name,
+        "status": "package-ready",
+        "identity_bible": {
+            "path": state["outputs"]["identity_bible"],
+            "sha256": sha256_file(Path(state["outputs"]["identity_bible"])),
+        },
+        "pixel_package": {
+            "manifest": {"path": str(manifest), "sha256": sha256_file(manifest)},
+            "package_tree_sha256": package_tree_sha256(manifest.parent),
+        },
+        "motion_diagnostics": {"path": str(diagnostics), "sha256": sha256_file(diagnostics)},
+        "review_packet": {"path": str(review_path), "sha256": sha256_file(review_path)},
+    }
+    if is_v2:
+        raw_admissions = state["outputs"].get("raw_frame_admissions", {})
+        request = {
+            "schema_version": "spritesheet-production-delivery/v2",
+            **common_request,
+            "quality_policy": state["intent"]["rendering_profile"]["quality_thresholds"],
+            "motion_plan": {
+                "path": state["outputs"]["motion_plan"],
+                "sha256": sha256_file(Path(state["outputs"]["motion_plan"])),
+            },
+            "raw_frame_admissions": [
+                {"path": path, "sha256": sha256_file(Path(path))}
+                for _, path in sorted(raw_admissions.items())
+            ],
+        }
+    else:
+        request = {
+            "schema_version": "spritesheet-production-delivery/v1",
+            **common_request,
+            "motion_blueprints": [
+                {"path": path, "sha256": sha256_file(Path(path))}
+                for path in state["outputs"]["motion_blueprints"]
+            ],
+            "spacing_plans": [
+                {"path": path, "sha256": sha256_file(Path(path))}
+                for path in state["outputs"]["spacing_plans"]
+            ],
+            "runtime": {
+                "scope": "not-requested",
+                "contract": None,
+                "projection": None,
+                "proof": None,
+            },
+        }
     request_path = artifacts / "delivery-request.json"
     write_canonical_json(request_path, request)
     output = Path(state["intent"]["output_scope"].get("delivery_dir", artifacts / "sealed-delivery"))
     completed = subprocess.run([sys.executable, str(adapter), "seal-delivery", "--request", str(request_path), "--output-dir", str(output)], check=False, capture_output=True, text=True)
     if completed.returncode:
-        raise ProductionError("DELIVERY_ADAPTER_FAILED", "delivery sealing failed", {"adapter": "seal-delivery"})
+        raise ProductionError(
+            "DELIVERY_ADAPTER_FAILED",
+            "delivery sealing failed",
+            {
+                "adapter": "seal-delivery",
+                "output": (completed.stdout + completed.stderr).strip()[-4000:],
+            },
+        )
     completed = subprocess.run([sys.executable, str(adapter), "verify", "--delivery", str(output / "delivery.json")], check=False, capture_output=True, text=True)
     if completed.returncode:
-        raise ProductionError("DELIVERY_VERIFICATION_FAILED", "sealed delivery failed verification", {"adapter": "delivery-verify"})
+        raise ProductionError(
+            "DELIVERY_VERIFICATION_FAILED",
+            "sealed delivery failed verification",
+            {
+                "adapter": "delivery-verify",
+                "output": (completed.stdout + completed.stderr).strip()[-4000:],
+            },
+        )
     state["outputs"]["sealed_delivery"] = str(output / "delivery.json")
     state["outputs"]["delivery_state"] = "package-ready"
     state["phase"] = "package-ready"
@@ -946,7 +1279,11 @@ def _apply_response(job: Path, state: dict[str, Any], kind: str, payload: dict[s
             state["phase"] = "awaiting-sequence-input"
         elif phase == "awaiting-package-review":
             return_to = payload.get("return_to")
-            routes = {"keyframes": "awaiting-keyframe-input", "spacing-plan": "awaiting-spacing-plan-input", "sequence": "awaiting-sequence-input"}
+            routes = (
+                {"keyframes": "awaiting-keyframe-input", "sequence": "awaiting-sequence-input"}
+                if _is_v2(state)
+                else {"keyframes": "awaiting-keyframe-input", "spacing-plan": "awaiting-spacing-plan-input", "sequence": "awaiting-sequence-input"}
+            )
             if return_to not in routes:
                 raise ProductionError("INVALID_CONTRACT", "package changes-requested requires return_to keyframes, spacing-plan, or sequence")
             _reopen_package_rework(state, return_to, routes[return_to])
@@ -957,10 +1294,17 @@ def _apply_response(job: Path, state: dict[str, Any], kind: str, payload: dict[s
         state["job_path"] = str(job)
         _approved_evidence(job, state, approval, identity_only=True)
         state.pop("job_path", None)
-        state["phase"] = "awaiting-production-blueprint-review"
+        state["phase"] = "awaiting-motion-plan-review" if _is_v2(state) else "awaiting-production-blueprint-review"
     elif phase == "awaiting-production-blueprint-review" and kind == "review":
         approval = _expect_review(payload, "motion-blueprint")
         state["approvals"]["motion-blueprint"] = approval
+        state["job_path"] = str(job)
+        _approved_evidence(job, state, approval)
+        state.pop("job_path", None)
+        state["phase"] = "awaiting-keyframe-input"
+    elif phase == "awaiting-motion-plan-review" and kind == "review":
+        approval = _expect_review(payload, "motion-plan")
+        state["approvals"]["motion-plan"] = approval
         state["job_path"] = str(job)
         _approved_evidence(job, state, approval)
         state.pop("job_path", None)
@@ -971,7 +1315,14 @@ def _apply_response(job: Path, state: dict[str, Any], kind: str, payload: dict[s
     elif phase == "awaiting-keyframe-review" and kind == "review":
         approval = _expect_review(payload, "keyframe-set")
         state["approvals"]["keyframes"] = approval
-        state["phase"] = "awaiting-spacing-plan-input"
+        if _is_v2(state):
+            if _position_ids(intent, "in-between"):
+                state["phase"] = "awaiting-sequence-input"
+            else:
+                state["inputs"]["sequence"] = {}
+                state["phase"] = "awaiting-sequence-review"
+        else:
+            state["phase"] = "awaiting-spacing-plan-input"
     elif phase == "awaiting-spacing-plan-input" and kind == "input":
         if set(payload) != {"spacing_plan"}:
             raise ProductionError("INVALID_CONTRACT", "spacing plan input contains unsupported or missing fields")
@@ -1006,10 +1357,18 @@ def _apply_response(job: Path, state: dict[str, Any], kind: str, payload: dict[s
 
 def _reopen_package_rework(state: dict[str, Any], return_to: str, phase: str) -> None:
     """Open an immutable material lineage while retaining only approved upstream evidence."""
-    base_output_keys = {"canonical_references", "identity_bible", "motion_blueprints"}
+    if _is_v2(state):
+        base_output_keys = {
+            "canonical_references",
+            "identity_bible",
+            "motion_plan",
+            "raw_frame_admissions",
+        }
+    else:
+        base_output_keys = {"canonical_references", "identity_bible", "motion_blueprints"}
     output_keys = set(base_output_keys)
     input_keys: set[str] = set()
-    approval_keys = {"canonical", "motion-blueprint"}
+    approval_keys = {"canonical", "motion-plan"} if _is_v2(state) else {"canonical", "motion-blueprint"}
     keep_spacing = return_to == "sequence"
     if return_to in {"spacing-plan", "sequence"}:
         input_keys.add("keyframes")
@@ -1067,7 +1426,7 @@ def _update_intent(job: Path, state: dict[str, Any], intent: dict[str, Any]) -> 
         state["approvals"] = preserved_approvals
         state["outputs"] = preserved_outputs
         state.pop("spacing_plan", None)
-        state["phase"] = "awaiting-production-blueprint-review"
+        state["phase"] = "awaiting-motion-plan-review" if _is_v2(state) else "awaiting-production-blueprint-review"
     elif output_changed or old.get("runtime_scope") != intent.get("runtime_scope"):
         state["outputs"].pop("sealed_delivery", None)
         state["outputs"].pop("delivery_state", None)
@@ -1079,7 +1438,7 @@ def _response_publish_targets(job: Path, state: dict[str, Any]) -> list[Path]:
     artifacts = _artifacts(job, state)
     if state["phase"] == "awaiting-sequence-review":
         return [
-            artifacts / "production-request-v4.json",
+            artifacts / ("production-request-v5.json" if _is_v2(state) else "production-request-v4.json"),
             artifacts / "package",
             artifacts / "diagnostics",
         ]
@@ -1249,7 +1608,7 @@ def verify_subject(subject: Path) -> dict[str, Any]:
             raise ProductionError("DELIVERY_VERIFICATION_FAILED", "sealed delivery did not verify", {"report": report})
         return {"ok": True, "result": {"subject": str(subject), "state": report.get("status", "package-ready"), "verification": report, "snapshot": before}}
     if manifest.name != "manifest.json" or not manifest.is_file():
-        raise ProductionError("UNSUPPORTED_SUBJECT", "subject must be a v4 package manifest or package directory")
+        raise ProductionError("UNSUPPORTED_SUBJECT", "subject must be a v5 or v4 package manifest or package directory")
     try:
         sha256_file(manifest)
     except (OSError, ValueError) as error:

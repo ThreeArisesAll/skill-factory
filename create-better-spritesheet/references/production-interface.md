@@ -1,54 +1,55 @@
 # Production Interface
 
-Use the stateful production seam exactly as exposed:
+Use the public stateful CLI:
 
 ```bash
-<python> <skill-dir>/scripts/spritesheet_production.py advance --job <job-dir> --intent <intent.json> --json
-<python> <skill-dir>/scripts/spritesheet_production.py advance --job <job-dir> --response <response.json> --json
-<python> <skill-dir>/scripts/spritesheet_production.py verify --subject <manifest-or-delivery> --json
+<python> <skill-dir>/scripts/spritesheet_production.py advance --job <absolute-job-dir> --intent <intent.json> --json
+<python> <skill-dir>/scripts/spritesheet_production.py advance --job <absolute-job-dir> --response <response.json> --json
+<python> <skill-dir>/scripts/spritesheet_production.py verify --subject <manifest-package-or-delivery> --json
 ```
 
-Pass exactly one of `--intent` or `--response` to `advance`. Treat the job directory as opaque agent-managed state: retain its path, but do not inspect, edit, copy, or depend on its internal layout. You may open the exact presentation files explicitly returned by the current checkpoint; treat every other job-internal path as private.
+Pass exactly one of `--intent` or `--response` to `advance`. Keep the job directory opaque except for presentation paths explicitly returned by the checkpoint.
 
-## Initial intent
+## Intent v2
 
-Submit one `spritesheet-production-intent/v1` document. Set `base_revision` to `null` for a new job and to the current job revision for any material update; stale updates fail with `STALE_JOB_REVISION`. An exact replay of unchanged intent is idempotent. For create and rebuild, provide only high-level production intent:
+Use `spritesheet-production-intent/v2` for current create and rebuild jobs. Set `base_revision` to `null` for a new job and to the current revision for a material update. Provide:
 
-- Identity sources and identity declarations
-- Clip topology intent and structural keyframes
-- At least one action-evidence record per clip: either a supplied reference or explicit authority to design from written intent
-- Target geometry and runtime-facing requirements
-- Rendering profile ID `smooth-raster/v1` and its high-level outline choice
-- `output_scope`, with optional `delivery_dir`
-- `runtime_scope: null` because runtime integration is not currently supported by this production adapter
+- `identity.sources`: absolute source path plus unique ID, direction, and camera for each canonical view
+- `identity.art_contract`: the fields in [art-direction-contract.md](art-direction-contract.md)
+- `clips`: complete topology and every logical position defined by [motion-plan-contract.md](motion-plan-contract.md)
+- `target`: frame size, origin, anchor, safe bounds, and optional columns
+- `rendering_profile`: `smooth-raster/v2`, outline contract, and quality thresholds
+- `output_scope`: optional absolute delivery directory
+- `runtime_scope: null`
 
-For diagnose and review, provide only the absolute regular-file or directory `subject` required by the intent schema. Do not place canonical v3 evidence, package v4 hashes or proofs, approval order, grid derivation, sampler settings, or other internal pixel-contract fields in the initial intent. The job derives and validates those details behind checkpoints.
+For diagnose and review, provide only schema, revision, mode, absolute subject, and `runtime_scope: null`. Unsupported production profiles return `UNSUPPORTED_CAPABILITY` rather than silently translating their rules.
 
-## Checkpoints and responses
+## Checkpoints
 
-Treat every returned checkpoint as the complete current interaction contract. It contains:
+Each result contains one complete current checkpoint with:
 
-- `id`
-- `job_revision`
-- `context_sha256`
-- `kind`
-- `question`
-- `response_schema`
-- `presentation`
+- Stable ID, job revision, context hash, kind, and question
+- A closed dynamic `response_schema`
+- The complete presentation required for that gate or input
 
-Before presenting a visual checkpoint, inspect every returned presentation subject required by its owning quality contract. Present the checkpoint's question and complete presentation only when that preflight passes. Withhold an approval request for any white fringe, jagged step, directional thickness spike, square corner, outline bulge, temporal outline flicker, or other owning hard blocker. Correct the owning source, Alpha policy, outline contract, or renderer and advance the regenerated revision instead. Build an eligible response by returning the exact checkpoint identity and revision fields required by `response_schema`, plus only the requested decision or input. Validate the complete response against that dynamic schema before calling `advance` again.
+Validate the response against the returned schema. Never reuse it for another revision. Current production follows canonical review, complete motion-plan review, keyframe input and review, optional in-between input, sequence review, package review, and package-ready completion.
 
-Never reuse a response for a different checkpoint or revision. A stale checkpoint, stale job revision, malformed response, unsupported capability, or unsupported pixel-art production request returns a structured typed error. Preserve its code and details when reporting or deciding the next action.
+If a clip has no in-between sources, the workflow skips the empty input gate and proceeds directly from keyframe review to complete sequence review. Holds and loop closure remain explicit logical aliases.
 
-## Guarantees
+## Failure behavior
 
-- Repeating the same valid operation against the same revision is idempotent.
-- The current production state binds `smooth-raster-pixel-protocol/v3`. A state or checkpoint bound to an earlier pixel protocol fails with typed `JOB_PROTOCOL_STALE`; start a new current-protocol job and regenerate from canonical source evidence rather than reusing or editing the stale checkpoint.
-- Canonical preparation is fail-closed: a failed pre-admission Alpha gate commits no state, emits no admission proof, and opens no canonical-review checkpoint.
-- Every accepted transition advances the job revision; material changes separately advance the artifact-lineage revision; stale writes are rejected.
-- The state commit is last. A failed transition cannot advance state, and the previously committed material revision remains addressable.
-- `verify` is read-only and accepts an immutable package manifest or sealed delivery subject. A bare v4 package may be pixel-package verified, but it has no delivery state until a sealed delivery passes the delivery verifier.
-- Create and rebuild support only `smooth-raster/v1`; pixel-art production fails with typed `UNSUPPORTED_CAPABILITY`.
-- The retained v4 pixel adapter requires at least two distinct keyframes and two distinct in-betweens per clip. This is an adapter encodability limit, not an artistic planning rule; an otherwise approved topology outside it fails with typed `LEGACY_TOPOLOGY_UNSUPPORTED` rather than being padded with invented poses.
-- Diagnose and review keep their subject read-only.
-- A completed production job or verified pixel package alone is not `package-ready`. Report `package-ready` only after the delivery has been sealed through `spritesheet_delivery.py seal-delivery` and that sealed delivery passes verification.
+Typed failures identify the recovery owner:
+
+- `STALE_JOB_REVISION` or `STALE_CHECKPOINT`: reload the current checkpoint; do not replay the stale write.
+- `CANONICAL_VIEW_MISMATCH`: correct the clip-to-view contract before job creation.
+- `RAW_FRAME_ADMISSION_FAILED`: correct or replace the high-resolution source; no review opens.
+- `QUALITY_GATE_FAILED`: correct source placement or revise the explicit threshold; no package review opens.
+- `UNSUPPORTED_CAPABILITY`: install or implement a matching profile adapter; do not coerce the request.
+- `JOB_PROTOCOL_STALE`: start a current job from authoritative source evidence.
+- `DELIVERY_VERIFICATION_FAILED`: inspect the nested report and return to the earliest stale evidence owner.
+
+Transitions are locked and state commits last. Failed operations retain the previous committed state and remove newly published outputs owned by the failed transition. Exact unchanged intent replay is idempotent.
+
+## Verification boundary
+
+`verify` is read-only. It accepts a v4 or v5 manifest/package and a sealed v1 or v2 delivery. A verified package proves its pixel contract but does not achieve a delivery state. A v2 delivery achieves `package-ready` only when its independent replay report passes.

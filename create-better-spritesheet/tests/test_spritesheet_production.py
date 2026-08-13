@@ -88,6 +88,108 @@ class SpritesheetProductionTests(unittest.TestCase):
             "runtime_scope": None,
         }
 
+    def v2_intent(self, root: Path) -> dict[str, object]:
+        source = root / "identity-v2.png"
+        self.write_rgba(source, 31)
+        return {
+            "schema_version": "spritesheet-production-intent/v2",
+            "base_revision": None,
+            "mode": "create",
+            "identity": {
+                "sources": [{
+                    "id": "hero-east",
+                    "path": str(source),
+                    "direction": "east",
+                    "camera": "orthographic-side",
+                }],
+                "art_contract": {
+                    "subject": "hero",
+                    "art_direction": "clean painted animation",
+                    "proportion_rules": ["keep the head at one quarter of body height"],
+                    "palette_rules": ["retain the red head mark"],
+                    "material_rules": ["keep the jacket matte"],
+                    "lighting_and_shadow_rules": ["use one fixed upper-left key light"],
+                    "recognition_constraints": ["retain the red head mark"],
+                    "allowed_variations": ["limb articulation"],
+                    "forbidden_drifts": ["costume replacement"],
+                    "equipment": [{
+                        "id": "satchel",
+                        "side": "character-left",
+                        "invariants": ["strap crosses the chest from left shoulder"],
+                    }],
+                },
+            },
+            "clips": [{
+                "id": "walk-east",
+                "canonical_view": "hero-east",
+                "direction": "east",
+                "camera": "orthographic-side",
+                "topology": "cyclic locomotion",
+                "intent": "readable in-place walk with clear weight transfer",
+                "entry": "front-foot contact",
+                "exit": "opposite contact ready to loop",
+                "loop": False,
+                "root_motion": "in-place",
+                "transition": "ready",
+                "terminal_hold": True,
+                "action_evidence": [{
+                    "evidence_id": "written-brief",
+                    "ref": "user authorizes motion design from the written intent",
+                    "relationship": "written-intent",
+                }],
+                "positions": [
+                    self.v2_position("k0", "keyframe", "contact", 100),
+                    self.v2_position("i1", "in-between", "down", 100),
+                    self.v2_position("i2", "in-between", "passing", 100),
+                    self.v2_position("k3", "keyframe", "contact-opposite", 100),
+                ],
+            }],
+            "target": {
+                "frame_width": 32,
+                "frame_height": 32,
+                "animation_origin": [0, 0],
+                "anchor": [16, 31],
+                "safe_bounds": [2, 2, 30, 30],
+            },
+            "rendering_profile": {
+                "id": "smooth-raster/v2",
+                "outline": {"enabled": False, "target_width": "none"},
+                "quality_thresholds": {
+                    "transparent_rgb": "reject",
+                    "minimum_margin": 1,
+                    "maximum_alpha_centroid_step": 4,
+                },
+            },
+            "output_scope": {},
+            "runtime_scope": None,
+        }
+
+    @staticmethod
+    def v2_position(identifier: str, role: str, phase: str, duration_ms: int) -> dict[str, object]:
+        return {
+            "id": identifier,
+            "role": role,
+            "phase": phase,
+            "action_beat": phase,
+            "purpose": f"communicate {phase}",
+            "pose": f"full-body {phase} pose",
+            "orientation": "head, ribcage, and pelvis remain side-on",
+            "projection": "orthographic side projection",
+            "foreshortening": "none beyond the side-view limb overlap",
+            "depth_and_occlusion": "near limbs overlap far limbs consistently",
+            "newly_visible_surfaces": [],
+            "root_and_center_of_mass": "root stays over the support transition",
+            "contacts": ["support foot"] if "contact" in phase else [],
+            "arc": "center of mass follows a shallow walk-cycle arc",
+            "spacing": "even timing around the current structural beat",
+            "equipment_state": ["satchel remains on character-left"],
+            "effect_state": [],
+            "transition_from_previous": "continue the approved arc",
+            "transition_to_next": "continue the approved arc",
+            "duration_ms": duration_ms,
+            "events": [],
+        }
+
     def alpha_intent(self, root: Path, *, detached_fringe: bool) -> dict[str, object]:
         intent = self.intent(root)
         source = Path(intent["identity"]["sources"][0]["path"])
@@ -118,6 +220,453 @@ class SpritesheetProductionTests(unittest.TestCase):
         result = self.run_cli("--help")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("{advance,verify}", result.stdout)
+
+    def test_v2_requires_complete_motion_plan_approval_before_any_image_input(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = root / "job"
+            intent_path = root / "intent-v2.json"
+            self.write_json(intent_path, self.v2_intent(root))
+            created = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+            state = json.loads(created.stdout)["result"]["state"]
+            self.assertEqual(state["schema_version"], "spritesheet-production-job/v3")
+            self.assertEqual(state["phase"], "awaiting-canonical-review")
+
+            response_path = root / "response.json"
+            self.write_json(response_path, {
+                "schema_version": "spritesheet-production-response/v2",
+                "checkpoint_id": state["checkpoint_id"],
+                "job_revision": state["revision"],
+                "context_sha256": state["context_sha256"],
+                "kind": "review",
+                "payload": {
+                    "gate": "canonical",
+                    "decision": "approved",
+                    "authority": "user",
+                    "evidence": "approved complete canonical view set",
+                },
+            })
+            approved = self.run_cli(
+                "advance", "--job", str(job), "--response", str(response_path), "--json",
+            )
+            self.assertEqual(approved.returncode, 0, approved.stdout + approved.stderr)
+            plan_state = json.loads(approved.stdout)["result"]["state"]
+            self.assertEqual(plan_state["phase"], "awaiting-motion-plan-review")
+            self.assertEqual(plan_state["checkpoint"]["presentation"]["gate"], "motion-plan")
+            plan = plan_state["checkpoint"]["presentation"]["motion_plan"]
+            self.assertEqual([item["id"] for item in plan["clips"][0]["positions"]], ["k0", "i1", "i2", "k3"])
+            self.assertEqual(plan["clips"][0]["positions"][1]["newly_visible_surfaces"], [])
+
+            before = (job / "state.json").read_bytes()
+            self.write_json(response_path, {
+                "schema_version": "spritesheet-production-response/v2",
+                "checkpoint_id": plan_state["checkpoint_id"],
+                "job_revision": plan_state["revision"],
+                "context_sha256": plan_state["context_sha256"],
+                "kind": "input",
+                "payload": {"assets": [{"id": "k0", "path": "/tmp/k0.png"}]},
+            })
+            rejected = self.run_cli(
+                "advance", "--job", str(job), "--response", str(response_path), "--json",
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertEqual(json.loads(rejected.stdout)["error"]["code"], "INVALID_CONTRACT")
+            self.assertEqual((job / "state.json").read_bytes(), before)
+
+    def test_v2_single_source_hold_builds_v5_without_an_empty_asset_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = root / "job"
+            intent = self.v2_intent(root)
+            intent["clips"][0]["positions"] = [
+                self.v2_position("k0", "keyframe", "settled", 120),
+                {
+                    "id": "hold-01",
+                    "role": "alias",
+                    "alias_of": "k0",
+                    "alias_kind": "hold",
+                    "phase": "settled-hold",
+                    "purpose": "hold the approved settled pose without inventing pixel differences",
+                    "duration_ms": 240,
+                    "events": [],
+                    "transition_from_previous": "hold",
+                    "transition_to_next": "exit",
+                },
+            ]
+            intent_path = root / "intent-v2.json"
+            self.write_json(intent_path, intent)
+            created = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+
+            def respond(kind: str, payload: dict[str, object]) -> dict[str, object]:
+                state = json.loads((job / "state.json").read_text(encoding="utf-8"))
+                response_path = root / "response.json"
+                self.write_json(response_path, {
+                    "schema_version": "spritesheet-production-response/v2",
+                    "checkpoint_id": state["checkpoint_id"],
+                    "job_revision": state["revision"],
+                    "context_sha256": state["context_sha256"],
+                    "kind": kind,
+                    "payload": payload,
+                })
+                result = self.run_cli(
+                    "advance", "--job", str(job), "--response", str(response_path), "--json",
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                return json.loads(result.stdout)["result"]["state"]
+
+            respond("review", {
+                "gate": "canonical", "decision": "approved", "authority": "user",
+                "evidence": "approved complete canonical view set",
+            })
+            plan_state = respond("review", {
+                "gate": "motion-plan", "decision": "approved", "authority": "user",
+                "evidence": "approved complete motion plan revision 1",
+            })
+            self.assertEqual(plan_state["phase"], "awaiting-keyframe-input")
+            self.assertEqual(
+                plan_state["checkpoint"]["response_schema"]["properties"]["payload"]["properties"]["assets"]["items"]["properties"]["id"]["enum"],
+                ["k0"],
+            )
+            frame = root / "k0.png"
+            self.write_rgba(frame, 61, (512, 512))
+            respond("input", {"assets": [{"id": "k0", "path": str(frame)}]})
+            sequence_review = respond("review", {
+                "gate": "keyframe-set", "decision": "approved", "authority": "user",
+                "evidence": "approved the only concrete source",
+            })
+            self.assertEqual(sequence_review["phase"], "awaiting-sequence-review")
+            self.assertEqual(sequence_review["checkpoint"]["kind"], "review")
+            package_review = respond("review", {
+                "gate": "sequence", "decision": "approved", "authority": "user",
+                "evidence": "approved the complete two-position sequence",
+            })
+            self.assertEqual(package_review["phase"], "awaiting-package-review")
+            manifest = json.loads(Path(package_review["outputs"]["package_manifest"]).read_text(encoding="utf-8"))
+            self.assertEqual(manifest["schema_version"], "spritesheet-package/v5")
+            self.assertEqual(
+                manifest["clips"][0]["positions"],
+                [
+                    {"id": "k0", "role": "keyframe", "source": "k0"},
+                    {"id": "hold-01", "role": "alias", "source": "k0", "alias_kind": "hold"},
+                ],
+            )
+            self.assertEqual([item["id"] for item in manifest["artifacts"] if item["type"] == "high-resolution-frame-source"], ["k0"])
+            verified = self.run_cli(
+                "verify", "--subject", str(Path(package_review["outputs"]["package_manifest"])), "--json",
+            )
+            self.assertEqual(verified.returncode, 0, verified.stdout + verified.stderr)
+            final_state = respond("review", {
+                "gate": "package",
+                "decision": "approved",
+                "authority": "user",
+                "evidence": "approved the complete native-size and motion presentation",
+                "observations": [
+                    {
+                        "subject_id": subject_id,
+                        "classification": "reviewed",
+                        "disposition": "acceptable",
+                        "statement": "The bound subject is acceptable in the supplied presentation",
+                    }
+                    for subject_id in package_review["outputs"]["package_review_subject_ids"]
+                ],
+            })
+            self.assertEqual(final_state["phase"], "package-ready")
+            delivery_path = Path(final_state["outputs"]["sealed_delivery"])
+            delivery = json.loads(delivery_path.read_text(encoding="utf-8"))
+            self.assertEqual(delivery["schema_version"], "spritesheet-production-delivery/v2")
+            self.assertEqual(len(delivery["raw_frame_admissions"]), 1)
+            delivery_verified = self.run_cli(
+                "verify", "--subject", str(delivery_path.parent), "--json",
+            )
+            self.assertEqual(
+                delivery_verified.returncode,
+                0,
+                delivery_verified.stdout + delivery_verified.stderr,
+            )
+
+            diagnostics_path = delivery_path.parent / delivery["motion_diagnostics"]["ref"]
+            diagnostics = json.loads(diagnostics_path.read_text(encoding="utf-8"))
+            diagnostics["clips"][0]["cells"][0]["alpha_area"] += 1
+            diagnostics_path.write_text(
+                json.dumps(diagnostics, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            diagnostics_hash = hashlib.sha256(diagnostics_path.read_bytes()).hexdigest()
+            review_path = delivery_path.parent / delivery["review_packet"]["ref"]
+            review = json.loads(review_path.read_text(encoding="utf-8"))
+            next(
+                subject for subject in review["subjects"]
+                if subject["id"] == "diagnostics"
+            )["sha256"] = diagnostics_hash
+            review_subject = {
+                "schema_version": "review-packet/v1",
+                "review_packet_id": review["review_packet_id"],
+                "subjects": review["subjects"],
+                "evidence": review["evidence"],
+                "reviews": review["reviews"],
+            }
+            review["decision"]["subject_sha256"] = hashlib.sha256(
+                json.dumps(
+                    review_subject,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            review_path.write_text(
+                json.dumps(review, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            review_hash = hashlib.sha256(review_path.read_bytes()).hexdigest()
+            delivery["motion_diagnostics"]["sha256"] = diagnostics_hash
+            delivery["review_packet"]["sha256"] = review_hash
+            changed = {
+                delivery["motion_diagnostics"]["ref"]: diagnostics_hash,
+                delivery["review_packet"]["ref"]: review_hash,
+            }
+            for record in delivery["files"]:
+                if record["ref"] in changed:
+                    record["sha256"] = changed[record["ref"]]
+            delivery_path.write_text(
+                json.dumps(delivery, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            rebound_tamper = self.run_cli(
+                "verify", "--subject", str(delivery_path.parent), "--json",
+            )
+            self.assertNotEqual(rebound_tamper.returncode, 0)
+            failure = json.loads(rebound_tamper.stdout)["error"]
+            self.assertEqual(failure["code"], "DELIVERY_VERIFICATION_FAILED")
+            self.assertEqual(
+                failure["details"]["report"]["error"]["code"],
+                "DIAGNOSTIC_MEASUREMENT_MISMATCH",
+            )
+
+    def test_v2_raw_frame_admission_rejects_hidden_rgb_before_review(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = root / "job"
+            intent = self.v2_intent(root)
+            intent["clips"][0]["positions"] = [self.v2_position("k0", "keyframe", "settled", 120)]
+            intent_path = root / "intent-v2.json"
+            self.write_json(intent_path, intent)
+            created = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+
+            def approve(gate: str, evidence: str) -> dict[str, object]:
+                state = json.loads((job / "state.json").read_text(encoding="utf-8"))
+                response_path = root / "response.json"
+                self.write_json(response_path, {
+                    "schema_version": "spritesheet-production-response/v2",
+                    "checkpoint_id": state["checkpoint_id"],
+                    "job_revision": state["revision"],
+                    "context_sha256": state["context_sha256"],
+                    "kind": "review",
+                    "payload": {
+                        "gate": gate, "decision": "approved", "authority": "user", "evidence": evidence,
+                    },
+                })
+                result = self.run_cli(
+                    "advance", "--job", str(job), "--response", str(response_path), "--json",
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                return json.loads(result.stdout)["result"]["state"]
+
+            approve("canonical", "approved canonical")
+            input_state = approve("motion-plan", "approved complete plan")
+            polluted = root / "polluted.png"
+            image = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+            ImageDraw.Draw(image).rectangle((80, 80, 431, 431), fill=(60, 80, 160, 255))
+            image.putpixel((0, 0), (255, 0, 0, 0))
+            image.save(polluted)
+            before = (job / "state.json").read_bytes()
+            response_path = root / "response.json"
+            self.write_json(response_path, {
+                "schema_version": "spritesheet-production-response/v2",
+                "checkpoint_id": input_state["checkpoint_id"],
+                "job_revision": input_state["revision"],
+                "context_sha256": input_state["context_sha256"],
+                "kind": "input",
+                "payload": {"assets": [{"id": "k0", "path": str(polluted)}]},
+            })
+            rejected = self.run_cli(
+                "advance", "--job", str(job), "--response", str(response_path), "--json",
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertEqual(json.loads(rejected.stdout)["error"]["code"], "RAW_FRAME_ADMISSION_FAILED")
+            self.assertEqual((job / "state.json").read_bytes(), before)
+            self.assertFalse((job / "artifacts-r1" / "raw-frame-admission-k0.json").exists())
+
+    def test_v2_revised_motion_plan_invalidates_image_work_and_requires_full_reapproval(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = root / "job"
+            intent = self.v2_intent(root)
+            intent_path = root / "intent-v2.json"
+            self.write_json(intent_path, intent)
+            created = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+
+            def approve(gate: str, evidence: str) -> dict[str, object]:
+                state = json.loads((job / "state.json").read_text(encoding="utf-8"))
+                response_path = root / "response.json"
+                self.write_json(response_path, {
+                    "schema_version": "spritesheet-production-response/v2",
+                    "checkpoint_id": state["checkpoint_id"],
+                    "job_revision": state["revision"],
+                    "context_sha256": state["context_sha256"],
+                    "kind": "review",
+                    "payload": {
+                        "gate": gate,
+                        "decision": "approved",
+                        "authority": "user",
+                        "evidence": evidence,
+                    },
+                })
+                result = self.run_cli(
+                    "advance", "--job", str(job), "--response", str(response_path), "--json",
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                return json.loads(result.stdout)["result"]["state"]
+
+            approve("canonical", "approved complete canonical views")
+            input_state = approve("motion-plan", "approved complete original plan")
+            stale_checkpoint = {
+                "checkpoint_id": input_state["checkpoint_id"],
+                "job_revision": input_state["revision"],
+                "context_sha256": input_state["context_sha256"],
+            }
+            revised = json.loads(json.dumps(intent))
+            revised["base_revision"] = input_state["revision"]
+            revised["clips"][0]["positions"][1]["pose"] = "lower passing pose with a clearer support-leg compression"
+            self.write_json(intent_path, revised)
+            updated = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertEqual(updated.returncode, 0, updated.stdout + updated.stderr)
+            state = json.loads(updated.stdout)["result"]["state"]
+            self.assertEqual(state["phase"], "awaiting-motion-plan-review")
+            self.assertEqual(
+                [position["id"] for position in state["checkpoint"]["presentation"]["motion_plan"]["clips"][0]["positions"]],
+                ["k0", "i1", "i2", "k3"],
+            )
+            self.assertEqual(
+                state["checkpoint"]["presentation"]["motion_plan"]["clips"][0]["positions"][1]["pose"],
+                "lower passing pose with a clearer support-leg compression",
+            )
+            self.assertNotIn("motion_plan", state["outputs"])
+            self.assertEqual(state["inputs"], {})
+            stale_response = root / "stale-response.json"
+            self.write_json(stale_response, {
+                "schema_version": "spritesheet-production-response/v2",
+                **stale_checkpoint,
+                "kind": "input",
+                "payload": {"assets": []},
+            })
+            rejected = self.run_cli(
+                "advance", "--job", str(job), "--response", str(stale_response), "--json",
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertEqual(json.loads(rejected.stdout)["error"]["code"], "STALE_CHECKPOINT")
+
+    def test_v2_rejects_clip_view_drift_before_creating_a_job(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = root / "job"
+            intent = self.v2_intent(root)
+            intent["clips"][0]["direction"] = "west"
+            intent_path = root / "intent-v2.json"
+            self.write_json(intent_path, intent)
+            rejected = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertEqual(
+                json.loads(rejected.stdout)["error"]["code"], "CANONICAL_VIEW_MISMATCH"
+            )
+            self.assertFalse(job.exists())
+
+    def test_v2_alpha_centroid_gate_fails_before_package_review(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = root / "job"
+            intent = self.v2_intent(root)
+            intent["clips"][0]["positions"] = [
+                self.v2_position("k0", "keyframe", "contact", 100),
+                self.v2_position("k1", "keyframe", "opposite-contact", 100),
+            ]
+            intent_path = root / "intent-v2.json"
+            self.write_json(intent_path, intent)
+            created = self.run_cli(
+                "advance", "--job", str(job), "--intent", str(intent_path), "--json",
+            )
+            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+
+            def respond(kind: str, payload: dict[str, object]) -> subprocess.CompletedProcess[str]:
+                state = json.loads((job / "state.json").read_text(encoding="utf-8"))
+                response_path = root / "response.json"
+                self.write_json(response_path, {
+                    "schema_version": "spritesheet-production-response/v2",
+                    "checkpoint_id": state["checkpoint_id"],
+                    "job_revision": state["revision"],
+                    "context_sha256": state["context_sha256"],
+                    "kind": kind,
+                    "payload": payload,
+                })
+                return self.run_cli(
+                    "advance", "--job", str(job), "--response", str(response_path), "--json",
+                )
+
+            for gate in ("canonical", "motion-plan"):
+                result = respond("review", {
+                    "gate": gate,
+                    "decision": "approved",
+                    "authority": "user",
+                    "evidence": f"approved complete {gate}",
+                })
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            first = root / "k0.png"
+            second = root / "k1.png"
+            image = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+            ImageDraw.Draw(image).rectangle((80, 140, 279, 379), fill=(60, 80, 160, 255))
+            image.save(first)
+            shifted = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+            ImageDraw.Draw(shifted).rectangle((220, 140, 419, 379), fill=(60, 80, 160, 255))
+            shifted.save(second)
+            admitted = respond("input", {
+                "assets": [{"id": "k0", "path": str(first)}, {"id": "k1", "path": str(second)}],
+            })
+            self.assertEqual(admitted.returncode, 0, admitted.stdout + admitted.stderr)
+            keyframes = respond("review", {
+                "gate": "keyframe-set",
+                "decision": "approved",
+                "authority": "user",
+                "evidence": "approved concrete keyframes",
+            })
+            self.assertEqual(keyframes.returncode, 0, keyframes.stdout + keyframes.stderr)
+            before = (job / "state.json").read_bytes()
+            failed = respond("review", {
+                "gate": "sequence",
+                "decision": "approved",
+                "authority": "user",
+                "evidence": "approved sequence",
+            })
+            self.assertNotEqual(failed.returncode, 0)
+            error = json.loads(failed.stdout)["error"]
+            self.assertEqual(error["code"], "QUALITY_GATE_FAILED")
+            self.assertGreater(error["details"]["measured_step"], 4)
+            self.assertEqual((job / "state.json").read_bytes(), before)
+            self.assertFalse((job / "artifacts-r1" / "package").exists())
 
     def test_canonical_review_binds_alpha_policy_and_complete_preview_matrix(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

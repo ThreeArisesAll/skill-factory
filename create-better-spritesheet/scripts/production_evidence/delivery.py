@@ -27,6 +27,7 @@ from .io import (
 from .schemas import (
     BLUEPRINT_SCHEMA,
     DELIVERY_SCHEMA,
+    DELIVERY_SCHEMA_V2,
     DIAGNOSTICS_SCHEMA,
     IDENTITY_SCHEMA,
     REVIEW_SCHEMA,
@@ -364,6 +365,11 @@ def _validate_evidence_bindings(
 
 def seal_delivery(request_path: Path, output_dir: Path, pipeline_path: Path) -> None:
     request = read_json(request_path, "delivery request")
+    if request.get("schema_version") == DELIVERY_SCHEMA_V2:
+        from .delivery_v2 import seal_delivery_v2
+
+        seal_delivery_v2(request_path, output_dir, pipeline_path)
+        return
     if request.get("schema_version") != DELIVERY_SCHEMA:
         raise EvidenceError(
             "SCHEMA_VERSION_UNSUPPORTED", f"schema_version must be {DELIVERY_SCHEMA!r}"
@@ -717,6 +723,14 @@ def seal_delivery(request_path: Path, output_dir: Path, pipeline_path: Path) -> 
 
 
 def verification_report(delivery_path: Path, pipeline_path: Path) -> dict[str, Any]:
+    try:
+        detected_schema = read_json(delivery_path, "delivery").get("schema_version")
+    except (EvidenceError, OSError, ValueError, TypeError):
+        detected_schema = None
+    if detected_schema == DELIVERY_SCHEMA_V2:
+        from .delivery_v2 import verification_report_v2
+
+        return verification_report_v2(delivery_path, pipeline_path)
     results: list[dict[str, str]] = []
 
     def record(classification: str, subject: str, detail: str) -> None:

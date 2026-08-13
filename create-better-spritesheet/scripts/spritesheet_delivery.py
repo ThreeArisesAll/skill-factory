@@ -16,9 +16,9 @@ def parse_args() -> argparse.Namespace:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "Closed schemas: identity-bible/v1, motion-blueprint/v1, spacing-plan/v1,\n"
-            "motion-diagnostics/v1, review-packet/v1, runtime-playback-proof/v1,\n"
-            "spritesheet-runtime-projection/v1, spritesheet-production-delivery/v1.\n"
+            "Current schemas: identity-bible/v2, motion-plan/v2, raw-frame-admission/v1,\n"
+            "motion-diagnostics/v2, review-packet/v1, spritesheet-production-delivery/v2.\n"
+            "Compatibility: delivery/evidence v1 and runtime-playback-proof/v1 remain supported.\n"
             "seal-delivery consumes the delivery schema with each {ref, sha256} replaced by\n"
             "{path, sha256}, where path is an absolute regular non-symlink file."
         ),
@@ -26,13 +26,13 @@ def parse_args() -> argparse.Namespace:
     commands = parser.add_subparsers(dest="command", required=True)
     diagnose_parser = commands.add_parser(
         "diagnose",
-        description="Verify a v4 package and deterministically emit measured diagnostics and review renderings.",
+        description="Verify a v5 or v4 package and deterministically emit measured diagnostics and review renderings.",
     )
     diagnose_parser.add_argument(
         "--manifest",
         required=True,
         type=Path,
-        help="absolute spritesheet-package/v4 manifest.json",
+        help="absolute spritesheet-package/v5 or v4 manifest.json",
     )
     diagnose_parser.add_argument(
         "--output-dir",
@@ -42,13 +42,13 @@ def parse_args() -> argparse.Namespace:
     )
     seal_parser = commands.add_parser(
         "seal-delivery",
-        description="Validate hash-bound evidence and copy it with the verified v4 package into a closed atomic delivery.",
+        description="Validate hash-bound evidence and copy it with the verified package into a closed atomic delivery.",
     )
     seal_parser.add_argument(
         "--request",
         required=True,
         type=Path,
-        help="spritesheet-production-delivery/v1 JSON using absolute path references",
+        help="spritesheet-production-delivery/v2 or compatible v1 request using absolute path references",
     )
     seal_parser.add_argument(
         "--output-dir", required=True, type=Path, help="new atomic delivery directory"

@@ -1,4 +1,4 @@
-"""Narrow subprocess adapters for the internal v3/v4 pipeline."""
+"""Narrow subprocess adapters for the internal canonical v3 and package v4/v5 pipeline."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Deterministic measurement and review renderings for verified v4 packages."""
+"""Deterministic measurement and review renderings for verified v5 and v4 packages."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from .io import (
     sha256_file,
     write_canonical_json,
 )
-from .schemas import DIAGNOSTICS_SCHEMA, validate_document
+from .schemas import DIAGNOSTICS_SCHEMA, DIAGNOSTICS_SCHEMA_V2, validate_document
 
 MAX_IMAGE_PIXELS = 64 * 1024 * 1024
 MAX_CELLS = 4096
@@ -161,6 +161,47 @@ def _cell_metrics(
     }
 
 
+def _measured_clips(
+    manifest: dict[str, Any],
+    cells: list[Image.Image],
+) -> list[dict[str, Any]]:
+    contract = manifest["contract"]
+    assembly_cells = manifest["assembly"]["cells"]
+    records: list[dict[str, Any]] = []
+    cursor = 0
+    for clip in manifest["clips"]:
+        count = len(clip["durations_ms"])
+        metrics = []
+        for offset in range(count):
+            global_index = cursor + offset
+            metrics.append(
+                _cell_metrics(
+                    cells[global_index],
+                    cells[global_index - 1] if offset > 0 else None,
+                    global_index,
+                    assembly_cells[global_index]["source"],
+                    contract["anchor"],
+                    contract["safe_bounds"],
+                ),
+            )
+        records.append({"clip_id": clip["id"], "cells": metrics})
+        cursor += count
+    return records
+
+
+def recompute_motion_metrics(manifest_path: Path, pipeline_path: Path) -> list[dict[str, Any]]:
+    """Recompute every sealed motion metric from exact package pixels."""
+    manifest_path = require_regular_file(manifest_path, "manifest")
+    _verify_package(manifest_path, pipeline_path)
+    manifest = read_json(manifest_path, "manifest")
+    sheet_record = next(
+        artifact for artifact in manifest["artifacts"]
+        if artifact.get("id") == manifest["assembly"]["sheet"]
+    )
+    sheet = _open_rgba((manifest_path.parent / sheet_record["path"]).resolve(), "spritesheet")
+    return _measured_clips(manifest, _crop_cells(manifest, sheet))
+
+
 def _checkerboard(size: tuple[int, int]) -> Image.Image:
     width, height = size
     board = Image.new("RGBA", size, (40, 40, 40, 255))
@@ -253,8 +294,6 @@ def diagnose(manifest_path: Path, output_dir: Path, pipeline_path: Path) -> None
         raise EvidenceError("SYMLINK_FORBIDDEN", "spritesheet must not be a symlink")
     sheet = _open_rgba(sheet_path.resolve(), "spritesheet")
     cells = _crop_cells(manifest, sheet)
-    contract = manifest["contract"]
-    assembly_cells = manifest["assembly"]["cells"]
 
     def build(destination: Path) -> None:
         source_dir = destination / "source"
@@ -298,27 +337,10 @@ def diagnose(manifest_path: Path, output_dir: Path, pipeline_path: Path) -> None
                 {"clip_id": clip["id"], "asset": _asset_ref(preview_path, destination)}
             )
             preview_cursor += count
-        clip_records: list[dict[str, Any]] = []
-        cursor = 0
-        for clip in manifest["clips"]:
-            count = len(clip["durations_ms"])
-            metrics = []
-            for offset in range(count):
-                global_index = cursor + offset
-                metrics.append(
-                    _cell_metrics(
-                        cells[global_index],
-                        cells[global_index - 1] if offset > 0 else None,
-                        global_index,
-                        assembly_cells[global_index]["source"],
-                        contract["anchor"],
-                        contract["safe_bounds"],
-                    ),
-                )
-            clip_records.append({"clip_id": clip["id"], "cells": metrics})
-            cursor += count
+        clip_records = _measured_clips(manifest, cells)
+        diagnostics_schema = DIAGNOSTICS_SCHEMA_V2 if manifest.get("schema_version") == "spritesheet-package/v5" else DIAGNOSTICS_SCHEMA
         diagnostics = {
-            "schema_version": DIAGNOSTICS_SCHEMA,
+            "schema_version": diagnostics_schema,
             "package_manifest": _asset_ref(manifest_copy, destination),
             "assets": {
                 "contact_sheet": _asset_ref(contact_path, destination),
@@ -329,7 +351,9 @@ def diagnose(manifest_path: Path, output_dir: Path, pipeline_path: Path) -> None
             "clips": clip_records,
             "observations": [],
         }
-        validate_document(diagnostics, DIAGNOSTICS_SCHEMA)
+        if diagnostics_schema == DIAGNOSTICS_SCHEMA_V2:
+            diagnostics["measurement_contract"] = "spritesheet-motion-metrics/v2"
+        validate_document(diagnostics, diagnostics_schema)
         write_canonical_json(destination / "motion-diagnostics.json", diagnostics)
 
     atomic_directory(output_dir, build)

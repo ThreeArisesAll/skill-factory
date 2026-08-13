@@ -28,6 +28,7 @@ from .protocol import (
     NORMALIZATION_ALGORITHM,
     OUTLINE_ALGORITHM,
     PACKAGE_SCHEMA,
+    PACKAGE_SCHEMA_V5,
     SAMPLER,
     normalize_clip_metadata,
     require_exact_keys,
@@ -103,7 +104,9 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
     check(isinstance(data, dict), "$", "manifest must be an object")
     if not isinstance(data, dict):
         data = {}
-    check(data.get("schema_version") == PACKAGE_SCHEMA, "schema_version", f"required={PACKAGE_SCHEMA!r}")
+    package_schema = data.get("schema_version")
+    is_v5 = package_schema == PACKAGE_SCHEMA_V5
+    check(package_schema in {PACKAGE_SCHEMA, PACKAGE_SCHEMA_V5}, "schema_version", f"required one of={[PACKAGE_SCHEMA, PACKAGE_SCHEMA_V5]!r}")
     check(
         set(data) == {"schema_version", "contract", "artifacts", "canonical_admissions", "clips", "reviews", "rendering", "assembly"},
         "$ fields",
@@ -456,6 +459,7 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
     frame_ids: list[str] = []
     canonical_ids: list[str] = []
     expected_sources: list[tuple[str, bool]] = []
+    expected_positions: list[str] = []
     clip_review_scopes: list[tuple[str, list[str]]] = []
     clip_ids_seen: set[str] = set()
     if isinstance(clips_value, list):
@@ -463,8 +467,9 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
             if not isinstance(raw_clip, dict):
                 check(False, f"clips[{clip_index}]", "must be an object")
                 continue
+            position_field = "positions" if is_v5 else "frame_ids"
             check(
-                set(raw_clip) == (CLIP_KEYS - {"frames"}) | {"frame_ids"},
+                set(raw_clip) == (CLIP_KEYS - {"frames"}) | {position_field},
                 f"clips[{clip_index}].fields",
                 "clip fields are closed",
             )
@@ -486,55 +491,104 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
             repeat = raw_clip.get("repeat_opening_cell")
             check(isinstance(loop, bool) and isinstance(repeat, bool), f"clips[{clip_index}].loop", "flags must be boolean")
             check(not repeat or loop is True, f"clips[{clip_index}].repeat_opening_cell", "allowed only for loops")
-            clip_frame_ids = raw_clip.get("frame_ids")
-            if not isinstance(clip_frame_ids, list):
-                check(False, f"clips[{clip_index}].frame_ids", "must be an array")
+            check(not is_v5 or repeat is False, f"clips[{clip_index}].repeat_opening_cell", "v5 requires explicit aliases")
+            raw_positions = raw_clip.get(position_field)
+            if not isinstance(raw_positions, list) or not raw_positions:
+                check(False, f"clips[{clip_index}].{position_field}", "must be a non-empty array")
                 continue
             try:
                 metadata_clip = {
                     key: value
                     for key, value in raw_clip.items()
-                    if key != "frame_ids"
+                    if key != position_field
                 }
                 metadata_clip["frames"] = []
                 normalize_clip_metadata(
                     metadata_clip,
                     clip_id if isinstance(clip_id, str) else f"clip-{clip_index}",
-                    len(clip_frame_ids) + int(repeat is True),
+                    len(raw_positions) + int(repeat is True),
                     width if isinstance(width, int) else 0,
                     height if isinstance(height, int) else 0,
                 )
             except (ContractError, TypeError) as error:
                 check(False, f"clips[{clip_index}].runtime", str(error))
+            position_records: list[dict[str, Any]] = []
+            logical_ids: set[str] = set()
+            concrete_ids: set[str] = set()
+            if is_v5:
+                for position_index, raw_position in enumerate(raw_positions):
+                    location = f"clips[{clip_index}].positions[{position_index}]"
+                    if not isinstance(raw_position, dict):
+                        check(False, location, "must be an object")
+                        position_records.append({})
+                        continue
+                    role = raw_position.get("role")
+                    expected_keys = {"id", "role", "source", "alias_kind"} if role == "alias" else {"id", "role", "source"}
+                    check(set(raw_position) == expected_keys, f"{location}.fields", "position fields are closed")
+                    logical_id = raw_position.get("id")
+                    source_id = raw_position.get("source")
+                    valid_logical_id = isinstance(logical_id, str) and bool(logical_id) and logical_id not in logical_ids
+                    check(valid_logical_id, f"{location}.id", "must be a unique non-empty logical position ID")
+                    if isinstance(logical_id, str):
+                        logical_ids.add(logical_id)
+                    check(role in {"keyframe", "in-between", "alias"}, f"{location}.role", "is invalid")
+                    check(
+                        isinstance(source_id, str)
+                        and artifacts.get(source_id, {}).get("type") == "high-resolution-frame-source",
+                        f"{location}.source",
+                        "must reference a high-resolution-frame-source artifact",
+                    )
+                    if role == "alias":
+                        check(source_id in concrete_ids, f"{location}.source", "alias must reference an earlier concrete source in the same clip")
+                        check(raw_position.get("alias_kind") in {"hold", "closing"}, f"{location}.alias_kind", "is invalid")
+                        if raw_position.get("alias_kind") == "closing":
+                            check(loop is True and position_index == len(raw_positions) - 1, f"{location}.alias_kind", "closing alias must end a loop")
+                    else:
+                        check(logical_id == source_id, f"{location}.source", "a concrete position must own its same-ID source")
+                        if isinstance(source_id, str):
+                            concrete_ids.add(source_id)
+                    position_records.append(dict(raw_position))
+            else:
+                for frame_id in raw_positions:
+                    artifact = artifacts.get(frame_id, {}) if isinstance(frame_id, str) else {}
+                    position_records.append(
+                        {
+                            "id": frame_id,
+                            "role": artifact.get("role"),
+                            "source": frame_id,
+                        }
+                    )
             frames = [
-                artifacts.get(frame_id, {})
-                if isinstance(frame_id, str)
+                artifacts.get(position.get("source"), {})
+                if isinstance(position.get("source"), str)
                 else {}
-                for frame_id in clip_frame_ids
+                for position in position_records
             ]
             local_keyframes = [
                 index
-                for index, frame in enumerate(frames)
-                if isinstance(frame, dict) and frame.get("role") == "keyframe"
+                for index, position in enumerate(position_records)
+                if position.get("role") == "keyframe"
             ]
             in_between_count = sum(
-                isinstance(frame, dict) and frame.get("role") == "in-between"
-                for frame in frames
+                position.get("role") == "in-between"
+                for position in position_records
             )
-            check(len(local_keyframes) >= 2, f"clips[{clip_index}].keyframes", "requires at least two")
-            check(in_between_count >= 2, f"clips[{clip_index}].in-betweens", "requires at least two")
-            for frame_index, frame in enumerate(frames):
+            if not is_v5:
+                check(len(local_keyframes) >= 2, f"clips[{clip_index}].keyframes", "requires at least two")
+                check(in_between_count >= 2, f"clips[{clip_index}].in-betweens", "requires at least two")
+            for frame_index, (position, frame) in enumerate(zip(position_records, frames, strict=True)):
                 if not isinstance(frame, dict):
                     check(False, f"clips[{clip_index}].frames[{frame_index}]", "must be an object")
                     continue
-                frame_id = frame.get("id")
-                role = frame.get("role")
-                check(role in ("keyframe", "in-between"), f"frame[{frame_id}].role", "invalid role")
+                frame_id = position.get("source")
+                role = position.get("role")
+                source_role = frame.get("role")
+                check(role in ("keyframe", "in-between", "alias"), f"frame[{frame_id}].role", "invalid role")
                 check(
                     isinstance(frame_id, str)
                     and frame_id in artifacts
                     and artifacts[frame_id].get("type") == "high-resolution-frame-source"
-                    and artifacts[frame_id].get("role") == role,
+                    and (role == "alias" or artifacts[frame_id].get("role") == role),
                     f"frame[{frame_id}].artifact",
                     "must reference a matching high-resolution-frame-source artifact",
                 )
@@ -545,8 +599,11 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
                 )
                 if not isinstance(frame_id, str):
                     continue
-                frame_ids.append(frame_id)
-                expected_sources.append((frame_id, False))
+                if frame_id not in frame_ids:
+                    frame_ids.append(frame_id)
+                expected_sources.append((frame_id, role == "alias"))
+                if is_v5 and isinstance(position.get("id"), str):
+                    expected_positions.append(position["id"])
                 if role == "keyframe":
                     check(
                         "previous_keyframe" not in frame and "next_keyframe" not in frame,
@@ -561,30 +618,30 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
                     bracket_valid = (
                         previous_index is not None
                         and following_index is not None
-                        and frame.get("previous_keyframe") == frames[previous_index].get("id")
-                        and frame.get("next_keyframe") == frames[following_index].get("id")
+                        and frame.get("previous_keyframe") == position_records[previous_index].get("source")
+                        and frame.get("next_keyframe") == position_records[following_index].get("source")
                     )
                     check(bool(bracket_valid), f"frame[{frame_id}].bracketing", "must name adjacent keyframes")
-            clip_frame_ids_for_review = [
-                frame.get("id")
-                for frame in frames
-                if isinstance(frame.get("id"), str)
-            ]
+            clip_frame_ids_for_review = list(dict.fromkeys(
+                position.get("source")
+                for position in position_records
+                if isinstance(position.get("source"), str)
+            ))
             clip_review_scopes.extend(
                 (
                     (
                         "keyframe-set-approval",
                         [canonical_id, *[
-                            frame.get("id")
-                            for frame in frames
-                            if frame.get("role") == "keyframe" and isinstance(frame.get("id"), str)
+                            position.get("source")
+                            for position in position_records
+                            if position.get("role") == "keyframe" and isinstance(position.get("source"), str)
                         ]],
                     ),
                     ("sequence-approval", [canonical_id, *clip_frame_ids_for_review]),
                 ),
             )
-            if repeat and clip_frame_ids and isinstance(clip_frame_ids[0], str):
-                expected_sources.append((clip_frame_ids[0], True))
+            if repeat and raw_positions and isinstance(raw_positions[0], str):
+                expected_sources.append((raw_positions[0], True))
     declared_canonical_ids = [
         artifact_id
         for artifact_id, artifact in artifacts.items()
@@ -600,21 +657,22 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
         "clips.canonical_reference",
         "every canonical reference must be consumed by at least one clip",
     )
-    check(len(frame_ids) == len(set(frame_ids)), "clips.frames", "frame IDs must be unique")
+    check(len(frame_ids) == len(set(frame_ids)), "clips.frames", "concrete frame source IDs must be unique")
     frame_pixel_hashes = [
         hashlib.sha256(images[frame_id].tobytes()).hexdigest()
         for frame_id in frame_ids
         if frame_id in images
     ]
     check(
-        len(frame_pixel_hashes) == len(frame_ids) and len(set(frame_pixel_hashes)) == len(frame_pixel_hashes),
+        len(frame_pixel_hashes) == len(frame_ids)
+        and (is_v5 or len(set(frame_pixel_hashes)) == len(frame_pixel_hashes)),
         "high-resolution-frame-source.pixels",
-        "all high-resolution frame sources must have distinct pixels",
+        "v4 frame sources must have distinct pixels and all source images must be readable",
     )
     for canonical_id in set(canonical_ids):
         if canonical_id in images:
             canonical_pixels = hashlib.sha256(images[canonical_id].tobytes()).hexdigest()
-            check(canonical_pixels not in set(frame_pixel_hashes), f"canonical-reference[{canonical_id}].pixels", "must differ from every frame")
+            check(is_v5 or canonical_pixels not in set(frame_pixel_hashes), f"canonical-reference[{canonical_id}].pixels", "v4 canonical pixels must differ from every frame")
     canonical_pixel_hashes = [
         hashlib.sha256(images[canonical_id].tobytes()).hexdigest()
         for canonical_id in declared_canonical_ids
@@ -670,16 +728,30 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
         and order in ("row-major", "column-major")
         and isinstance(cells, list)
         and rows == (count + columns - 1) // columns
-        and cells == [
-            {
-                "source": source,
-                "repeated_opening": repeated,
-                "index": index,
-                "column": cell_position(index, columns, rows, order)[0],
-                "row": cell_position(index, columns, rows, order)[1],
-            }
-            for index, (source, repeated) in enumerate(expected_sources)
-        ]
+        and cells == (
+            [
+                {
+                    "position": expected_positions[index],
+                    "source": source,
+                    "alias": repeated,
+                    "index": index,
+                    "column": cell_position(index, columns, rows, order)[0],
+                    "row": cell_position(index, columns, rows, order)[1],
+                }
+                for index, (source, repeated) in enumerate(expected_sources)
+            ]
+            if is_v5
+            else [
+                {
+                    "source": source,
+                    "repeated_opening": repeated,
+                    "index": index,
+                    "column": cell_position(index, columns, rows, order)[0],
+                    "row": cell_position(index, columns, rows, order)[1],
+                }
+                for index, (source, repeated) in enumerate(expected_sources)
+            ]
+        )
     )
     check(layout_valid, "assembly.cells", "cells must exactly follow clip order and grid order")
     check(isinstance(count, int) and count == len(expected_sources), "contract.frame_count", "must equal assembled cell count")

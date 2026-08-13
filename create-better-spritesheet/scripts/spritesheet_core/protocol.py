@@ -12,6 +12,8 @@ from .package_io import ResourceBudget, read_regular_file_snapshot
 CANONICAL_REQUEST_SCHEMA = "canonical-authoring-request/v3"
 PRODUCTION_REQUEST_SCHEMA = "spritesheet-production-request/v4"
 PACKAGE_SCHEMA = "spritesheet-package/v4"
+PRODUCTION_REQUEST_SCHEMA_V5 = "spritesheet-production-request/v5"
+PACKAGE_SCHEMA_V5 = "spritesheet-package/v5"
 EVIDENCE_SCHEMA = "canonical-reference-evidence/v3"
 ADMISSION_PROOF_SCHEMA = "canonical-admission-proof/v1"
 NORMALIZATION_ALGORITHM = "normalize-to-canvas/lanczos-premultiplied-v1"
@@ -58,7 +60,7 @@ def require_positive_int(value: Any, location: str) -> int:
 
 def read_request(
     path: Path,
-    schema: str,
+    schema: str | set[str],
     *,
     budget: ResourceBudget | None = None,
 ) -> dict[str, Any]:
@@ -74,8 +76,9 @@ def read_request(
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ContractError(f"cannot read request: {error}") from error
     request = require_object(data, "request")
-    if request.get("schema_version") != schema:
-        raise ContractError(f"schema_version must be {schema!r}")
+    schemas = {schema} if isinstance(schema, str) else schema
+    if request.get("schema_version") not in schemas:
+        raise ContractError(f"schema_version must be one of {sorted(schemas)!r}")
     lowered = raw_text.lower()
     forbidden = [term for term in FORBIDDEN_TERMS if term in lowered]
     if forbidden:

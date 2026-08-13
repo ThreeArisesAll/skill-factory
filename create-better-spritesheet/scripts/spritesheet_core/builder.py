@@ -12,7 +12,7 @@ from PIL import Image
 from .errors import ContractError
 from .package_io import atomic_directory, cell_position, image_record, sha256_file
 from .production import parse_production_request
-from .protocol import PACKAGE_SCHEMA
+from .protocol import PACKAGE_SCHEMA, PACKAGE_SCHEMA_V5, PRODUCTION_REQUEST_SCHEMA_V5
 from .rendering import (
     MAX_HIGH_RESOLUTION_SIDE,
     MAX_PNG_DECODED_PIXELS,
@@ -25,6 +25,7 @@ from .rendering import (
 
 def build_package(request_path: Path, output_dir: Path) -> None:
     parsed = parse_production_request(request_path)
+    is_v5 = parsed["schema_version"] == PRODUCTION_REQUEST_SCHEMA_V5
 
     def build(destination: Path) -> None:
         artifacts_dir = destination / "artifacts"
@@ -125,11 +126,26 @@ def build_package(request_path: Path, output_dir: Path) -> None:
         cells: list[dict[str, Any]] = []
         for clip in parsed["clips"]:
             frames = clip.pop("frames")
-            clip["frame_ids"] = [frame["id"] for frame in frames]
-            for frame in frames:
-                cells.append({"source": frame["id"], "repeated_opening": False})
-            if clip["repeat_opening_cell"]:
-                cells.append({"source": clip["frame_ids"][0], "repeated_opening": True})
+            if is_v5:
+                positions: list[dict[str, Any]] = []
+                for frame in frames:
+                    source = frame["source_id"] if frame["role"] == "alias" else frame["id"]
+                    position = {"id": frame["id"], "role": frame["role"], "source": source}
+                    if frame["role"] == "alias":
+                        position["alias_kind"] = frame["alias_kind"]
+                    positions.append(position)
+                    cells.append({
+                        "position": frame["id"],
+                        "source": source,
+                        "alias": frame["role"] == "alias",
+                    })
+                clip["positions"] = positions
+            else:
+                clip["frame_ids"] = [frame["id"] for frame in frames]
+                for frame in frames:
+                    cells.append({"source": frame["id"], "repeated_opening": False})
+                if clip["repeat_opening_cell"]:
+                    cells.append({"source": clip["frame_ids"][0], "repeated_opening": True})
 
         columns = parsed["columns"]
         rows = (parsed["frame_count"] + columns - 1) // columns
@@ -164,7 +180,7 @@ def build_package(request_path: Path, output_dir: Path) -> None:
             ),
         )
         manifest = {
-            "schema_version": PACKAGE_SCHEMA,
+            "schema_version": PACKAGE_SCHEMA_V5 if is_v5 else PACKAGE_SCHEMA,
             "contract": parsed["contract"],
             "artifacts": artifact_records,
             "canonical_admissions": admission_records,

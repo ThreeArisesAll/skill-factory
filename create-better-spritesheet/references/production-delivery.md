@@ -1,55 +1,47 @@
-# Production Delivery v1
+# Production Delivery v2
 
-Use `spritesheet-production-delivery/v1` as the job and delivery envelope around one exact verified `spritesheet-package/v4`. Seal and verify it through `spritesheet_delivery.py`. The envelope records intent, reviews, diagnostics, and supplied runtime evidence without expanding or reinterpreting the pixel package.
+`spritesheet-production-delivery/v2` seals one exact `spritesheet-package/v5` with the evidence required to reproduce its current production claim.
 
-## Authority boundary
+## Closed evidence set
 
-`spritesheet-package/v4` remains the sole authority for packaged source bytes, manifest metadata, canonical admission material, deterministic rendering, sheet assembly, hashes, and pixel replay. A current package binds `smooth-raster-pixel-protocol/v3` through `spritesheet-rendering-receipt/v2`. A valid current v4 package proves its declared pixel derivation. It does not prove identity intent, motion quality, metadata meaning, review presentation, an external runtime projection, or runtime playback.
+The delivery contains job-relative, hash-bound references to:
 
-The v1 delivery envelope references one exact v4 package and these job-level evidence schemas:
+- Approved `identity-bible/v2`
+- Approved complete `motion-plan/v2`
+- One `raw-frame-admission/v1` for every unique concrete high-resolution source
+- Exact v5 package manifest and closed package-tree hash
+- `motion-diagnostics/v2` and its generated presentation assets
+- Approved `review-packet/v1`
+- The mechanical quality policy used for raw admission and target-cell centroid steps
+- An exact file inventory excluding `delivery.json` itself
 
-- `identity-bible/v1`: approved identity, art direction, camera, direction, and recognition constraints
-- `motion-blueprint/v1`: approved topology, phases, structural anchors, timing intent, events, and transitions
-- `spacing-plan/v1`: approved playback positions, keyframe brackets, durations, events, and spacing intent
-- `motion-diagnostics/v1`: measured package properties, generated review assets, ownership classification, and correction consequences
-- `review-packet/v1`: exact subjects, presentation assets, observations, and recorded human decision
-- `spritesheet-runtime-projection/v1`: closed projection of the exact package geometry, assembly, cells, clips, timing, and events into an external runtime contract
-- `runtime-playback-proof/v1`: supplied target-runtime evidence and recorded playback, event, and rendering checks
+Runtime integration is not represented by v2. Current production accepts `runtime_scope: null`; use [runtime-integration.md](runtime-integration.md) as a separately authorized downstream workflow.
 
-Treat these as closed evidence schemas, not v4 manifest sections. Use executable schemas for exact fields. This document is the sole authority for their delivery roles and invalidation relationships.
+## Independent replay
 
-## Dependency and invalidation
+Sealing and verification require all of the following:
 
-Bind the envelope to the exact v4 package and exact evidence hashes. Apply [approval-protocol.md](approval-protocol.md) to every human decision.
+1. Identity and motion-plan approvals bind their exact canonical content.
+2. The motion plan binds the identity hash and exactly matches package clips, views, positions, aliases, durations, and events.
+3. Raw admissions cover every concrete plan source exactly once and bind plan, position, canonical view, packaged high-resolution bytes, Alpha measurements, transparent-RGB policy, and margin policy.
+4. Package v5 passes full pixel and tree replay.
+5. Diagnostics bind the package and every recorded metric recomputes from final sheet pixels.
+6. The review packet exactly covers identity, motion plan, diagnostics, and package with acceptable observations and bound presentation assets.
+7. The delivery tree contains exactly its declared semantic evidence and no symlinks or undeclared files.
 
-An outer evidence change never alters or invalidates unchanged v4 pixel bytes, manifest bytes, or pixel replay. It may make the current delivery binding or eligibility stale:
+The sealed quality policy also enforces the configured maximum target-cell Alpha-centroid step. This is a coarse mechanical discontinuity gate, not proof of root motion or contact quality.
 
-- An identity-bible change makes canonical approval and all dependent motion, review, delivery, and runtime evidence ineligible until reconciled. Rebuild v4 only when canonical or packaged inputs actually change.
-- A motion-blueprint change makes affected keyframe, spacing-plan, sequence, diagnostic, review, delivery, and playback bindings ineligible. Rebuild v4 only when raw sources or manifest content change.
-- A spacing-plan change makes affected sequence, manifest-metadata semantics, review, delivery, runtime projection, and playback bindings ineligible. Unchanged pixels remain replayable even when their current delivery meaning is stale.
-- A raw-source, rendering-contract, assembly, or v4 manifest change requires a new exact pixel-package binding and invalidates every delivery claim bound to the prior package.
-- A pixel-protocol or outline-algorithm change requires regeneration from canonical authoring source evidence. Rebuild every dependent proof, approval subject, raw-frame rendering, receipt, sheet, manifest, checkpoint, review, and delivery binding; relabeling prior output is never sufficient.
-- A review-packet presentation change makes its recorded decision ineligible when it changes what the authority could inspect; unchanged production bytes remain valid.
-- An external runtime contract, projection, environment, integration, or playback change makes affected runtime evidence and higher delivery eligibility stale; a still-matching v4 package remains independently verifiable.
+## Claim boundary
 
-Regenerate the envelope whenever a referenced hash changes. Retain no output state whose required current bindings and evidence fail.
+Report the current classification of every conclusion:
 
-## Metadata boundary
+- `MACHINE-VERIFIED`: schema, hashes, closed trees, admissions, package rendering, assembly, and recomputed measurements
+- `REVIEWED`: identity, motion-plan, source-set, sequence, and package decisions explicitly covered by human review
+- `DECLARED`: artistic intent, action meaning, metadata meaning, and generative relationships not directly proven by pixels
+- `SUPPLIED`: external evidence whose presence and binding are checked without claiming direct observation
 
-Distinguish metadata inside the v4 manifest from metadata projected into a consumer runtime:
+The only v2 delivery state is `package-ready`. A missing, stale, or failed requirement means no delivery state is achieved, even if the inner package remains independently pixel-verifiable.
 
-- Verify v4 manifest schema, hashes, internal references, and pixel/package bindings as `MACHINE-VERIFIED`.
-- Treat the intended semantics of clip names, timing, anchors, events, loops, and transitions as `DECLARED` unless explicitly `REVIEWED`.
-- Treat an external runtime projection as a separate delivery input. Verification may prove its schema and binding to the exact manifest, while its semantic correctness remains `DECLARED` or `REVIEWED`.
+## Invalidation
 
-## Output states
-
-Report a state only when the delivery verifier passes all of its required current evidence:
-
-| State                       | Required evidence                                                                                            | Claim boundary                                                                                                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package-ready`             | Verified v4 pixel package, current identity, blueprint, spacing, diagnostics, review coverage, and approvals | Package replay and delivery bindings pass; visual and metadata conclusions retain their recorded classifications                                                 |
-| `runtime-metadata-complete` | `package-ready` plus a current external runtime contract and manifest-bound projection                       | Projection schema and binding pass; metadata semantics are `DECLARED` or `REVIEWED`, not inferred by the verifier                                                |
-| `runtime-verified`          | `runtime-metadata-complete` plus current `runtime-playback-proof/v1`                                         | Runtime evidence is `SUPPLIED`; the verifier checks its schema, hashes, assets, bindings, and recorded check results without claiming direct runtime observation |
-
-The states are cumulative. Report a lower state when a higher state's evidence is missing, stale, conditionally skipped, or unresolved. For diagnosis or review that meets none, report `no delivery state achieved`. Never infer runtime observation from package replay, metadata inspection, or a verifier pass.
+Regenerate the v2 delivery whenever a referenced hash, plan, source admission, package, diagnostic, quality policy, presentation, observation, or decision changes. Preserve independently valid upstream evidence and package bytes when their bound inputs are unchanged. Never rebind a changed diagnostic or review hash without replaying its semantic evidence; the verifier intentionally recomputes measurements from the package.

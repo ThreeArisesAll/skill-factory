@@ -1,4 +1,4 @@
 interface:
   display_name: "Create Better Spritesheet"
-  short_description: "Create and verify sprite-sheet packages"
-  default_prompt: "Use $create-better-spritesheet to create, rebuild, diagnose, review, or integrate these sprite-sheet artifacts."
+  short_description: "Plan, build, diagnose, and verify 2D sprite sheets"
+  default_prompt: "Use $create-better-spritesheet to approve the complete motion plan before building or verifying this 2D character sprite sheet."

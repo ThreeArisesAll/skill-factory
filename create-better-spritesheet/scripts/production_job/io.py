@@ -121,6 +121,21 @@ def atomic_json(path: Path, value: Any) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def atomic_canonical_json(path: Path, value: Any) -> None:
+    """Atomically write the shared canonical JSON byte representation."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}-", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as output:
+            output.write(canonical_bytes(value))
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def tree_snapshot(root: Path) -> list[dict[str, Any]]:
     if not root.exists():
         return []

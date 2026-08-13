@@ -15,7 +15,7 @@ python3 -m venv .venv
 .venv/bin/python create-better-spritesheet/scripts/spritesheet_delivery.py --help
 ```
 
-Exercise the public production seam through `spritesheet_production.py advance|verify` with real RGBA fixtures. Exercise evidence work through `spritesheet_delivery.py diagnose|seal-delivery|verify`. Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` as the compatibility and internal adapter surface: canonical authoring requests and evidence remain v3, canonical admission proofs remain v1, and pixel packages remain v4. Keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
+Exercise the public production seam through `spritesheet_production.py advance|verify` with real RGBA fixtures. Exercise evidence work through `spritesheet_delivery.py diagnose|seal-delivery|verify`. Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` as the compatibility and internal adapter surface: canonical authoring requests and evidence remain v3, canonical admission proofs remain v1, current pixel packages are v5, and v4 packages remain readable and verifiable for compatibility. Keep lower-level raster helpers internal to the package. Run the package regression suite with `python -m unittest discover -s create-better-spritesheet/tests -p 'test_*.py' -v` inside the isolated environment.
 
 ## Coding Style & Naming Conventions
 

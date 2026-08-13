@@ -6,7 +6,7 @@ Run this workflow only when the user cannot provide action evidence and still wa
 
 Use available web or browser search. Pinterest may be useful for discovery, but prefer the original creator or source page whenever it is available. If a Pinterest page is inaccessible, requires login, or loads incomplete results, use web or image search restricted to `pinterest.com` and open the specific Pin.
 
-Construct two to four narrow queries from the motion blueprint. Prefer English action terms:
+Construct two to four narrow queries from the complete motion plan. Prefer English action terms:
 
 - `<action> animation reference`
 - `<action> key poses`
@@ -38,7 +38,7 @@ Present the two to four most useful candidates rather than an entire result page
 - The topology, phases, rhythm, direction, or event decisions it supports
 - The motion information it lacks
 
-Recommend one candidate and present the complete current set for approval. Before approval, analyze motion and draft the motion blueprint only; generate no motion images.
+Recommend one candidate and present the complete current set for approval. Before approval, analyze motion and draft the complete motion plan only; generate no motion images.
 
 Use external images to study motion, rhythm, and pose. Do not copy character identity, clothing, brand elements, or art style. Do not save third-party images into the repository or Skill assets unless the user requests it and rights are clear.
 
