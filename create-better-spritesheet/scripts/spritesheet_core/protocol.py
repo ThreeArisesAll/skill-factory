@@ -15,12 +15,16 @@ PACKAGE_SCHEMA = "spritesheet-package/v4"
 EVIDENCE_SCHEMA = "canonical-reference-evidence/v3"
 ADMISSION_PROOF_SCHEMA = "canonical-admission-proof/v1"
 NORMALIZATION_ALGORITHM = "normalize-to-canvas/lanczos-premultiplied-v1"
-OUTLINE_ALGORITHM = "outward-silhouette-maxfilter/v1"
+OUTLINE_ALGORITHM = "outward-silhouette-euclidean-coverage-opaque-alpha/v3"
+PIXEL_PROTOCOL_ID = "smooth-raster-pixel-protocol/v3"
 IDENTITY_ALGORITHM = "identity/v1"
 SAMPLER = "lanczos-premultiplied-v1"
-RENDERING_RECEIPT_SCHEMA = "spritesheet-rendering-receipt/v1"
+RENDERING_RECEIPT_SCHEMA = "spritesheet-rendering-receipt/v2"
 RENDERING_PIPELINE = "high-resolution-outline-then-target-resize/v1"
-MASK_POLICY = "nonzero-alpha/v1"
+MASK_POLICY = "opaque-alpha-threshold/v1"
+OUTLINE_ALPHA_THRESHOLD = 255
+LOW_ALPHA_BOUNDARY_THRESHOLD = 16
+ALPHA_BOUNDARY_CHECK = "exterior-low-alpha-boundary/v1"
 HIGH_RESOLUTION_SHORT_SIDE = 512
 MAX_JSON_FILE_BYTES = 8 * 1024 * 1024
 MAX_FRAME_COUNT = 4096
@@ -121,8 +125,8 @@ def validate_outline_contract(value: Any, location: str) -> dict[str, Any]:
             )
         ):
             raise ContractError(f"{location}.color must contain four integers between 0 and 255")
-        if color[3] == 0:
-            raise ContractError(f"{location}.color alpha must be greater than zero")
+        if color[3] != 255:
+            raise ContractError(f"{location}.color alpha must be 255")
     else:
         require_exact_keys(outline, {"enabled", "target_width"}, location)
         if outline.get("target_width") != "none":

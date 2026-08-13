@@ -5,8 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from spritesheet_core import protocol as core_protocol
+
 INTENT_SCHEMA = "spritesheet-production-intent/v1"
-JOB_SCHEMA = "spritesheet-production-job/v1"
+JOB_SCHEMA = "spritesheet-production-job/v2"
+PIXEL_PROTOCOL_ID = core_protocol.PIXEL_PROTOCOL_ID
 RESPONSE_SCHEMA = "spritesheet-production-response/v1"
 SUPPORTED_PROFILE = "smooth-raster/v1"
 MAX_ITEMS = 256
@@ -189,6 +192,8 @@ def validate_intent(value: Any) -> dict[str, Any]:
         color = outline.get("color")
         if not isinstance(color, list) or len(color) != 4 or any(type(item) is not int or not 0 <= item <= 255 for item in color):
             raise ProductionError("INVALID_CONTRACT", "outline color must contain four byte values")
+        if color[3] != 255:
+            raise ProductionError("INVALID_CONTRACT", "outline color alpha must be 255")
     elif outline.get("target_width") != "none":
         raise ProductionError("INVALID_CONTRACT", "disabled outline target_width must be 'none'")
     if intent.get("runtime_scope") is not None:

@@ -15,6 +15,7 @@ from typing import Any
 
 from .contracts import (
     JOB_SCHEMA,
+    PIXEL_PROTOCOL_ID,
     RESPONSE_SCHEMA,
     ProductionError,
     validate_intent,
@@ -32,7 +33,7 @@ from .io import (
 from .legacy import run_legacy
 
 STATE = "state.json"
-STATE_KEYS = {"schema_version", "revision", "material_revision", "phase", "intent", "inputs", "approvals", "outputs", "intent_material_sha256", "checkpoint_id", "context_sha256", "checkpoint", "spacing_plan"}
+STATE_KEYS = {"schema_version", "pixel_protocol_id", "revision", "material_revision", "phase", "intent", "inputs", "approvals", "outputs", "intent_material_sha256", "checkpoint_id", "context_sha256", "checkpoint", "spacing_plan"}
 PHASES = {"initializing", "awaiting-canonical-review", "awaiting-production-blueprint-review", "awaiting-keyframe-input", "awaiting-keyframe-review", "awaiting-spacing-plan-input", "awaiting-spacing-plan-review", "awaiting-sequence-input", "awaiting-sequence-review", "awaiting-package-review", "package-ready", "review-complete", "diagnosis-complete"}
 GATE_BY_PHASE = {"awaiting-canonical-review": "canonical", "awaiting-production-blueprint-review": "motion-blueprint", "awaiting-keyframe-review": "keyframe-set", "awaiting-spacing-plan-review": "spacing-plan", "awaiting-sequence-review": "sequence", "awaiting-package-review": "package"}
 
@@ -186,6 +187,24 @@ def _checkpoint_presentation(state: dict[str, Any], phase: str) -> dict[str, Any
             for kind, key, media_type in (("candidate", "path", "image/png"), ("evidence", "evidence_path", "application/json"), ("proof", "proof_path", "application/json")):
                 path = item[key]
                 subjects.append({"id": f"{item['id']}-{kind}", "kind": kind, "path": path, "sha256": sha256_file(Path(path)), "media_type": media_type})
+            for preview in item["review_previews"]:
+                path = preview["path"]
+                actual_sha256 = sha256_file(Path(path))
+                if actual_sha256 != preview["sha256"]:
+                    raise ProductionError(
+                        "CANONICAL_ALPHA_GATE_FAILED",
+                        "canonical review preview changed after Alpha admission",
+                        {"canonical_id": item["id"], "scale": preview["scale"], "background": preview["background"]},
+                    )
+                subjects.append({
+                    "id": f"{item['id']}-canonical-review-{preview['scale']}-{preview['background']}",
+                    "kind": "canonical-review-preview",
+                    "scale": preview["scale"],
+                    "background": preview["background"],
+                    "path": path,
+                    "sha256": preview["sha256"],
+                    "media_type": "image/png",
+                })
         return {**base, "subjects": subjects, "identity_content": identity_content}
     if phase == "awaiting-production-blueprint-review":
         identity_content, blueprint_contents = _draft_evidence_content(state)
@@ -225,6 +244,10 @@ def _draft_evidence_content(state: dict[str, Any]) -> tuple[dict[str, Any], list
 
 
 def _validate_state(state: dict[str, Any]) -> None:
+    if state.get("schema_version") == "spritesheet-production-job/v1":
+        raise ProductionError("JOB_PROTOCOL_STALE", "job state predates the current pixel protocol binding")
+    if state.get("schema_version") == JOB_SCHEMA and state.get("pixel_protocol_id") != PIXEL_PROTOCOL_ID:
+        raise ProductionError("JOB_PROTOCOL_STALE", "job state does not bind the current pixel protocol")
     if set(state) - STATE_KEYS or state.get("schema_version") != JOB_SCHEMA or state.get("phase") not in PHASES or type(state.get("revision")) is not int or state["revision"] < 1 or type(state.get("material_revision")) is not int or state["material_revision"] < 1:
         raise ProductionError("JOB_STATE_CORRUPT", "job state fields or phase are invalid")
     checkpoint = state.get("checkpoint")
@@ -256,6 +279,7 @@ def _save(job: Path, state: dict[str, Any]) -> None:
 def _new_state(intent: dict[str, Any]) -> dict[str, Any]:
     return {
         "schema_version": JOB_SCHEMA,
+        "pixel_protocol_id": PIXEL_PROTOCOL_ID,
         "revision": 1,
         "material_revision": 1,
         "phase": "initializing",
@@ -304,12 +328,127 @@ def _artifacts(job: Path, state: dict[str, Any]) -> Path:
     return path
 
 
+def _contained_generated_path(output_path: Path, relative: object, location: str) -> Path:
+    if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", f"{location} must be a relative generated path")
+    candidate = output_path / relative
+    try:
+        output_root = output_path.resolve(strict=True)
+        resolved = candidate.resolve(strict=True)
+    except OSError as error:
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", f"{location} is missing or unsafe") from error
+    if candidate.is_symlink() or resolved == output_root or output_root not in resolved.parents:
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", f"{location} escapes the canonical output")
+    return candidate
+
+
+def _canonical_alpha_records(
+    output_path: Path,
+    evidence_path: Path,
+    proof_path: Path,
+    target_size: tuple[int, int],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    try:
+        evidence = read_json(evidence_path)
+        proof = read_json(proof_path)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical Alpha admission evidence is unreadable") from error
+
+    alpha_policy = evidence.get("alpha_policy")
+    alpha_keys = {
+        "boundary_check", "low_alpha_threshold", "outline_mask", "outline_alpha_threshold",
+        "source_low_alpha_boundary_pixels", "source_partial_alpha_boundary_pixels",
+        "unbacked_source_boundary_pixels", "status",
+    }
+    if (
+        not isinstance(alpha_policy, dict)
+        or set(alpha_policy) != alpha_keys
+        or alpha_policy.get("boundary_check") != "exterior-low-alpha-boundary/v1"
+        or alpha_policy.get("low_alpha_threshold") != 16
+        or alpha_policy.get("outline_mask") != "opaque-alpha-threshold/v1"
+        or alpha_policy.get("outline_alpha_threshold") != 255
+        or alpha_policy.get("status") != "passed"
+        or any(
+            type(alpha_policy.get(key)) is not int or alpha_policy[key] < 0
+            for key in (
+                "source_low_alpha_boundary_pixels", "source_partial_alpha_boundary_pixels",
+                "unbacked_source_boundary_pixels",
+            )
+        )
+        or alpha_policy.get("unbacked_source_boundary_pixels") != 0
+        or alpha_policy.get("source_low_alpha_boundary_pixels", 0) > alpha_policy.get("source_partial_alpha_boundary_pixels", 0)
+    ):
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical Alpha policy did not pass the closed admission contract")
+
+    raw_previews = evidence.get("review_previews")
+    expected_matrix = {
+        ("high-resolution", "white"), ("high-resolution", "dark"),
+        ("high-resolution", "checkerboard"), ("native", "white"),
+        ("native", "dark"), ("native", "checkerboard"),
+    }
+    if not isinstance(raw_previews, list) or len(raw_previews) != len(expected_matrix):
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical review preview matrix is incomplete")
+    candidate_record = evidence.get("candidate")
+    if (
+        not isinstance(candidate_record, dict)
+        or type(candidate_record.get("width")) is not int
+        or type(candidate_record.get("height")) is not int
+        or min(candidate_record["width"], candidate_record["height"]) != 512
+    ):
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical high-resolution review size is invalid")
+    expected_sizes = {
+        "high-resolution": (candidate_record["width"], candidate_record["height"]),
+        "native": target_size,
+    }
+    previews: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for index, raw in enumerate(raw_previews):
+        preview_keys = {
+            "scale", "background", "path", "sha256", "rgba_sha256", "width", "height", "mode",
+        }
+        if not isinstance(raw, dict) or set(raw) != preview_keys:
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical review preview record is invalid")
+        key = (raw.get("scale"), raw.get("background"))
+        if key not in expected_matrix or key in seen:
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical review preview matrix is invalid")
+        if (
+            not isinstance(raw.get("sha256"), str)
+            or len(raw["sha256"]) != 64
+            or any(character not in "0123456789abcdef" for character in raw["sha256"])
+            or not isinstance(raw.get("rgba_sha256"), str)
+            or len(raw["rgba_sha256"]) != 64
+            or any(character not in "0123456789abcdef" for character in raw["rgba_sha256"])
+            or type(raw.get("width")) is not int or raw["width"] < 1
+            or type(raw.get("height")) is not int or raw["height"] < 1
+            or raw.get("mode") != "RGBA"
+            or (raw.get("width"), raw.get("height")) != expected_sizes[key[0]]
+        ):
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical review preview metadata is invalid")
+        preview_path = _contained_generated_path(output_path, raw["path"], f"review_previews[{index}].path")
+        try:
+            actual_sha256 = sha256_file(preview_path)
+        except (OSError, ValueError) as error:
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical review preview is not a safe regular file") from error
+        if actual_sha256 != raw["sha256"]:
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical review preview hash does not match its evidence")
+        previews.append({
+            "scale": key[0], "background": key[1], "path": str(preview_path),
+            "sha256": raw["sha256"], "width": raw["width"], "height": raw["height"],
+        })
+        seen.add(key)
+    if seen != expected_matrix or proof.get("alpha_policy") != alpha_policy or proof.get("review_previews") != raw_previews:
+        raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical admission proof does not bind the Alpha policy and review previews")
+    return dict(alpha_policy), previews
+
+
 def _prepare(job: Path, state: dict[str, Any]) -> None:
     intent = state["intent"]
     artifacts = _artifacts(job, state)
     artifacts.mkdir(parents=True, exist_ok=True)
     canonical_records: list[dict[str, Any]] = []
     for source in intent["identity"]["sources"]:
+        if Path(source["id"]).name != source["id"] or source["id"] in {".", ".."}:
+            raise ProductionError("INVALID_CONTRACT", "identity source IDs must be safe path components")
         request_path = artifacts / f"canonical-{source['id']}-request.json"
         output_path = artifacts / f"canonical-{source['id']}"
         outline = intent["rendering_profile"].get("outline", {"enabled": False, "target_width": "none"})
@@ -325,11 +464,28 @@ def _prepare(job: Path, state: dict[str, Any]) -> None:
         })
         if not output_path.exists():
             run_legacy("prepare-canonical", "--request", str(request_path), "--output-dir", str(output_path))
+        try:
+            artifacts_root = artifacts.resolve(strict=True)
+            output_root = output_path.resolve(strict=True)
+        except OSError as error:
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical output is missing or unsafe") from error
+        if output_path.is_symlink() or not output_path.is_dir() or artifacts_root not in output_root.parents:
+            raise ProductionError("CANONICAL_ALPHA_GATE_FAILED", "canonical output escapes the material revision")
+        evidence_path = output_path / "canonical-reference-evidence.json"
+        proof_path = output_path / "canonical-admission-proof.json"
+        alpha_policy, review_previews = _canonical_alpha_records(
+            output_path,
+            evidence_path,
+            proof_path,
+            (intent["target"]["frame_width"], intent["target"]["frame_height"]),
+        )
         canonical_records.append({
             "id": source["id"],
             "path": str(output_path / "canonical-reference-candidate.png"),
-            "evidence_path": str(output_path / "canonical-reference-evidence.json"),
-            "proof_path": str(output_path / "canonical-admission-proof.json"),
+            "evidence_path": str(evidence_path),
+            "proof_path": str(proof_path),
+            "alpha_policy": alpha_policy,
+            "review_previews": review_previews,
         })
     state["outputs"].update({
         "canonical_references": canonical_records,
@@ -604,7 +760,10 @@ def _legacy_request(state: dict[str, Any]) -> dict[str, Any]:
             "outline": intent["rendering_profile"].get("outline", {"enabled": False, "target_width": "none"}),
             "animation_origin": target["animation_origin"], "anchor": target["anchor"], "safe_bounds": target["safe_bounds"],
         },
-        "canonical_references": list(canonical.values()), "clips": clips, "reviews": reviews,
+        "canonical_references": [
+            {key: item[key] for key in ("id", "path", "evidence_path", "proof_path")}
+            for item in canonical.values()
+        ], "clips": clips, "reviews": reviews,
         "grid": {"columns": target.get("columns", min(frame_count, 8)), "order": "row-major"},
     }
 

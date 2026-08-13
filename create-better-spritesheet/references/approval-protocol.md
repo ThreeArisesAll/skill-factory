@@ -2,7 +2,7 @@
 
 Use this protocol for every user or reviewer gate in canonical, motion, sequence, and integration work. A gate is valid only when all five properties below are satisfied.
 
-Treat canonical, motion-blueprint, keyframe-set, spacing-plan, sequence, and package review as distinct gates. Completion of one never substitutes for another; dependency order controls when each may open.
+Treat canonical, motion-blueprint, keyframe-set, spacing-plan, sequence, and package review as distinct gates. Completion of one never substitutes for another; dependency order controls when each may open. A gate may open only after its subject passes every owning machine check and required agent preflight. A known visual hard blocker makes the subject ineligible for presentation or approval.
 
 ## Authority
 
@@ -20,7 +20,9 @@ Present one complete current approval subject with:
 - Exact hashes for byte-bound image gates
 - A direct request to approve the current revision or request changes
 
-For visual gates, present the images together at a comparable scale. For plan gates, present every item and relationship governed by the decision. A recommendation may accompany the subject but cannot replace the explicit decision.
+For visual gates, present the complete evidence set together at a comparable scale and preserve any required native-pixel inspection. Do not omit a required background, resolution, or bound subject. For plan gates, present every item and relationship governed by the decision. A recommendation may accompany the subject but cannot replace the explicit decision.
+
+Withhold a visual approval question when preflight finds a white fringe, jagged step, directional thickness spike, square corner, outline bulge, or temporal outline flicker. Route the defect to its owning source, Alpha policy, outline contract, or renderer; regenerate the complete affected presentation and machine evidence before the gate may open.
 
 ## Pause
 

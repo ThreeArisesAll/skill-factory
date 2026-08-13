@@ -390,6 +390,44 @@ class SpritesheetDeliveryTests(unittest.TestCase):
                 self.assertFalse(output.exists())
                 self.assertEqual(self.stage_paths(output), [])
 
+    def test_seal_rejects_legacy_rendering_receipt_without_partial_output(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            request_path, request = self.copy_request(root)
+            package = root / "package"
+            shutil.copytree(self.fixture_manifest.parent, package)
+            manifest_path = package / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["rendering"]["schema_version"] = (
+                "spritesheet-rendering-receipt/v1"
+            )
+            write_canonical_json(manifest_path, manifest)
+            request["pixel_package"] = {
+                "manifest": {
+                    "path": str(manifest_path),
+                    "sha256": sha256_file(manifest_path),
+                },
+                "package_tree_sha256": package_tree_sha256(package),
+            }
+            write_canonical_json(request_path, request)
+            output = root / "sealed"
+
+            sealed = self.run_cli(
+                "seal-delivery",
+                "--request",
+                str(request_path),
+                "--output-dir",
+                str(output),
+            )
+
+            self.assertEqual(sealed.returncode, 2, sealed.stdout + sealed.stderr)
+            self.assertEqual(
+                json.loads(sealed.stdout)["error"]["code"],
+                "PACKAGE_VERIFY_FAILED",
+            )
+            self.assertFalse(output.exists())
+            self.assertEqual(self.stage_paths(output), [])
+
     def test_verify_rejects_undeclared_file_and_missing_diagnostics_manifest(
         self,
     ) -> None:
@@ -418,6 +456,38 @@ class SpritesheetDeliveryTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
             self.assertEqual(
                 json.loads(result.stdout)["error"]["code"], "DELIVERY_TREE_MISMATCH"
+            )
+
+    def test_verify_rejects_rebound_legacy_receipt_inside_sealed_delivery(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            delivery_path = self.copy_delivery_fixture(root)
+            delivery = json.loads(delivery_path.read_text(encoding="utf-8"))
+            manifest_ref = delivery["pixel_package"]["manifest"]["ref"]
+            manifest_path = delivery_path.parent / manifest_ref
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["rendering"]["outline_algorithm"] = (
+                "outward-silhouette-maxfilter-opaque-alpha/v2"
+            )
+            write_canonical_json(manifest_path, manifest)
+            manifest_hash = sha256_file(manifest_path)
+            delivery["pixel_package"]["manifest"]["sha256"] = manifest_hash
+            for item in delivery["files"]:
+                if item["ref"] == manifest_ref:
+                    item["sha256"] = manifest_hash
+                    break
+            else:
+                self.fail("sealed delivery does not declare its package manifest")
+            write_canonical_json(delivery_path, delivery)
+
+            verified = self.run_cli(
+                "verify", "--delivery", str(delivery_path)
+            )
+
+            self.assertEqual(verified.returncode, 1, verified.stdout + verified.stderr)
+            self.assertEqual(
+                json.loads(verified.stdout)["error"]["code"],
+                "PACKAGE_VERIFY_FAILED",
             )
 
     def test_verify_rejects_tampered_review_observation_decision_and_evidence_hash(

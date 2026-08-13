@@ -36,13 +36,15 @@ Treat every returned checkpoint as the complete current interaction contract. It
 - `response_schema`
 - `presentation`
 
-Present the checkpoint's question and presentation without dropping governed subjects. Build the response by returning the exact checkpoint identity and revision fields required by `response_schema`, plus only the requested decision or input. Validate the complete response against that dynamic schema before calling `advance` again.
+Before presenting a visual checkpoint, inspect every returned presentation subject required by its owning quality contract. Present the checkpoint's question and complete presentation only when that preflight passes. Withhold an approval request for any white fringe, jagged step, directional thickness spike, square corner, outline bulge, temporal outline flicker, or other owning hard blocker. Correct the owning source, Alpha policy, outline contract, or renderer and advance the regenerated revision instead. Build an eligible response by returning the exact checkpoint identity and revision fields required by `response_schema`, plus only the requested decision or input. Validate the complete response against that dynamic schema before calling `advance` again.
 
 Never reuse a response for a different checkpoint or revision. A stale checkpoint, stale job revision, malformed response, unsupported capability, or unsupported pixel-art production request returns a structured typed error. Preserve its code and details when reporting or deciding the next action.
 
 ## Guarantees
 
 - Repeating the same valid operation against the same revision is idempotent.
+- The current production state binds `smooth-raster-pixel-protocol/v3`. A state or checkpoint bound to an earlier pixel protocol fails with typed `JOB_PROTOCOL_STALE`; start a new current-protocol job and regenerate from canonical source evidence rather than reusing or editing the stale checkpoint.
+- Canonical preparation is fail-closed: a failed pre-admission Alpha gate commits no state, emits no admission proof, and opens no canonical-review checkpoint.
 - Every accepted transition advances the job revision; material changes separately advance the artifact-lineage revision; stale writes are rejected.
 - The state commit is last. A failed transition cannot advance state, and the previously committed material revision remains addressable.
 - `verify` is read-only and accepts an immutable package manifest or sealed delivery subject. A bare v4 package may be pixel-package verified, but it has no delivery state until a sealed delivery passes the delivery verifier.

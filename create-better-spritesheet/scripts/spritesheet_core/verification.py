@@ -42,6 +42,7 @@ from .rendering import (
     MAX_TARGET_SIDE,
     apply_outline,
     clear_transparent_rgb,
+    normalize_low_alpha,
     normalize_to_canvas,
     open_rgba_snapshot,
     render_high_resolution_source,
@@ -336,14 +337,17 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
             check(actual_evidence_hash == evidence_hash, f"{location}.evidence_sha256", "evidence bytes must match")
             try:
                 proof = require_object(json.loads(proof_snapshot.data), "admission proof")
-                require_exact_keys(
-                    proof,
-                    {
-                        "schema_version", "canonical_reference", "target", "source", "outline",
-                        "derivation", "authoring_evidence_sha256",
-                    },
-                    "admission proof",
-                )
+                current_proof_keys = {
+                    "schema_version", "canonical_reference", "target", "source", "outline",
+                    "derivation", "authoring_evidence_sha256", "alpha_policy", "review_previews",
+                }
+                require_exact_keys(proof, current_proof_keys, "admission proof")
+                missing_proof_fields = sorted(current_proof_keys - set(proof))
+                if missing_proof_fields:
+                    raise ContractError(
+                        "admission proof is missing required fields: "
+                        + ", ".join(missing_proof_fields),
+                    )
                 if proof.get("schema_version") != ADMISSION_PROOF_SCHEMA:
                     raise ContractError(f"admission proof schema_version must be {ADMISSION_PROOF_SCHEMA!r}")
                 canonical_record = require_object(proof.get("canonical_reference"), "admission proof.canonical_reference")
@@ -389,7 +393,8 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
                 }:
                     raise ContractError("admission source metadata is invalid")
                 expected_size, _ = resolve_high_resolution_dimensions(width, height)
-                normalized = normalize_to_canvas(source, expected_size)
+                normalized_source = normalize_to_canvas(source, expected_size)
+                normalized = normalize_low_alpha(normalized_source)
                 canonical_image = images.get(canonical_id)
                 canonical_artifact = artifacts.get(canonical_id, {})
                 if (
@@ -424,6 +429,7 @@ def verify_package_report(manifest_path: Path) -> VerificationReport:
                     width,
                     height,
                     budget=budget,
+                    require_review_preview_files=False,
                 )
                 replayed_payload = {
                     key: value for key, value in replayed_proof.items() if not key.startswith("_")

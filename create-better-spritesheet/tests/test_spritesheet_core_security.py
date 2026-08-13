@@ -7,14 +7,17 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 
-from PIL import Image
+from PIL import Image, PngImagePlugin
 
 SCRIPTS = Path(__file__).parents[1] / "scripts"
 SCRIPT = SCRIPTS / "spritesheet_pipeline.py"
 sys.path.insert(0, str(SCRIPTS))
 
+from spritesheet_core import rendering
 from spritesheet_core.errors import ContractError
 from spritesheet_core.package_io import (
     ResourceBudget,
@@ -204,6 +207,75 @@ class SpritesheetCoreSecurityTests(unittest.TestCase):
             open_rgba_snapshot(first, "first", budget=pixel_budget)
             with self.assertRaisesRegex(ContractError, "aggregate decoded pixels exceed"):
                 open_rgba_snapshot(second, "second", budget=pixel_budget)
+
+    def test_checkerboard_and_review_previews_do_not_allocate_full_coordinate_grids(self) -> None:
+        with patch.object(
+            rendering.np,
+            "indices",
+            side_effect=AssertionError("full coordinate grids are forbidden"),
+        ):
+            checkerboard = rendering._checkerboard((4, 4), 2)
+            previews = rendering.review_preview_payloads(
+                Image.new("RGBA", (4, 4), (0, 0, 0, 0)),
+                (2, 2),
+            )
+
+        self.assertEqual(
+            [
+                checkerboard.getpixel((x, y))
+                for y in range(checkerboard.height)
+                for x in range(checkerboard.width)
+            ],
+            [
+                *((216, 216, 216, 255),) * 2,
+                *((160, 160, 160, 255),) * 2,
+                *((216, 216, 216, 255),) * 2,
+                *((160, 160, 160, 255),) * 2,
+                *((160, 160, 160, 255),) * 2,
+                *((216, 216, 216, 255),) * 2,
+                *((160, 160, 160, 255),) * 2,
+                *((216, 216, 216, 255),) * 2,
+            ],
+        )
+        self.assertEqual(len(previews), 6)
+        self.assertEqual(
+            {
+                (record["scale"], record["background"], record["width"], record["height"])
+                for record, _ in previews
+            },
+            {
+                ("high-resolution", "white", 4, 4),
+                ("high-resolution", "dark", 4, 4),
+                ("high-resolution", "checkerboard", 4, 4),
+                ("native", "white", 2, 2),
+                ("native", "dark", 2, 2),
+                ("native", "checkerboard", 2, 2),
+            },
+        )
+
+    def test_rgba_decode_rejects_expected_size_or_pixel_budget_before_image_load(self) -> None:
+        stream = BytesIO()
+        Image.new("RGBA", (32, 32), (1, 2, 3, 255)).save(stream, format="PNG")
+        payload = stream.getvalue()
+
+        with patch.object(
+            PngImagePlugin.PngImageFile,
+            "load",
+            side_effect=AssertionError("pixel payload must not be loaded"),
+        ):
+            with self.assertRaisesRegex(ContractError, "dimensions must equal"):
+                rendering.decode_rgba(
+                    payload,
+                    "preview",
+                    expected_size=(16, 16),
+                )
+            with self.assertRaisesRegex(ContractError, "aggregate decoded pixels exceed"):
+                rendering.decode_rgba(
+                    payload,
+                    "preview",
+                    expected_size=(32, 32),
+                    budget=ResourceBudget(max_decoded_pixels=100),
+                )
 
 
 if __name__ == "__main__":

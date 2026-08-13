@@ -4,7 +4,7 @@ Use `spritesheet-production-delivery/v1` as the job and delivery envelope around
 
 ## Authority boundary
 
-`spritesheet-package/v4` remains the sole authority for packaged source bytes, manifest metadata, canonical admission material, deterministic rendering, sheet assembly, hashes, and pixel replay. A valid v4 package proves its declared pixel derivation. It does not prove identity intent, motion quality, metadata meaning, review presentation, an external runtime projection, or runtime playback.
+`spritesheet-package/v4` remains the sole authority for packaged source bytes, manifest metadata, canonical admission material, deterministic rendering, sheet assembly, hashes, and pixel replay. A current package binds `smooth-raster-pixel-protocol/v3` through `spritesheet-rendering-receipt/v2`. A valid current v4 package proves its declared pixel derivation. It does not prove identity intent, motion quality, metadata meaning, review presentation, an external runtime projection, or runtime playback.
 
 The v1 delivery envelope references one exact v4 package and these job-level evidence schemas:
 
@@ -28,6 +28,7 @@ An outer evidence change never alters or invalidates unchanged v4 pixel bytes, m
 - A motion-blueprint change makes affected keyframe, spacing-plan, sequence, diagnostic, review, delivery, and playback bindings ineligible. Rebuild v4 only when raw sources or manifest content change.
 - A spacing-plan change makes affected sequence, manifest-metadata semantics, review, delivery, runtime projection, and playback bindings ineligible. Unchanged pixels remain replayable even when their current delivery meaning is stale.
 - A raw-source, rendering-contract, assembly, or v4 manifest change requires a new exact pixel-package binding and invalidates every delivery claim bound to the prior package.
+- A pixel-protocol or outline-algorithm change requires regeneration from canonical authoring source evidence. Rebuild every dependent proof, approval subject, raw-frame rendering, receipt, sheet, manifest, checkpoint, review, and delivery binding; relabeling prior output is never sufficient.
 - A review-packet presentation change makes its recorded decision ineligible when it changes what the authority could inspect; unchanged production bytes remain valid.
 - An external runtime contract, projection, environment, integration, or playback change makes affected runtime evidence and higher delivery eligibility stale; a still-matching v4 package remains independently verifiable.
 
@@ -45,10 +46,10 @@ Distinguish metadata inside the v4 manifest from metadata projected into a consu
 
 Report a state only when the delivery verifier passes all of its required current evidence:
 
-| State | Required evidence | Claim boundary |
-| --- | --- | --- |
-| `package-ready` | Verified v4 pixel package, current identity, blueprint, spacing, diagnostics, review coverage, and approvals | Package replay and delivery bindings pass; visual and metadata conclusions retain their recorded classifications |
-| `runtime-metadata-complete` | `package-ready` plus a current external runtime contract and manifest-bound projection | Projection schema and binding pass; metadata semantics are `DECLARED` or `REVIEWED`, not inferred by the verifier |
-| `runtime-verified` | `runtime-metadata-complete` plus current `runtime-playback-proof/v1` | Runtime evidence is `SUPPLIED`; the verifier checks its schema, hashes, assets, bindings, and recorded check results without claiming direct runtime observation |
+| State                       | Required evidence                                                                                            | Claim boundary                                                                                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package-ready`             | Verified v4 pixel package, current identity, blueprint, spacing, diagnostics, review coverage, and approvals | Package replay and delivery bindings pass; visual and metadata conclusions retain their recorded classifications                                                 |
+| `runtime-metadata-complete` | `package-ready` plus a current external runtime contract and manifest-bound projection                       | Projection schema and binding pass; metadata semantics are `DECLARED` or `REVIEWED`, not inferred by the verifier                                                |
+| `runtime-verified`          | `runtime-metadata-complete` plus current `runtime-playback-proof/v1`                                         | Runtime evidence is `SUPPLIED`; the verifier checks its schema, hashes, assets, bindings, and recorded check results without claiming direct runtime observation |
 
 The states are cumulative. Report a lower state when a higher state's evidence is missing, stale, conditionally skipped, or unresolved. For diagnosis or review that meets none, report `no delivery state achieved`. Never infer runtime observation from package replay, metadata inspection, or a verifier pass.

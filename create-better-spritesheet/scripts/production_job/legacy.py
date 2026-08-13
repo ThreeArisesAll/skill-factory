@@ -23,6 +23,17 @@ def run_legacy(*arguments: str) -> None:
         env=environment,
     )
     if completed.returncode:
+        diagnostic = "\n".join(part for part in (completed.stdout, completed.stderr) if part).lower()
+        if arguments and arguments[0] == "prepare-canonical" and (
+            "unbacked low-alpha boundary" in diagnostic
+            or "canonical alpha gate" in diagnostic
+            or "enabled outline requires an opaque silhouette seed" in diagnostic
+        ):
+            raise ProductionError(
+                "CANONICAL_ALPHA_GATE_FAILED",
+                "canonical preparation failed the pre-admission Alpha gate",
+                {"adapter": "canonical-admission-v3"},
+            )
         raise ProductionError(
             "LEGACY_ADAPTER_FAILED",
             "the internal spritesheet pipeline rejected the projected request",

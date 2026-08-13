@@ -20,6 +20,8 @@ Use the production seam for stateful work and the delivery seam for evidence wor
 <python> <skill-dir>/scripts/spritesheet_delivery.py diagnose|seal-delivery|verify
 ```
 
+Resolve `<python>` to a Python 3.10+ interpreter that can import NumPy and Pillow before invoking either seam. If no compatible interpreter is available, report the missing runtime and stop; never treat an environment failure as image evidence.
+
 Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` as a compatibility and internal-adapter surface. Use it directly only for scoped pixel-contract work, never as the primary production workflow. Treat CLI behavior and tests as authoritative for exact schemas and layout. Read each directly relevant reference before acting:
 
 - [quality-contract.md](references/quality-contract.md) — resolve the production contract, style profile, quality gates, and correction owner.
@@ -35,12 +37,12 @@ Treat `spritesheet_pipeline.py prepare-canonical|build-package|verify-package` a
 
 ## Create sequence
 
-1. Resolve one authoritative production contract and the applicable action topology. The installed executable profile is `smooth-raster/v1`.
-2. **Canonical gate:** reuse only an exact, fully admitted, currently approved canonical whose bound inputs match; otherwise prepare, replay-admit, and approve one neutral canonical per required camera or direction.
+1. Resolve one authoritative production contract and the applicable action topology. The installed executable profile is `smooth-raster/v1`, bound to `smooth-raster-pixel-protocol/v3`.
+2. **Canonical gate:** reuse only an exact, fully admitted, currently approved canonical whose bound inputs and pixel protocol match. Otherwise prepare the source, run the pre-admission low-Alpha boundary gate, apply the evidence-bound Alpha and outline policy, replay admission, and perform the complete canonical visual preflight before presenting one neutral canonical per required camera or direction for approval. Inspect both the high-resolution master and native target preview on white, dark, and checkerboard transparency-visualization backgrounds. A visible white fringe, jagged step, directional thickness spike, square corner, or outline bulge is a hard blocker: correct the owning source, Alpha policy, outline contract, or renderer; regenerate its evidence; and withhold the canonical approval gate.
 3. **Motion-blueprint gate:** produce and approve the complete motion blueprint before generating motion images.
 4. **Keyframe gate:** generate the topology's necessary keyframes, finalize their Alpha boundaries, and obtain the hash-bound keyframe-set approval.
 5. **Spacing-plan gate:** derive and approve the complete `spacing-plan/v1` from the approved keyframes before generating in-betweens.
-6. **Sequence gate:** generate the planned in-betweens, finalize Alpha boundaries, review the complete sequence, and obtain the hash-bound `sequence-approval`.
+6. **Sequence gate:** generate the planned in-betweens, finalize Alpha boundaries, review the complete sequence, and obtain the hash-bound `sequence-approval`. Treat temporal outline flicker as a hard blocker and withhold sequence approval until the owning source or renderer is corrected.
 7. Build the package, replay verification, and inspect the complete diagnostic presentation at native size.
 8. **Package-review gate:** approve the exact verified package, diagnostics, and presentation subjects before sealing the delivery. Correct defects at their owning stage and repeat every invalidated descendant.
 9. Integrate only when authorized, update interdependent runtime contracts atomically, and validate the real production entry point.

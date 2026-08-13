@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -10,6 +12,11 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from PIL import Image, ImageDraw
+
+TESTS_DIR = Path(__file__).parent
+sys.path.insert(0, str(TESTS_DIR))
+
+import test_spritesheet_pipeline as pipeline_tests
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "spritesheet_production.py"
 
@@ -35,6 +42,14 @@ class SpritesheetProductionTests(unittest.TestCase):
         draw.rectangle((40, 40, size[0] - 41, size[1] - 41), fill=(seed, 80, 160, 255))
         draw.rectangle((90, 60, 150, 130), fill=(255, seed, 20, 200))
         image.save(path)
+
+    @staticmethod
+    def tree_bytes(root: Path) -> dict[str, bytes]:
+        return {
+            path.relative_to(root).as_posix(): path.read_bytes()
+            for path in sorted(root.rglob("*"))
+            if path.is_file() and not path.is_symlink()
+        }
 
     def intent(self, root: Path, profile: str = "smooth-raster/v1") -> dict[str, object]:
         source = root / "identity.png"
@@ -73,10 +88,155 @@ class SpritesheetProductionTests(unittest.TestCase):
             "runtime_scope": None,
         }
 
+    def alpha_intent(self, root: Path, *, detached_fringe: bool) -> dict[str, object]:
+        intent = self.intent(root)
+        source = Path(intent["identity"]["sources"][0]["path"])
+        image = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(image)
+        if detached_fringe:
+            draw.rectangle((96, 96, 415, 415), outline=(255, 255, 255, 32), width=2)
+            draw.rectangle((160, 160, 351, 351), fill=(30, 80, 160, 255))
+        else:
+            draw.rectangle((127, 127, 384, 384), outline=(245, 245, 245, 8), width=2)
+            draw.rectangle((129, 129, 382, 382), fill=(30, 80, 160, 255))
+        image.save(source)
+        intent["target"] = {
+            "frame_width": 128,
+            "frame_height": 128,
+            "animation_origin": [0, 0],
+            "anchor": [64, 127],
+            "safe_bounds": [4, 4, 124, 124],
+        }
+        intent["rendering_profile"]["outline"] = {
+            "enabled": True,
+            "target_width": 2,
+            "color": [7, 8, 9, 255],
+        }
+        return intent
+
     def test_help_exposes_only_advance_and_verify(self) -> None:
         result = self.run_cli("--help")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("{advance,verify}", result.stdout)
+
+    def test_canonical_review_binds_alpha_policy_and_complete_preview_matrix(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            intent_path = root / "intent.json"
+            self.write_json(intent_path, self.alpha_intent(root, detached_fringe=False))
+
+            result = self.run_cli(
+                "advance",
+                "--job",
+                str(root / "job"),
+                "--intent",
+                str(intent_path),
+                "--json",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            state = json.loads(result.stdout)["result"]["state"]
+            self.assertEqual(state["phase"], "awaiting-canonical-review")
+            records = state["outputs"]["canonical_references"]
+            self.assertEqual(len(records), 1)
+            evidence = json.loads(Path(records[0]["evidence_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(evidence["alpha_policy"]["status"], "passed")
+            previews = [
+                subject
+                for subject in state["checkpoint"]["presentation"]["subjects"]
+                if subject["kind"] == "canonical-review-preview"
+            ]
+            self.assertEqual(len(previews), 6)
+            self.assertEqual(
+                {(item["scale"], item["background"]) for item in previews},
+                {
+                    ("high-resolution", "white"),
+                    ("high-resolution", "dark"),
+                    ("high-resolution", "checkerboard"),
+                    ("native", "white"),
+                    ("native", "dark"),
+                    ("native", "checkerboard"),
+                },
+            )
+            for preview in previews:
+                path = Path(preview["path"])
+                self.assertTrue(path.is_file())
+                self.assertEqual(preview["sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
+
+    def test_unbacked_low_alpha_fringe_never_opens_canonical_review(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            intent_path = root / "intent.json"
+            job = root / "job"
+            self.write_json(intent_path, self.alpha_intent(root, detached_fringe=True))
+
+            result = self.run_cli(
+                "advance",
+                "--job",
+                str(job),
+                "--intent",
+                str(intent_path),
+                "--json",
+            )
+
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["error"]["code"], "CANONICAL_ALPHA_GATE_FAILED")
+            self.assertFalse((job / "state.json").exists())
+            self.assertEqual(list(job.rglob("canonical-admission-proof.json")) if job.exists() else [], [])
+
+    def test_nonopaque_outline_color_is_rejected_at_the_public_intent_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            intent_path = root / "intent.json"
+            job = root / "job"
+            intent = self.alpha_intent(root, detached_fringe=False)
+            intent["rendering_profile"]["outline"]["color"][3] = 254
+            self.write_json(intent_path, intent)
+
+            result = self.run_cli(
+                "advance",
+                "--job",
+                str(job),
+                "--intent",
+                str(intent_path),
+                "--json",
+            )
+
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["error"]["code"], "INVALID_CONTRACT")
+            self.assertIn("color alpha must be 255", payload["error"]["message"])
+            self.assertFalse(job.exists())
+
+    def test_missing_opaque_silhouette_seed_is_a_typed_alpha_gate_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            intent_path = root / "intent.json"
+            job = root / "job"
+            intent = self.alpha_intent(root, detached_fringe=False)
+            source = Path(intent["identity"]["sources"][0]["path"])
+            image = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+            ImageDraw.Draw(image).rectangle(
+                (160, 160, 351, 351),
+                fill=(30, 80, 160, 254),
+            )
+            image.save(source)
+            self.write_json(intent_path, intent)
+
+            result = self.run_cli(
+                "advance",
+                "--job",
+                str(job),
+                "--intent",
+                str(intent_path),
+                "--json",
+            )
+
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["error"]["code"], "CANONICAL_ALPHA_GATE_FAILED")
+            self.assertFalse(job.exists())
 
     def test_checkpoint_response_schema_is_closed_and_phase_exact(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -130,6 +290,140 @@ class SpritesheetProductionTests(unittest.TestCase):
             stale = self.run_cli("advance", "--job", str(job), "--response", str(response_path), "--json")
             self.assertEqual(json.loads(stale.stdout)["error"]["code"], "STALE_CHECKPOINT")
             self.assertEqual((job / "state.json").read_bytes(), state_bytes)
+
+    def test_legacy_job_protocol_rejects_response_and_intent_without_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for label, schema_version in (
+                ("schema-v1", "spritesheet-production-job/v1"),
+                ("v2-missing-pixel-protocol", "spritesheet-production-job/v2"),
+            ):
+                with self.subTest(protocol=label):
+                    case_root = root / label
+                    case_root.mkdir()
+                    job = case_root / "job"
+                    intent_path = case_root / "intent.json"
+                    intent = self.intent(case_root)
+                    self.write_json(intent_path, intent)
+                    created = self.run_cli(
+                        "advance",
+                        "--job",
+                        str(job),
+                        "--intent",
+                        str(intent_path),
+                        "--json",
+                    )
+                    self.assertEqual(
+                        created.returncode, 0, created.stdout + created.stderr
+                    )
+
+                    state_path = job / "state.json"
+                    state = json.loads(state_path.read_text(encoding="utf-8"))
+                    response_path = case_root / "response.json"
+                    self.write_json(response_path, {
+                        "schema_version": "spritesheet-production-response/v1",
+                        "checkpoint_id": state["checkpoint_id"],
+                        "job_revision": state["revision"],
+                        "context_sha256": state["context_sha256"],
+                        "kind": "review",
+                        "payload": {
+                            "gate": "canonical",
+                            "decision": "approved",
+                            "authority": "user",
+                            "evidence": "approved the persisted checkpoint",
+                        },
+                    })
+                    state["schema_version"] = schema_version
+                    state.pop("pixel_protocol_id")
+                    self.write_json(state_path, state)
+                    stale_tree = self.tree_bytes(job)
+
+                    resumed = self.run_cli(
+                        "advance",
+                        "--job",
+                        str(job),
+                        "--response",
+                        str(response_path),
+                        "--json",
+                    )
+                    self.assertEqual(resumed.returncode, 1)
+                    self.assertEqual(
+                        json.loads(resumed.stdout)["error"]["code"],
+                        "JOB_PROTOCOL_STALE",
+                    )
+                    self.assertEqual(self.tree_bytes(job), stale_tree)
+
+                    intent["base_revision"] = state["revision"]
+                    intent["output_scope"] = {
+                        "delivery_dir": str(case_root / "revised-delivery")
+                    }
+                    revised_intent_path = case_root / "revised-intent.json"
+                    self.write_json(revised_intent_path, intent)
+                    updated = self.run_cli(
+                        "advance",
+                        "--job",
+                        str(job),
+                        "--intent",
+                        str(revised_intent_path),
+                        "--json",
+                    )
+                    self.assertEqual(updated.returncode, 1)
+                    self.assertEqual(
+                        json.loads(updated.stdout)["error"]["code"],
+                        "JOB_PROTOCOL_STALE",
+                    )
+                    self.assertEqual(self.tree_bytes(job), stale_tree)
+
+    def test_public_verify_rejects_legacy_rendering_protocols_read_only(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            helper = pipeline_tests.SpritesheetPipelineTests(methodName="runTest")
+            request_path, request = helper.make_production_request(root)
+            outline = {
+                "enabled": True,
+                "target_width": 2,
+                "color": [7, 8, 9, 255],
+            }
+            helper.enable_outline_for_production_request(root, request, outline)
+            helper.write_json(request_path, request)
+            current_package = root / "current-package"
+            built = helper.run_cli(
+                "build-package",
+                "--request",
+                str(request_path),
+                "--output-dir",
+                str(current_package),
+            )
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+
+            mutations = {
+                "receipt-v1": lambda rendering: rendering.update(
+                    schema_version="spritesheet-rendering-receipt/v1"
+                ),
+                "outline-v2": lambda rendering: rendering.update(
+                    outline_algorithm="outward-silhouette-maxfilter-opaque-alpha/v2"
+                ),
+            }
+            for label, mutate in mutations.items():
+                with self.subTest(protocol=label):
+                    package = root / label
+                    shutil.copytree(current_package, package)
+                    manifest_path = package / "manifest.json"
+                    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    mutate(manifest["rendering"])
+                    self.write_json(manifest_path, manifest)
+                    stale_tree = self.tree_bytes(package)
+
+                    verified = self.run_cli(
+                        "verify", "--subject", str(manifest_path), "--json"
+                    )
+
+                    self.assertEqual(verified.returncode, 1)
+                    self.assertEqual(
+                        json.loads(verified.stdout)["error"]["code"],
+                        "LEGACY_ADAPTER_FAILED",
+                    )
+                    self.assertEqual(self.tree_bytes(package), stale_tree)
 
     def test_read_only_intent_accepts_subject_without_production_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

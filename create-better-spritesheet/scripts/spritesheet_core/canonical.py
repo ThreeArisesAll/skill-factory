@@ -27,10 +27,13 @@ from .protocol import (
     validate_outline_contract,
 )
 from .rendering import (
+    alpha_policy_record,
     apply_outline,
     decode_rgba,
+    normalize_low_alpha,
     normalize_to_canvas,
     resolve_high_resolution_dimensions,
+    review_preview_payloads,
 )
 
 
@@ -54,14 +57,15 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
         budget=budget,
     )
     source_bytes = source_snapshot.data
-    source = decode_rgba(source_bytes, "source")
+    source = decode_rgba(source_bytes, "source", budget=budget)
     source_digest = source_snapshot.sha256
     target = require_object(request.get("target"), "target")
     require_exact_keys(target, {"frame_width", "frame_height"}, "target")
     frame_width = require_positive_int(target.get("frame_width"), "target.frame_width")
     frame_height = require_positive_int(target.get("frame_height"), "target.frame_height")
     canvas_size, _ = resolve_high_resolution_dimensions(frame_width, frame_height)
-    candidate = normalize_to_canvas(source, canvas_size)
+    normalized_source = normalize_to_canvas(source, canvas_size)
+    candidate = normalize_low_alpha(normalized_source)
     outline = validate_outline_contract(request.get("outline"), "outline")
     enabled = outline["enabled"]
     resolved_width = 0
@@ -76,6 +80,13 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
             min(frame_width, frame_height),
             color,
         )
+    alpha_policy = alpha_policy_record(
+        normalized_source,
+        candidate,
+        enabled,
+    )
+    if alpha_policy["status"] != "passed":
+        raise ContractError("unbacked low-alpha boundary prevents canonical admission")
     bbox = candidate.getchannel("A").getbbox()
     if bbox is None:
         raise ContractError("canonical candidate has no visible pixels")
@@ -89,6 +100,11 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
         source_evidence_path = destination / source_relative
         source_evidence_path.parent.mkdir()
         source_evidence_path.write_bytes(source_bytes)
+        preview_payloads = review_preview_payloads(candidate, (frame_width, frame_height))
+        for preview_record, preview_bytes in preview_payloads:
+            preview_path = destination / str(preview_record["path"])
+            preview_path.parent.mkdir(exist_ok=True)
+            preview_path.write_bytes(preview_bytes)
         outline_evidence = {
             "enabled": enabled,
             "target_width": outline.get("target_width"),
@@ -113,6 +129,8 @@ def prepare_canonical(request_path: Path, output_dir: Path) -> None:
                 "outline": OUTLINE_ALGORITHM if enabled else IDENTITY_ALGORITHM,
             },
             "outline": outline_evidence,
+            "alpha_policy": alpha_policy,
+            "review_previews": [record for record, _ in preview_payloads],
             "metrics": {
                 "width": candidate.width,
                 "height": candidate.height,
