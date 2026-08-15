@@ -1,0 +1,4 @@
+interface:
+  display_name: "First-Principles Systems Solver"
+  short_description: "Turn hard problems into testable engineering moves"
+  default_prompt: "Use $solve-from-first-principles to analyze this ambitious, complex problem and produce the highest-information next move."
