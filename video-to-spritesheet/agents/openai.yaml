@@ -1,4 +1,4 @@
 interface:
   display_name: "Video to Spritesheet"
-  short_description: "Extract verified looping spritesheets from local videos"
-  default_prompt: "Use $video-to-spritesheet to extract a verified transparent looping spritesheet from my local video."
+  short_description: "Inspect videos and extract verified looping spritesheets"
+  default_prompt: "Use $video-to-spritesheet to inspect my local video for watermarks and extract a verified transparent looping spritesheet, removing a reviewed watermark only when I explicitly confirm authorization."

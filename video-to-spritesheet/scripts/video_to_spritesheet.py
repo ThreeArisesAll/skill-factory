@@ -81,6 +81,8 @@ class CycleCandidate:
 @dataclass(frozen=True)
 class FrameMetrics:
     boundary_residual_rate: float
+    outer_edge_background_like_pixel_count: int
+    outer_edge_background_like_ratio: float
     transparent_rgb_nonzero_count: int
     foreground_area: float
     foreground_area_ratio: float
@@ -385,6 +387,22 @@ def _parse_color(value: str) -> tuple[float, float, float]:
     return tuple(float(channel) for channel in channels)
 
 
+def _parse_region(value: str) -> tuple[int, int, int, int]:
+    try:
+        region = tuple(int(part.strip()) for part in value.split(","))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(
+            "watermark region must be X,Y,WIDTH,HEIGHT in display pixels"
+        ) from error
+    if len(region) != 4 or any(number < 0 for number in region[:2]) or any(
+        number <= 0 for number in region[2:]
+    ):
+        raise argparse.ArgumentTypeError(
+            "watermark region must be X,Y,WIDTH,HEIGHT with positive dimensions"
+        )
+    return region
+
+
 def _working_size(width: int, height: int) -> tuple[int, int]:
     if width <= height:
         return 512, max(1, int(round(height * 512.0 / width)))
@@ -508,21 +526,34 @@ def cutout_frame(
     feather_width: float,
     decontaminate: float,
     residual_p95: float,
+    background_mode: str = "edge-connected",
 ) -> tuple[np.ndarray, dict[str, float | int]]:
     distance, nearest_index = _background_distance(image_rgb, background_colors)
     # The public tolerance describes background variation. A wider matte band
     # is needed to recover antialiasing that is a mixture of foreground and
     # background rather than classifying those pixels as opaque foreground.
     matte_tolerance = min(64.0, tolerance * 2.0)
-    connected = _edge_connected(distance <= matte_tolerance)
-    seed_tolerance = max(1.5, min(tolerance * 0.30, residual_p95 * 2.5))
-    interior = _interior_background(
-        distance,
-        tolerance=min(100.0, tolerance * 4.0),
-        seed_tolerance=seed_tolerance,
-    )
-    background = connected | interior
-    transparent_radius = max(1.0, min(tolerance * 0.10, residual_p95 * 1.25))
+    if background_mode == "global":
+        interior = np.zeros(distance.shape, dtype=bool)
+        background = distance <= matte_tolerance
+        seed_tolerance = 0.0
+        transparent_radius = tolerance
+    elif background_mode == "edge-connected":
+        connected = _edge_connected(distance <= matte_tolerance)
+        seed_tolerance = max(1.5, min(tolerance * 0.30, residual_p95 * 2.5))
+        interior = _interior_background(
+            distance,
+            tolerance=min(100.0, tolerance * 4.0),
+            seed_tolerance=seed_tolerance,
+        )
+        background = connected | interior
+        transparent_radius = max(1.0, min(tolerance * 0.10, residual_p95 * 1.25))
+    else:
+        raise PipelineError(
+            "BACKGROUND_ESTIMATION_FAILED",
+            "unknown background connectivity mode",
+            {"background_mode": background_mode},
+        )
     normalized = (distance - transparent_radius) / max(
         matte_tolerance - transparent_radius, 1e-6
     )
@@ -555,6 +586,7 @@ def cutout_frame(
     retained = interior & (distance <= transparent_radius) & (alpha_u8 > 8)
     return rgba, {
         "background_seed_tolerance": seed_tolerance,
+        "background_mode": background_mode,
         "matte_tolerance": matte_tolerance,
         "interior_component_pixels": int(np.count_nonzero(interior)),
         "retained_background_seed_count": int(np.count_nonzero(retained)),
@@ -575,10 +607,10 @@ def suppress_detached_artifacts(
         return rgba, {"removed_component_count": 0, "removed_pixel_count": 0}
     main_label = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
     main_area = int(stats[main_label, cv2.CC_STAT_AREA])
-    main_x = int(stats[main_label, cv2.CC_STAT_LEFT])
-    main_y = int(stats[main_label, cv2.CC_STAT_TOP])
-    main_right = main_x + int(stats[main_label, cv2.CC_STAT_WIDTH]) - 1
-    main_bottom = main_y + int(stats[main_label, cv2.CC_STAT_HEIGHT]) - 1
+    main_mask = labels == main_label
+    distance_to_main = cv2.distanceTransform(
+        (~main_mask).astype(np.uint8), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
     removable: list[int] = []
     ambiguous: list[dict[str, object]] = []
     for label in range(1, count):
@@ -588,9 +620,7 @@ def suppress_detached_artifacts(
         y = int(stats[label, cv2.CC_STAT_TOP])
         right = x + int(stats[label, cv2.CC_STAT_WIDTH]) - 1
         bottom = y + int(stats[label, cv2.CC_STAT_HEIGHT]) - 1
-        gap_x = max(main_x - right - 1, x - main_right - 1, 0)
-        gap_y = max(main_y - bottom - 1, y - main_bottom - 1, 0)
-        gap = math.hypot(gap_x, gap_y)
+        gap = max(0.0, float(np.min(distance_to_main[labels == label])) - 1.0)
         if gap <= proximity:
             continue
         area = int(stats[label, cv2.CC_STAT_AREA])
@@ -632,10 +662,10 @@ def suppress_resize_islands(
     if count <= 2:
         return rgba, {"removed_resize_island_count": 0, "removed_resize_island_pixels": 0}
     main_label = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
-    main_x = int(stats[main_label, cv2.CC_STAT_LEFT])
-    main_y = int(stats[main_label, cv2.CC_STAT_TOP])
-    main_right = main_x + int(stats[main_label, cv2.CC_STAT_WIDTH]) - 1
-    main_bottom = main_y + int(stats[main_label, cv2.CC_STAT_HEIGHT]) - 1
+    main_mask = labels == main_label
+    distance_to_main = cv2.distanceTransform(
+        (~main_mask).astype(np.uint8), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
     removable: list[int] = []
     for label in range(1, count):
         if label == main_label:
@@ -644,10 +674,9 @@ def suppress_resize_islands(
         y = int(stats[label, cv2.CC_STAT_TOP])
         right = x + int(stats[label, cv2.CC_STAT_WIDTH]) - 1
         bottom = y + int(stats[label, cv2.CC_STAT_HEIGHT]) - 1
-        gap_x = max(main_x - right - 1, x - main_right - 1, 0)
-        gap_y = max(main_y - bottom - 1, y - main_bottom - 1, 0)
         component_peak_alpha = int(rgba[:, :, 3][labels == label].max())
-        if component_peak_alpha <= 4 or math.hypot(gap_x, gap_y) > proximity:
+        gap = max(0.0, float(np.min(distance_to_main[labels == label])) - 1.0)
+        if component_peak_alpha <= 4 or gap > proximity:
             removable.append(label)
     output = rgba.copy()
     remove = np.isin(labels, removable)
@@ -656,6 +685,40 @@ def suppress_resize_islands(
         "removed_resize_island_count": len(removable),
         "removed_resize_island_pixels": int(np.count_nonzero(remove)),
     }
+
+
+def suppress_low_alpha_haze(
+    rgba: np.ndarray, *, core_alpha: int = 16, proximity: float = 2.0
+) -> tuple[np.ndarray, dict[str, int]]:
+    visible = rgba[:, :, 3] > 0
+    core = rgba[:, :, 3] >= core_alpha
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(
+        core.astype(np.uint8), connectivity=8
+    )
+    if count <= 1:
+        return rgba, {"removed_low_alpha_haze_pixels": 0}
+    main = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    main_mask = labels == main
+    distance_to_main = cv2.distanceTransform(
+        (~main_mask).astype(np.uint8), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
+    keep = {main}
+    for label in range(1, count):
+        if label == main:
+            continue
+        gap = max(0.0, float(np.min(distance_to_main[labels == label])) - 1.0)
+        if gap <= proximity:
+            keep.add(label)
+    kept_core = np.isin(labels, list(keep))
+    radius = max(1, int(math.ceil(proximity)))
+    support = cv2.dilate(
+        kept_core.astype(np.uint8),
+        np.ones((radius * 2 + 1, radius * 2 + 1), dtype=np.uint8),
+    ).astype(bool)
+    clear = visible & ~support
+    output = rgba.copy()
+    output[clear] = 0
+    return output, {"removed_low_alpha_haze_pixels": int(np.count_nonzero(clear))}
 
 
 def _exterior(alpha: np.ndarray) -> np.ndarray:
@@ -694,6 +757,33 @@ def estimate_outline_color(rgba_frames: Sequence[np.ndarray]) -> tuple[int, int,
             {"channel_spread": spread.tolist()},
         )
     return tuple(int(value) for value in np.rint(np.median(estimates_array, axis=0)))
+
+
+def outline_color_distance(
+    color: tuple[int, int, int], reference: tuple[int, int, int]
+) -> float:
+    colors = np.asarray((color, reference), dtype=np.float32)
+    lab = _rgb_to_lab(colors)
+    return float(np.linalg.norm(lab[0] - lab[1]))
+
+
+def estimate_outline_reference(path: Path) -> tuple[int, int, int]:
+    if not path.is_file():
+        raise PipelineError(
+            "OUTLINE_COLOR_UNCERTAIN",
+            "outline reference is not a readable file",
+            {"name": path.name},
+        )
+    try:
+        with Image.open(path) as image:
+            rgba = np.asarray(image.convert("RGBA"), dtype=np.uint8)
+    except (OSError, ValueError) as error:
+        raise PipelineError(
+            "OUTLINE_COLOR_UNCERTAIN",
+            "outline reference is not a readable raster image",
+            {"name": path.name},
+        ) from error
+    return estimate_outline_color((rgba,))
 
 
 def add_outline(
@@ -795,6 +885,7 @@ def _bbox(alpha: np.ndarray) -> tuple[int, int, int, int] | None:
 def frame_metrics(
     rgba: np.ndarray,
     *,
+    background_colors: Sequence[tuple[float, float, float]],
     retained_background_seed_count: int,
     outline_width: float,
 ) -> FrameMetrics:
@@ -807,6 +898,14 @@ def frame_metrics(
         internal.astype(np.uint8), connectivity=8
     )
     foreground_area = float(alpha.astype(np.float64).sum() / 255.0)
+    exterior_distance = cv2.distanceTransform(
+        (~exterior).astype(np.uint8), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
+    outer_edge = (alpha >= 16) & (exterior_distance <= 4.0)
+    background_distance, _ = _background_distance(rgb, background_colors)
+    background_like = outer_edge & (background_distance <= 8.0)
+    outer_edge_count = int(np.count_nonzero(outer_edge))
+    background_like_count = int(np.count_nonzero(background_like))
     transparent = alpha == 0
     coordinates = np.argwhere(alpha >= 128)
     clipped = True
@@ -817,6 +916,10 @@ def frame_metrics(
         clipped = bool(margin < math.ceil(outline_width + 1.0))
     return FrameMetrics(
         boundary_residual_rate=float(np.mean(border > 8)),
+        outer_edge_background_like_pixel_count=background_like_count,
+        outer_edge_background_like_ratio=(
+            background_like_count / outer_edge_count if outer_edge_count else 0.0
+        ),
         transparent_rgb_nonzero_count=int(
             np.count_nonzero(np.any(rgb[transparent] != 0, axis=1))
         ),
@@ -1239,6 +1342,399 @@ def _seconds_to_frame(records: Sequence[dict[str, float]], seconds: float) -> in
     )
 
 
+def _remote_foreground_mask(
+    image_rgb: np.ndarray,
+    *,
+    background_tolerance: float,
+    border_width: int,
+) -> tuple[np.ndarray, int]:
+    color, _, residual = estimate_background(
+        image_rgb,
+        border_width=border_width,
+        tolerance=background_tolerance,
+    )
+    rgba, _ = cutout_frame(
+        image_rgb,
+        background_colors=(color,),
+        tolerance=background_tolerance,
+        feather_width=1.5,
+        decontaminate=1.0,
+        residual_p95=residual,
+    )
+    foreground = rgba[:, :, 3] >= 128
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(
+        foreground.astype(np.uint8), connectivity=8
+    )
+    if count <= 1:
+        return np.zeros(foreground.shape, dtype=bool), 0
+    dominant_label = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    dominant_area = int(stats[dominant_label, cv2.CC_STAT_AREA])
+    dominant_mask = labels == dominant_label
+    distance_to_dominant = cv2.distanceTransform(
+        (~dominant_mask).astype(np.uint8), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+    )
+    remote = foreground & (labels != dominant_label)
+    remote_labels = np.unique(labels[remote])
+    for label in remote_labels:
+        if label == 0:
+            continue
+        gap = max(0.0, float(np.min(distance_to_dominant[labels == label])) - 1.0)
+        if int(stats[label, cv2.CC_STAT_AREA]) < 4 or gap <= 12.0:
+            remote[labels == label] = False
+    return remote, dominant_area
+
+
+def analyze_watermarks(
+    frames: Sequence[np.ndarray],
+    *,
+    frame_indices: Sequence[int],
+    display_size: tuple[int, int],
+    background_tolerance: float,
+    border_width: int,
+) -> dict[str, object]:
+    if len(frames) != len(frame_indices):
+        raise ValueError("watermark sample frames and indices must have equal lengths")
+    if not frames:
+        return {
+            "status": "ambiguous",
+            "coordinate_space": "display_pixels",
+            "candidates": [],
+            "analyzed_frame_count": 0,
+            "reason": "no frames were available for watermark review",
+        }
+    remote_masks: list[np.ndarray] = []
+    dominant_areas: list[int] = []
+    successful_indices: list[int] = []
+    failed_frames: list[int] = []
+    for frame_index, frame in zip(frame_indices, frames, strict=True):
+        try:
+            remote, dominant_area = _remote_foreground_mask(
+                frame,
+                background_tolerance=background_tolerance,
+                border_width=border_width,
+            )
+        except PipelineError:
+            failed_frames.append(frame_index)
+            continue
+        remote_masks.append(remote)
+        dominant_areas.append(dominant_area)
+        successful_indices.append(frame_index)
+    if not remote_masks:
+        return {
+            "status": "ambiguous",
+            "coordinate_space": "display_pixels",
+            "candidates": [],
+            "analyzed_frame_count": 0,
+            "failed_frames": failed_frames,
+            "reason": "background analysis could not support watermark review",
+        }
+    combined = np.logical_or.reduce(remote_masks)
+    merge_gap = max(5, int(round(min(combined.shape) * 0.04)))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (merge_gap, merge_gap))
+    grouped = cv2.dilate(combined.astype(np.uint8), kernel)
+    group_count, group_labels = cv2.connectedComponents(grouped, connectivity=8)
+    display_width, display_height = display_size
+    scale_x = display_width / combined.shape[1]
+    scale_y = display_height / combined.shape[0]
+    region_padding = max(2, int(math.ceil(min(display_width, display_height) * 0.005)))
+    candidates: list[dict[str, object]] = []
+    maximum_dominant_area = max(dominant_areas, default=1)
+    for label in range(1, group_count):
+        pixels = combined & (group_labels == label)
+        ys, xs = np.nonzero(pixels)
+        if not len(xs):
+            continue
+        area = int(len(xs))
+        left = max(0, int(math.floor(int(xs.min()) * scale_x)) - region_padding)
+        top = max(0, int(math.floor(int(ys.min()) * scale_y)) - region_padding)
+        right = min(
+            display_width,
+            int(math.ceil((int(xs.max()) + 1) * scale_x)) + region_padding,
+        )
+        bottom = min(
+            display_height,
+            int(math.ceil((int(ys.max()) + 1) * scale_y)) + region_padding,
+        )
+        sampled_hits = [
+            frame_index
+            for frame_index, mask in zip(successful_indices, remote_masks, strict=True)
+            if np.any(mask & (group_labels == label))
+        ]
+        candidates.append(
+            {
+                "region": [left, top, right - left, bottom - top],
+                "first_frame": min(sampled_hits),
+                "last_frame": max(sampled_hits),
+                "frame_count": len(sampled_hits),
+                "frame_coverage": len(sampled_hits) / len(remote_masks),
+                "foreground_area_ratio": area / maximum_dominant_area,
+                "padding_pixels": region_padding,
+            }
+        )
+    candidates.sort(key=lambda item: tuple(item["region"]))
+    status = "detected" if candidates else "clear"
+    return {
+        "status": status,
+        "coordinate_space": "display_pixels",
+        "candidates": candidates,
+        "analyzed_frame_count": len(successful_indices),
+        "analyzed_frame_range": [successful_indices[0], successful_indices[-1]],
+        "failed_frames": failed_frames,
+    }
+
+
+def constrain_watermark_review_to_regions(
+    review: dict[str, object],
+    regions: Sequence[tuple[int, int, int, int]],
+) -> dict[str, object]:
+    if review.get("status") == "ambiguous":
+        return review
+    candidates = review.get("candidates")
+    if not isinstance(candidates, list):
+        return review
+
+    def intersects(candidate: object) -> bool:
+        if not isinstance(candidate, dict):
+            return False
+        candidate_region = candidate.get("region")
+        if not isinstance(candidate_region, list) or len(candidate_region) != 4:
+            return False
+        left, top, width, height = (int(value) for value in candidate_region)
+        right = left + width
+        bottom = top + height
+        for region_left, region_top, region_width, region_height in regions:
+            region_right = region_left + region_width
+            region_bottom = region_top + region_height
+            if (
+                left < region_right
+                and right > region_left
+                and top < region_bottom
+                and bottom > region_top
+            ):
+                return True
+        return False
+
+    scoped = [candidate for candidate in candidates if intersects(candidate)]
+    ignored = [candidate for candidate in candidates if not intersects(candidate)]
+    return {
+        **review,
+        "status": "detected" if scoped else "clear",
+        "scope": "reviewed_regions",
+        "reviewed_regions": [list(region) for region in regions],
+        "candidates": scoped,
+        "ignored_outside_reviewed_regions": ignored,
+    }
+
+
+def remove_watermarks(
+    frames: Sequence[np.ndarray],
+    *,
+    regions: Sequence[tuple[int, int, int, int]],
+    background_tolerance: float,
+    border_width: int,
+) -> tuple[list[np.ndarray], dict[str, object]]:
+    cleaned_frames: list[np.ndarray] = []
+    frame_records: list[dict[str, int]] = []
+    total_removed = 0
+    for frame_index, frame in enumerate(frames):
+        height, width = frame.shape[:2]
+        region_mask = np.zeros((height, width), dtype=bool)
+        for x, y, region_width, region_height in regions:
+            if x + region_width > width or y + region_height > height:
+                raise PipelineError(
+                    "WATERMARK_REGION_INVALID",
+                    "watermark region lies outside the display frame",
+                    {
+                        "frame_size": [width, height],
+                        "region": [x, y, region_width, region_height],
+                    },
+                )
+            region_mask[y : y + region_height, x : x + region_width] = True
+        color, _, residual = estimate_background(
+            frame,
+            border_width=min(border_width, max(1, min(height, width) // 4)),
+            tolerance=background_tolerance,
+        )
+        rgba, _ = cutout_frame(
+            frame,
+            background_colors=(color,),
+            tolerance=background_tolerance,
+            feather_width=1.5,
+            decontaminate=1.0,
+            residual_p95=residual,
+        )
+        foreground = rgba[:, :, 3] >= 128
+        count, labels, stats, _ = cv2.connectedComponentsWithStats(
+            foreground.astype(np.uint8), connectivity=8
+        )
+        if count > 1:
+            dominant_label = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+            if np.any(region_mask & (labels == dominant_label)):
+                raise PipelineError(
+                    "WATERMARK_OVERLAPS_SUBJECT",
+                    "reviewed watermark region overlaps the dominant subject",
+                    {"frame": frame_index},
+                )
+        distance, _ = _background_distance(frame, (color,))
+        cleaned = frame.copy()
+        removed_pixels = 0
+        repair_records: list[dict[str, object]] = []
+        for x, y, region_width, region_height in regions:
+            touches_boundary = (
+                x == 0
+                or y == 0
+                or x + region_width == width
+                or y + region_height == height
+            )
+            if touches_boundary:
+                donor_candidates: list[tuple[str, int, int]] = []
+                if x >= region_width:
+                    donor_candidates.append(("left", x - region_width, y))
+                if x + region_width * 2 <= width:
+                    donor_candidates.append(("right", x + region_width, y))
+                if y >= region_height:
+                    donor_candidates.append(("up", x, y - region_height))
+                if y + region_height * 2 <= height:
+                    donor_candidates.append(("down", x, y + region_height))
+                ranked_donors: list[tuple[float, str, int, int]] = []
+                for direction, donor_x, donor_y in donor_candidates:
+                    donor_foreground = foreground[
+                        donor_y : donor_y + region_height,
+                        donor_x : donor_x + region_width,
+                    ]
+                    if np.any(donor_foreground):
+                        continue
+                    donor_distance = distance[
+                        donor_y : donor_y + region_height,
+                        donor_x : donor_x + region_width,
+                    ]
+                    ranked_donors.append(
+                        (
+                            float(np.percentile(donor_distance, 95)),
+                            direction,
+                            donor_x,
+                            donor_y,
+                        )
+                    )
+                if not ranked_donors:
+                    raise PipelineError(
+                        "WATERMARK_REMOVAL_FAILED",
+                        "boundary watermark region has no subject-free donor background",
+                        {"frame": frame_index, "region": [x, y, region_width, region_height]},
+                    )
+                _, direction, donor_x, donor_y = min(ranked_donors)
+                donor = frame[
+                    donor_y : donor_y + region_height,
+                    donor_x : donor_x + region_width,
+                ].astype(np.float64)
+                local_left = max(0, min(x, donor_x) - 8)
+                local_top = max(0, min(y, donor_y) - 8)
+                local_right = min(width, max(x, donor_x) + region_width + 8)
+                local_bottom = min(height, max(y, donor_y) + region_height + 8)
+                local_valid = (~foreground & ~region_mask)[
+                    local_top:local_bottom, local_left:local_right
+                ]
+                local_y, local_x = np.nonzero(local_valid)
+                local_x = local_x + local_left
+                local_y = local_y + local_top
+                if len(local_x) >= 16:
+                    design = np.column_stack(
+                        (
+                            local_x.astype(np.float64),
+                            local_y.astype(np.float64),
+                            np.ones(len(local_x), dtype=np.float64),
+                        )
+                    )
+                    samples = frame[local_y, local_x].astype(np.float64)
+                    coefficients, _, _, _ = np.linalg.lstsq(design, samples, rcond=None)
+                    patch_y, patch_x = np.indices((region_height, region_width))
+                    donor_design = np.stack(
+                        (
+                            patch_x + donor_x,
+                            patch_y + donor_y,
+                            np.ones_like(patch_x),
+                        ),
+                        axis=2,
+                    ).astype(np.float64)
+                    target_design = np.stack(
+                        (patch_x + x, patch_y + y, np.ones_like(patch_x)), axis=2
+                    ).astype(np.float64)
+                    donor_plane = donor_design @ coefficients
+                    target_plane = target_design @ coefficients
+                    repaired = np.clip(target_plane + donor - donor_plane, 0.0, 255.0).astype(
+                        np.uint8
+                    )
+                    smooth_background = np.clip(target_plane, 0.0, 255.0).astype(np.uint8)
+                else:
+                    repaired = donor.astype(np.uint8)
+                    smooth_background = np.broadcast_to(
+                        np.rint(color).astype(np.uint8), repaired.shape
+                    )
+                collar = min(4, region_width, region_height)
+                if x == 0:
+                    repaired[:, :collar] = smooth_background[:, :collar]
+                if x + region_width == width:
+                    repaired[:, -collar:] = smooth_background[:, -collar:]
+                if y == 0:
+                    repaired[:collar] = smooth_background[:collar]
+                if y + region_height == height:
+                    repaired[-collar:] = smooth_background[-collar:]
+                cleaned[y : y + region_height, x : x + region_width] = repaired
+                removed_pixels += region_width * region_height
+                repair_records.append(
+                    {
+                        "region": [x, y, region_width, region_height],
+                        "method": "subject-free-donor-patch",
+                        "donor": [donor_x, donor_y, region_width, region_height],
+                    }
+                )
+                continue
+            local_region = np.zeros((height, width), dtype=bool)
+            local_region[y : y + region_height, x : x + region_width] = True
+            removal_threshold = max(2.0, residual * 1.5)
+            removal_mask = local_region & (distance > removal_threshold)
+            if np.any(removal_mask):
+                removal_mask = cv2.dilate(
+                    removal_mask.astype(np.uint8), np.ones((5, 5), dtype=np.uint8)
+                ).astype(bool) & local_region
+            local_removed = int(np.count_nonzero(removal_mask))
+            if local_removed:
+                cleaned = cv2.inpaint(
+                    cleaned,
+                    (removal_mask.astype(np.uint8) * 255),
+                    3.0,
+                    cv2.INPAINT_TELEA,
+                )
+            removed_pixels += local_removed
+            repair_records.append(
+                {
+                    "region": [x, y, region_width, region_height],
+                    "method": "background-constrained-inpaint",
+                    "removed_pixel_count": local_removed,
+                }
+            )
+        total_removed += removed_pixels
+        cleaned_frames.append(cleaned)
+        frame_records.append(
+            {
+                "frame": frame_index,
+                "removed_pixel_count": removed_pixels,
+                "repairs": repair_records,
+            }
+        )
+    if total_removed == 0:
+        raise PipelineError(
+            "WATERMARK_NOT_FOUND",
+            "reviewed watermark regions contain no removable foreground",
+        )
+    return cleaned_frames, {
+        "method": "reviewed-background-repair/v1",
+        "regions": [list(region) for region in regions],
+        "removed_pixel_count": total_removed,
+        "frames": frame_records,
+    }
+
+
 def _artifact_hashes(output: Path) -> dict[str, str]:
     hashes: dict[str, str] = {}
     for path in sorted(output.rglob("*")):
@@ -1248,19 +1744,39 @@ def _artifact_hashes(output: Path) -> dict[str, str]:
 
 
 def _parameter_payload(args: argparse.Namespace) -> dict[str, object]:
+    outline_reference = None
+    if args.outline_reference is not None:
+        reference_path = args.outline_reference.resolve()
+        if not reference_path.is_file():
+            raise PipelineError(
+                "OUTLINE_COLOR_UNCERTAIN",
+                "outline reference is not a readable file",
+                {"name": reference_path.name},
+            )
+        outline_reference = {
+            "name": reference_path.name,
+            "sha256": _sha256(reference_path),
+        }
     return {
         "target_short_edge": args.target_short_edge,
         "sheet_columns": args.sheet_columns,
         "background": args.background or ["auto"],
         "background_tolerance": args.background_tolerance,
+        "background_mode": args.background_mode,
+        "watermark_background_tolerance": args.watermark_background_tolerance,
         "border_width": args.border_width,
         "feather_width": args.feather_width,
         "decontaminate": args.decontaminate,
         "outline_width": args.outline_width,
         "outline_color": args.outline_color,
+        "outline_reference": outline_reference,
+        "outline_reference_max_distance": args.outline_reference_max_distance,
         "video_stream": args.video_stream,
         "cycle_start": args.cycle_start,
         "cycle_end": args.cycle_end,
+        "watermark_action": args.watermark_action,
+        "watermark_regions": args.watermark_region or [],
+        "watermark_removal_authorized": args.watermark_removal_authorized,
     }
 
 
@@ -1269,6 +1785,28 @@ def run_pipeline(args: argparse.Namespace) -> int:
     output = args.output.resolve()
     info = inspect_video(input_path, requested_stream=args.video_stream)
     parameters = _parameter_payload(args)
+    watermark_background_tolerance = (
+        args.watermark_background_tolerance
+        if args.watermark_background_tolerance is not None
+        else args.background_tolerance
+    )
+    if args.watermark_action == "remove" and not args.watermark_removal_authorized:
+        raise PipelineError(
+            "WATERMARK_AUTHORIZATION_REQUIRED",
+            "watermark removal requires explicit confirmation that the caller is authorized",
+        )
+    if args.watermark_action == "remove" and not args.watermark_region:
+        raise PipelineError(
+            "WATERMARK_REGION_REQUIRED",
+            "watermark removal requires at least one reviewed --watermark-region",
+        )
+    if args.watermark_action == "reject" and (
+        args.watermark_region or args.watermark_removal_authorized
+    ):
+        raise PipelineError(
+            "UNSUPPORTED_INPUT",
+            "watermark regions and authorization require --watermark-action remove",
+        )
     if args.dry_run:
         print(
             json.dumps(
@@ -1317,6 +1855,52 @@ def run_pipeline(args: argparse.Namespace) -> int:
     _write_json(analysis_directory / "video.json", asdict(info))
     with tempfile.TemporaryDirectory(prefix="video-to-spritesheet-") as temporary:
         decoded_paths, timestamps = decode_video(input_path, info, Path(temporary))
+        watermark_sample_indices = list(range(len(decoded_paths)))
+        watermark_sample_frames: list[np.ndarray] = []
+        for index in watermark_sample_indices:
+            with Image.open(decoded_paths[index]) as image:
+                sample = np.asarray(image.convert("RGB"), dtype=np.uint8)
+            watermark_sample_frames.append(
+                np.asarray(
+                    Image.fromarray(sample, mode="RGB").resize(
+                        _working_size(info.display_width, info.display_height),
+                        Image.Resampling.LANCZOS,
+                    ),
+                    dtype=np.uint8,
+                )
+            )
+        watermark_review = analyze_watermarks(
+            watermark_sample_frames,
+            frame_indices=watermark_sample_indices,
+            display_size=(info.display_width, info.display_height),
+            background_tolerance=watermark_background_tolerance,
+            border_width=args.border_width,
+        )
+        watermark_record: dict[str, object] = {
+            "schema": "video-to-spritesheet-watermark/v1",
+            "passed": watermark_review["status"] == "clear",
+            "action": args.watermark_action,
+            "authorization": (
+                "SUPPLIED" if args.watermark_removal_authorized else "UNRESOLVED"
+            ),
+            "regions": [list(region) for region in (args.watermark_region or [])],
+            "pre_removal_review": watermark_review,
+            "removal": None,
+            "post_removal_review": None,
+        }
+        _write_json(analysis_directory / "watermark.json", watermark_record)
+        if watermark_review["status"] == "ambiguous":
+            raise PipelineError(
+                "WATERMARK_REVIEW_FAILED",
+                "watermark review is ambiguous; inspect the source before running the pipeline",
+                {"watermark_review": watermark_review},
+            )
+        if watermark_review["status"] == "detected" and args.watermark_action == "reject":
+            raise PipelineError(
+                "WATERMARK_DETECTED",
+                "potential watermark content was detected; review it before authorized removal",
+                {"watermark_review": watermark_review},
+            )
         candidates = find_cycle_candidates(decoded_paths)
         _write_json(
             analysis_directory / "cycle-candidates.json",
@@ -1350,10 +1934,49 @@ def run_pipeline(args: argparse.Namespace) -> int:
             },
         )
         source_frames: list[np.ndarray] = []
-        for index, source_path in enumerate(selected_paths):
+        for source_path in selected_paths:
             with Image.open(source_path) as image:
                 source_rgb = np.asarray(image.convert("RGB"), dtype=np.uint8)
             source_frames.append(source_rgb)
+        if args.watermark_action == "remove":
+            source_frames, removal = remove_watermarks(
+                source_frames,
+                regions=args.watermark_region,
+                background_tolerance=watermark_background_tolerance,
+                border_width=args.border_width,
+            )
+            post_indices = list(range(len(source_frames)))
+            post_frames = [
+                np.asarray(
+                    Image.fromarray(source_frames[index], mode="RGB").resize(
+                        _working_size(info.display_width, info.display_height),
+                        Image.Resampling.LANCZOS,
+                    ),
+                    dtype=np.uint8,
+                )
+                for index in post_indices
+            ]
+            post_review = analyze_watermarks(
+                post_frames,
+                frame_indices=post_indices,
+                display_size=(info.display_width, info.display_height),
+                background_tolerance=watermark_background_tolerance,
+                border_width=args.border_width,
+            )
+            post_review = constrain_watermark_review_to_regions(
+                post_review, args.watermark_region
+            )
+            watermark_record["removal"] = removal
+            watermark_record["post_removal_review"] = post_review
+            watermark_record["passed"] = post_review["status"] == "clear"
+            _write_json(analysis_directory / "watermark.json", watermark_record)
+            if post_review["status"] != "clear":
+                raise PipelineError(
+                    "WATERMARK_REMOVAL_FAILED",
+                    "watermark candidates remain after removal",
+                    {"watermark_review": post_review},
+                )
+        for index, source_rgb in enumerate(source_frames):
             Image.fromarray(source_rgb, mode="RGB").save(
                 selected_directory / f"frame-{index:04d}.png", format="PNG", compress_level=9
             )
@@ -1403,13 +2026,26 @@ def run_pipeline(args: argparse.Namespace) -> int:
             feather_width=args.feather_width,
             decontaminate=args.decontaminate,
             residual_p95=residual,
+            background_mode=args.background_mode,
         )
         rgba, detached_diagnostics = suppress_detached_artifacts(
             rgba, proximity=max(12.0, args.outline_width * 2.0)
         )
         diagnostics.update(detached_diagnostics)
+        rgba, visible_island_diagnostics = suppress_resize_islands(rgba, proximity=2.0)
+        diagnostics.update(
+            {
+                "removed_cutout_island_count": visible_island_diagnostics[
+                    "removed_resize_island_count"
+                ],
+                "removed_cutout_island_pixels": visible_island_diagnostics[
+                    "removed_resize_island_pixels"
+                ],
+            }
+        )
         metrics = frame_metrics(
             rgba,
+            background_colors=colors,
             retained_background_seed_count=int(diagnostics["retained_background_seed_count"]),
             outline_width=args.outline_width,
         )
@@ -1418,6 +2054,10 @@ def run_pipeline(args: argparse.Namespace) -> int:
             reasons.append(f"background confidence {confidence:.6f} below 0.900000")
         if metrics.boundary_residual_rate > 0.001:
             reasons.append("boundary background residue exceeds 0.001")
+        if metrics.outer_edge_background_like_ratio > 0.12:
+            reasons.append(
+                "outer-edge background-like color ratio exceeds 0.120000"
+            )
         if metrics.retained_background_seed_count:
             reasons.append("enclosed high-confidence background seeds remain opaque")
         if metrics.transparent_rgb_nonzero_count:
@@ -1454,6 +2094,10 @@ def run_pipeline(args: argparse.Namespace) -> int:
                 "schema": QUALITY_VERSION,
                 "passed": False,
                 "synthetic_truth": synthetic,
+                "watermark": {
+                    "passed": watermark_record["passed"],
+                    "analysis": "analysis/watermark.json",
+                },
                 "frames": frame_records,
                 "failures": frame_failures,
                 "human_visual_review": "pending",
@@ -1469,6 +2113,24 @@ def run_pipeline(args: argparse.Namespace) -> int:
     else:
         parsed = _parse_color(args.outline_color)
         outline_color = tuple(int(value) for value in parsed)
+    outline_reference_record: dict[str, object] | None = None
+    if args.outline_reference is not None:
+        reference_path = args.outline_reference.resolve()
+        reference_color = estimate_outline_reference(reference_path)
+        reference_distance = outline_color_distance(outline_color, reference_color)
+        outline_reference_record = {
+            "name": reference_path.name,
+            "sha256": _sha256(reference_path),
+            "estimated_color": reference_color,
+            "distance": reference_distance,
+            "maximum_distance": args.outline_reference_max_distance,
+        }
+        if reference_distance > args.outline_reference_max_distance:
+            raise PipelineError(
+                "OUTLINE_COLOR_MISMATCH",
+                "selected outline color does not match the production reference",
+                {"outline": outline_color, "reference": outline_reference_record},
+            )
     outlined_frames: list[np.ndarray] = []
     final_frames: list[np.ndarray] = []
     final_frame_diagnostics: list[dict[str, int]] = []
@@ -1480,11 +2142,14 @@ def run_pipeline(args: argparse.Namespace) -> int:
         )
         final = resize_premultiplied(outlined, final_size)
         final, resize_diagnostics = suppress_resize_islands(final)
+        final, haze_diagnostics = suppress_low_alpha_haze(final)
         _write_png(outlined_directory / f"frame-{index:04d}.png", outlined)
         _write_png(final_directory / f"frame-{index:04d}.png", final)
         outlined_frames.append(outlined)
         final_frames.append(final)
-        final_frame_diagnostics.append({"index": index, **resize_diagnostics})
+        final_frame_diagnostics.append(
+            {"index": index, **resize_diagnostics, **haze_diagnostics}
+        )
     temporal = animation_quality([frame[:, :, 3] for frame in final_frames])
     if temporal["failures"]:
         raise PipelineError(
@@ -1507,11 +2172,19 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "frames": frame_records,
         "final_frame_diagnostics": final_frame_diagnostics,
         "animation": temporal,
-        "outline": {"width": args.outline_width, "color": outline_color},
+        "outline": {
+            "width": args.outline_width,
+            "color": outline_color,
+            "reference": outline_reference_record,
+        },
         "working_size": working_size,
         "final_size": final_size,
         "spritesheet": sheet_metadata,
         "inspection": inspection,
+        "watermark": {
+            "passed": watermark_record["passed"],
+            "analysis": "analysis/watermark.json",
+        },
         "failures": [],
         "human_visual_review": "pending",
     }
@@ -1527,10 +2200,17 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "working_size": working_size,
         "final_size": final_size,
         "spritesheet": sheet_metadata,
+        "watermark": {
+            "action": args.watermark_action,
+            "authorization": watermark_record["authorization"],
+            "regions": watermark_record["regions"],
+            "analysis": "analysis/watermark.json",
+        },
         "artifacts": _artifact_hashes(output),
         "claims": {
             "machine_verification": "MACHINE-VERIFIED",
             "human_visual_review": "UNRESOLVED",
+            "watermark_removal_authorization": watermark_record["authorization"],
         },
     }
     _write_json(output / "job.json", job)
@@ -1565,6 +2245,63 @@ def verify_output(output: Path, *, emit: bool = True) -> int:
         failures.append(
             {"artifact": "quality-report.json", "reason": "quality report is not passing"}
         )
+    quality_watermark = quality.get("watermark")
+    if (
+        not isinstance(quality_watermark, dict)
+        or quality_watermark.get("passed") is not True
+        or quality_watermark.get("analysis") != "analysis/watermark.json"
+    ):
+        failures.append(
+            {"artifact": "quality-report.json", "reason": "invalid watermark summary"}
+        )
+    job_watermark = job.get("watermark")
+    watermark_path = output / "analysis" / "watermark.json"
+    if not isinstance(job_watermark, dict) or job_watermark.get("analysis") != (
+        "analysis/watermark.json"
+    ):
+        failures.append({"artifact": "job.json", "reason": "invalid watermark reference"})
+    elif not watermark_path.is_file():
+        failures.append({"artifact": "analysis/watermark.json", "reason": "missing watermark record"})
+    else:
+        watermark = _read_json(watermark_path)
+        action = watermark.get("action")
+        if (
+            watermark.get("schema") != "video-to-spritesheet-watermark/v1"
+            or watermark.get("passed") is not True
+            or action != job_watermark.get("action")
+            or watermark.get("authorization") != job_watermark.get("authorization")
+            or watermark.get("regions") != job_watermark.get("regions")
+        ):
+            failures.append(
+                {"artifact": "analysis/watermark.json", "reason": "invalid watermark record"}
+            )
+        elif action == "remove":
+            post_review = watermark.get("post_removal_review")
+            if (
+                watermark.get("authorization") != "SUPPLIED"
+                or not isinstance(watermark.get("removal"), dict)
+                or not isinstance(post_review, dict)
+                or post_review.get("status") != "clear"
+            ):
+                failures.append(
+                    {
+                        "artifact": "analysis/watermark.json",
+                        "reason": "authorized removal is not independently cleared",
+                    }
+                )
+        elif action == "reject":
+            pre_review = watermark.get("pre_removal_review")
+            if not isinstance(pre_review, dict) or pre_review.get("status") != "clear":
+                failures.append(
+                    {
+                        "artifact": "analysis/watermark.json",
+                        "reason": "unremoved watermark review is not clear",
+                    }
+                )
+        else:
+            failures.append(
+                {"artifact": "analysis/watermark.json", "reason": "unknown watermark action"}
+            )
     expected_hashes = job.get("artifacts")
     if not isinstance(expected_hashes, dict):
         failures.append({"artifact": "job.json", "reason": "artifacts is not an object"})
@@ -1720,6 +2457,26 @@ def inspect_command(args: argparse.Namespace) -> int:
                 background_records.append(
                     {"frame": index, "supported": False, "error": error.payload()["error"]}
                 )
+        watermark_frames: list[np.ndarray] = []
+        for frame_path in frames:
+            with Image.open(frame_path) as image:
+                source = np.asarray(image.convert("RGB"), dtype=np.uint8)
+            watermark_frames.append(
+                np.asarray(
+                    Image.fromarray(source, mode="RGB").resize(
+                        _working_size(info.display_width, info.display_height),
+                        Image.Resampling.LANCZOS,
+                    ),
+                    dtype=np.uint8,
+                )
+            )
+        watermark_review = analyze_watermarks(
+            watermark_frames,
+            frame_indices=list(range(len(frames))),
+            display_size=(info.display_width, info.display_height),
+            background_tolerance=args.background_tolerance,
+            border_width=args.border_width,
+        )
     result = {
         "schema": "video-to-spritesheet-inspection/v1",
         "video": asdict(info),
@@ -1727,6 +2484,7 @@ def inspect_command(args: argparse.Namespace) -> int:
         "frame_timing": timestamps,
         "working_size": _working_size(info.display_width, info.display_height),
         "background_samples": background_records,
+        "watermark_review": watermark_review,
         "cycle_candidates": [asdict(candidate) for candidate in candidates[:20]],
     }
     print(json.dumps(result, indent=2))
@@ -1760,14 +2518,27 @@ def _build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--sheet-columns", type=int, default=4)
     run_parser.add_argument("--background", action="append")
     run_parser.add_argument("--background-tolerance", type=float, default=22.0)
+    run_parser.add_argument(
+        "--background-mode",
+        choices=("edge-connected", "global"),
+        default="edge-connected",
+    )
+    run_parser.add_argument("--watermark-background-tolerance", type=float)
     run_parser.add_argument("--border-width", type=int, default=12)
     run_parser.add_argument("--feather-width", type=float, default=1.5)
     run_parser.add_argument("--decontaminate", type=float, default=1.0)
     run_parser.add_argument("--outline-width", type=float, default=6.0)
     run_parser.add_argument("--outline-color", default="auto")
+    run_parser.add_argument("--outline-reference", type=Path)
+    run_parser.add_argument("--outline-reference-max-distance", type=float, default=6.0)
     run_parser.add_argument("--video-stream", type=int)
     run_parser.add_argument("--cycle-start", type=float)
     run_parser.add_argument("--cycle-end", type=float)
+    run_parser.add_argument(
+        "--watermark-action", choices=("reject", "remove"), default="reject"
+    )
+    run_parser.add_argument("--watermark-region", action="append", type=_parse_region)
+    run_parser.add_argument("--watermark-removal-authorized", action="store_true")
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.set_defaults(handler=run_pipeline)
@@ -1787,10 +2558,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if getattr(args, "background_tolerance", 1.0) <= 0:
         parser.error("--background-tolerance must be positive")
+    if (
+        getattr(args, "watermark_background_tolerance", None) is not None
+        and args.watermark_background_tolerance <= 0
+    ):
+        parser.error("--watermark-background-tolerance must be positive")
     if getattr(args, "border_width", 1) < 1:
         parser.error("--border-width must be positive")
     if not 0.0 <= getattr(args, "decontaminate", 0.0) <= 1.0:
         parser.error("--decontaminate must be within [0, 1]")
+    if getattr(args, "outline_reference_max_distance", 1.0) <= 0:
+        parser.error("--outline-reference-max-distance must be positive")
     try:
         return int(args.handler(args))
     except PipelineError as error:
