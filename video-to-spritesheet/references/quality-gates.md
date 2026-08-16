@@ -18,6 +18,8 @@ Measure each frame's boundary residue, suspicious transparent holes, retained en
 
 Require both a six-scaled-MAD robust outlier and a material difference before rejecting a pair. The measured materiality floors are 0.015 mean alpha difference, 0.040 contour-change ratio, and 0.015 foreground-area change. This prevents sub-percent source-pose changes from being mislabeled as matte instability while preserving rejection of visible jumps. Always include the last-to-first pair in the same gate.
 
+When explicit cadence collapse is enabled, compare every adjacent pair of high-resolution cutout alpha masks before outlining. Collapse a pair only when mean alpha difference is at most 0.003, contour-change ratio is at most 0.012, and foreground-area change is at most 0.003. Preserve non-collapsed motion steps even when only one metric exceeds its threshold. Recompute the groups during verification from hashed cutouts and the selected-cycle timing record; require source and output durations to match exactly within serialized floating-point precision. Run the normal adjacent-pair and loop-seam gate again on the collapsed output sequence.
+
 ## Visual evidence
 
 Create cycle-candidate, contact-sheet, alpha, edge-detail, black, white, gray, checkerboard, and loop-seam views. Include the original video and `analysis/watermark.json` in human review, and inspect the repaired region throughout the loop after removal. Report `human_visual_review: pending` until a person explicitly accepts them.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Download Video Transcripts"
+  short_description: "Download subtitles and produce bilingual transcripts"
+  default_prompt: "Use $download-video-transcripts to process this video URL into verified Chinese and English transcripts."

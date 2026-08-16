@@ -10,6 +10,12 @@ When a source has strongly varying near-solid backgrounds, perform cutout and ed
 
 Default to edge-connected background admission so foreground colors close to the background remain protected. Permit global background admission only after visual evidence establishes that the subject palette does not overlap any declared background color. Global mode clears pixels inside the declared tolerance anywhere on the canvas and must remain an explicit recorded parameter.
 
+## Cadence
+
+Preserve every decoded source pose and timing record by default. Permit explicit adjacent near-duplicate collapse only when cadence review shows repeated holds between material motion steps. Apply it after original-background cutout so the decision uses subject alpha structure rather than container compression or background noise. Retain every selected source frame and high-resolution cutout in the output closure; apply outlining, final resizing, APNG assembly, and sheet assembly only to the first frame of each collapsed group.
+
+Sum every grouped source duration into its retained output frame without changing the selected cycle's total duration. Record absolute source-frame groups, thresholds, pair measurements, source and output frame counts, and source and output durations under `cadence` in `job.json`. The verifier must recompute the grouping from the retained high-resolution cutouts and the hashed selected-cycle timing record. Return `TEMPORAL_QUALITY_FAILED` when collapse leaves fewer than three output frames or the remaining sequence fails the real-animation gate.
+
 ## Watermarks
 
 - Analyze every decoded frame and report remote foreground candidates in display-pixel coordinates before cycle extraction.
@@ -34,7 +40,7 @@ Default to edge-connected background admission so foreground colors close to the
 
 ## Output closure
 
-The output directory contains `job.json`, analysis records, selected source frames, high-resolution cutouts, high-resolution outlined frames, final frames, `spritesheet.png`, `loop-preview.png`, `quality-report.json`, and inspection images. `job.json` uses relative paths and excludes timestamps, UUIDs, and absolute output paths. Hash every deliverable except the manifest itself.
+The output directory contains `job.json`, analysis records, selected source frames, high-resolution cutouts, high-resolution outlined frames, final frames, `spritesheet.png`, `loop-preview.png`, `quality-report.json`, and inspection images. When cadence collapse is enabled, selected source frames and cutouts cover the complete source interval while outlined and final frames follow the recorded groups. `job.json` uses relative paths and excludes wall-clock timestamps, UUIDs, and absolute output paths. Hash every deliverable except the manifest itself.
 
 ## Claim classes
 

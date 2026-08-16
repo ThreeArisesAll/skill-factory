@@ -37,6 +37,12 @@ except ImportError as error:  # pragma: no cover - exercised without the test en
 SCHEMA_VERSION = "video-to-spritesheet-job/v1"
 QUALITY_VERSION = "video-to-spritesheet-quality/v1"
 SUPPORTED_SUFFIXES = {".mp4", ".mov", ".webm", ".mkv"}
+CADENCE_COLLAPSE_SCHEMA = "adjacent-near-duplicate-collapse/v1"
+CADENCE_COLLAPSE_THRESHOLDS = {
+    "maximum_mean_alpha_difference": 0.003,
+    "maximum_contour_change_ratio": 0.012,
+    "maximum_area_change_ratio": 0.003,
+}
 
 
 class PipelineError(ValueError):
@@ -1016,6 +1022,66 @@ def animation_quality(alphas: Sequence[np.ndarray]) -> dict[str, object]:
     }
 
 
+def collapse_near_duplicate_frames(
+    alphas: Sequence[np.ndarray],
+    timings: Sequence[dict[str, float]],
+    *,
+    source_start_frame: int,
+) -> tuple[list[int], list[dict[str, float]], dict[str, object]]:
+    if len(alphas) != len(timings) or not alphas:
+        raise PipelineError(
+            "TEMPORAL_QUALITY_FAILED",
+            "cadence collapse requires matching non-empty frames and timing records",
+        )
+    groups: list[list[int]] = [[0]]
+    comparisons: list[dict[str, object]] = []
+    for index in range(1, len(alphas)):
+        metrics = _pair_metrics(alphas[index - 1], alphas[index])
+        collapsed = (
+            metrics["mean_alpha_difference"]
+            <= CADENCE_COLLAPSE_THRESHOLDS["maximum_mean_alpha_difference"]
+            and metrics["contour_change_ratio"]
+            <= CADENCE_COLLAPSE_THRESHOLDS["maximum_contour_change_ratio"]
+            and metrics["area_change_ratio"]
+            <= CADENCE_COLLAPSE_THRESHOLDS["maximum_area_change_ratio"]
+        )
+        comparisons.append(
+            {
+                "from_source_frame": source_start_frame + index - 1,
+                "to_source_frame": source_start_frame + index,
+                "collapsed": collapsed,
+                **metrics,
+            }
+        )
+        if collapsed:
+            groups[-1].append(index)
+        else:
+            groups.append([index])
+    retained_indices = [group[0] for group in groups]
+    merged_timings = [
+        {
+            "timestamp": float(timings[group[0]]["timestamp"]),
+            "duration": float(sum(timings[index]["duration"] for index in group)),
+        }
+        for group in groups
+    ]
+    source_duration = float(sum(record["duration"] for record in timings))
+    output_duration = float(sum(record["duration"] for record in merged_timings))
+    record = {
+        "schema": CADENCE_COLLAPSE_SCHEMA,
+        "source_frame_count": len(alphas),
+        "output_frame_count": len(retained_indices),
+        "source_frame_groups": [
+            [source_start_frame + index for index in group] for group in groups
+        ],
+        "thresholds": CADENCE_COLLAPSE_THRESHOLDS,
+        "comparisons": comparisons,
+        "source_duration_seconds": source_duration,
+        "output_duration_seconds": output_duration,
+    }
+    return retained_indices, merged_timings, record
+
+
 def _write_png(path: Path, rgba: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(rgba, mode="RGBA").save(path, format="PNG", compress_level=9)
@@ -1777,6 +1843,7 @@ def _parameter_payload(args: argparse.Namespace) -> dict[str, object]:
         "watermark_action": args.watermark_action,
         "watermark_regions": args.watermark_region or [],
         "watermark_removal_authorized": args.watermark_removal_authorized,
+        "collapse_near_duplicate_frames": args.collapse_near_duplicate_frames,
     }
 
 
@@ -2108,6 +2175,23 @@ def run_pipeline(args: argparse.Namespace) -> int:
             "one or more cutout quality gates failed",
             {"failures": frame_failures},
         )
+    retained_indices = list(range(len(cutouts)))
+    cadence_record: dict[str, object] | None = None
+    output_timestamps = selected_timestamps
+    if args.collapse_near_duplicate_frames:
+        retained_indices, output_timestamps, cadence_record = collapse_near_duplicate_frames(
+            [cutout[:, :, 3] for cutout in cutouts],
+            selected_timestamps,
+            source_start_frame=selected.start_frame,
+        )
+        if len(retained_indices) < 3:
+            raise PipelineError(
+                "TEMPORAL_QUALITY_FAILED",
+                "cadence collapse leaves fewer than three output frames",
+                {"cadence": cadence_record},
+            )
+        normalized_frames = [normalized_frames[index] for index in retained_indices]
+        cutouts = [cutouts[index] for index in retained_indices]
     if args.outline_color.lower() == "auto":
         outline_color = estimate_outline_color(cutouts)
     else:
@@ -2160,7 +2244,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
     sheet_metadata = _write_sheet(
         output / "spritesheet.png", final_frames, columns=args.sheet_columns
     )
-    durations = [record["duration"] for record in selected_timestamps]
+    durations = [record["duration"] for record in output_timestamps]
     _write_apng(output / "loop-preview.png", final_frames, durations)
     inspection = _write_inspection(
         output / "inspection", normalized_frames, cutouts, outlined_frames, final_frames
@@ -2185,6 +2269,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
             "passed": watermark_record["passed"],
             "analysis": "analysis/watermark.json",
         },
+        "cadence": cadence_record,
         "failures": [],
         "human_visual_review": "pending",
     }
@@ -2196,7 +2281,8 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "video": asdict(info),
         "parameters": parameters,
         "selected_cycle": asdict(selected),
-        "frame_timing": selected_timestamps,
+        "frame_timing": output_timestamps,
+        "cadence": cadence_record,
         "working_size": working_size,
         "final_size": final_size,
         "spritesheet": sheet_metadata,
@@ -2324,6 +2410,84 @@ def verify_output(output: Path, *, emit: bool = True) -> int:
             )
     timing = job.get("frame_timing", [])
     expected_count = len(timing) if isinstance(timing, list) else 0
+    parameters = job.get("parameters")
+    collapse_requested = (
+        isinstance(parameters, dict)
+        and parameters.get("collapse_near_duplicate_frames") is True
+    )
+    cadence = job.get("cadence")
+    if collapse_requested:
+        selected_cycle_path = output / "analysis" / "selected-cycle.json"
+        if not isinstance(cadence, dict) or cadence.get("schema") != CADENCE_COLLAPSE_SCHEMA:
+            failures.append({"artifact": "job.json", "reason": "invalid cadence record"})
+        elif not selected_cycle_path.is_file():
+            failures.append(
+                {"artifact": "analysis/selected-cycle.json", "reason": "missing cycle record"}
+            )
+        else:
+            selected_cycle_record = _read_json(selected_cycle_path)
+            source_timing = selected_cycle_record.get("frames")
+            selected_cycle = job.get("selected_cycle")
+            cutout_paths = sorted(
+                (output / "frames" / "cutout-high-res").glob("frame-*.png")
+            )
+            if (
+                not isinstance(source_timing, list)
+                or not isinstance(selected_cycle, dict)
+                or not isinstance(selected_cycle.get("start_frame"), int)
+                or len(cutout_paths) != len(source_timing)
+            ):
+                failures.append(
+                    {"artifact": "job.json", "reason": "cadence source evidence is incomplete"}
+                )
+            else:
+                source_alphas: list[np.ndarray] = []
+                try:
+                    for path in cutout_paths:
+                        with Image.open(path) as image:
+                            source_alphas.append(
+                                np.asarray(image.convert("RGBA"), dtype=np.uint8)[:, :, 3]
+                            )
+                    _, expected_timing, expected_cadence = collapse_near_duplicate_frames(
+                        source_alphas,
+                        source_timing,
+                        source_start_frame=int(selected_cycle["start_frame"]),
+                    )
+                except (OSError, TypeError, ValueError) as error:
+                    failures.append(
+                        {
+                            "artifact": "frames/cutout-high-res",
+                            "reason": f"cannot recompute cadence: {error}",
+                        }
+                    )
+                else:
+                    for key in (
+                        "source_frame_count",
+                        "output_frame_count",
+                        "source_frame_groups",
+                        "thresholds",
+                        "comparisons",
+                        "source_duration_seconds",
+                        "output_duration_seconds",
+                    ):
+                        if cadence.get(key) != expected_cadence[key]:
+                            failures.append(
+                                {
+                                    "artifact": "job.json",
+                                    "reason": f"cadence {key} does not match source evidence",
+                                }
+                            )
+                    if timing != expected_timing:
+                        failures.append(
+                            {
+                                "artifact": "job.json",
+                                "reason": "collapsed frame timing does not match source evidence",
+                            }
+                        )
+    elif cadence is not None:
+        failures.append(
+            {"artifact": "job.json", "reason": "cadence record exists without collapse parameter"}
+        )
     final_directory = output / "frames" / "final"
     final_paths = sorted(final_directory.glob("frame-*.png"))
     if len(final_paths) != expected_count or expected_count < 3:
@@ -2539,6 +2703,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     run_parser.add_argument("--watermark-region", action="append", type=_parse_region)
     run_parser.add_argument("--watermark-removal-authorized", action="store_true")
+    run_parser.add_argument("--collapse-near-duplicate-frames", action="store_true")
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.set_defaults(handler=run_pipeline)

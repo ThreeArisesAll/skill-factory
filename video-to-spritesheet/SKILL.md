@@ -31,6 +31,8 @@ Read [references/contracts.md](references/contracts.md) before running the pipel
 
 2. Review duration, frame timing, display rotation, background explainability, ranked cycle candidates, and `watermark_review`. The scanner analyzes every decoded frame and reports detached foreground candidates in display-pixel coordinates. Treat `clear` as machine evidence only and visually inspect the source. Treat `detected` as a review request because an intentional detached prop can resemble a watermark. Stop on `ambiguous`. If the near-solid background changes strongly, keep the original decoded frames as matte authority: cut out and decontaminate against each frame's original background before any stable-background composite.
 
+   If the decoded cadence alternates between visually near-identical holds and materially different motion steps, use `--collapse-near-duplicate-frames` in the formal run. This is deterministic cadence normalization, not frame invention: it retains every source frame and high-resolution cutout as evidence, groups only adjacent near-duplicates after cutout, sums their durations, and records the source-to-output mapping in `job.json`. Leave it disabled when the cadence does not show that pattern.
+
 3. If review confirms the input is clear, run the full pipeline into a new directory. The default `reject` action stops if a candidate is detected:
 
    ```bash
@@ -69,6 +71,7 @@ Read [references/contracts.md](references/contracts.md) before running the pipel
 - Keep `--background-mode edge-connected` unless visual review establishes that the character palette does not overlap any admitted background color. In that proven case, use `--background-mode global` to clear admitted background colors from enclosed gaps as well as the exterior; never use it to force a result when palette overlap is uncertain.
 - Use `--watermark-background-tolerance N` when the broad tolerance needed for watermark review differs from the tighter original-background matte tolerance. It affects only watermark analysis and repair, never the character cutout.
 - Use `--cycle-start SECONDS --cycle-end SECONDS` together for an explicit inclusive interval.
+- Use `--collapse-near-duplicate-frames` only after cadence review establishes adjacent near-duplicate holds. The verifier recomputes the groups from the retained high-resolution cutouts and requires total selected-cycle duration to remain unchanged.
 - Use `--sheet-columns N`; the default is four. Unused cells remain RGBA zero.
 - Use `--outline-color auto` to estimate one shared color from the character's existing outer contour.
 - Use `--outline-reference /absolute/path/reference.png` whenever the result must match an existing production set. The run independently estimates the reference's external contour color and fails if the selected color differs by more than `--outline-reference-max-distance` (default 6.0 in Lab space).
@@ -95,6 +98,7 @@ Deliver `job.json`, `quality-report.json`, `analysis/watermark.json`, cleaned se
 - The input and selected cycle
 - Working and final geometry
 - Frame count and timing behavior
+- Cadence-collapse status, original and output frame counts, source-frame groups, and duration conservation
 - Watermark pre-scan status, authorization claim, reviewed regions, removal method, and post-scan status
 - Synthetic and real-animation gate results
 - Machine verification status

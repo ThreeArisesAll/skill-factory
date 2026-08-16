@@ -277,6 +277,97 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         return video
 
+    def _make_duplicate_cadence_video(self, root: Path) -> Path:
+        source = root / "source"
+        source.mkdir()
+        for pose_index in range(12):
+            image = Image.new("RGB", (128, 96), (122, 24, 61))
+            draw = ImageDraw.Draw(image)
+            phase = 2 * np.pi * pose_index / 11
+            x = 64 + int(round(10 * np.sin(phase)))
+            y = 49 + int(round(4 * np.cos(phase)))
+            draw.ellipse(
+                (x - 25, y - 29, x + 25, y + 29),
+                fill=(27, 23, 31),
+                outline=(18, 14, 22),
+                width=4,
+            )
+            draw.ellipse((x - 19, y - 23, x + 19, y + 23), fill=(230, 184, 95))
+            for duplicate_index in range(2):
+                frame_index = pose_index * 2 + duplicate_index
+                frame = image.copy()
+                if duplicate_index:
+                    frame.putpixel((x + 26, y), (18, 14, 22))
+                frame.save(source / f"frame-{frame_index:04d}.png")
+        video = root / "input.mkv"
+        completed = subprocess.run(
+            [
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                "-framerate", "24", "-i", str(source / "frame-%04d.png"),
+                "-c:v", "ffv1", str(video),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        return video
+
+    def test_cli_collapses_adjacent_duplicate_cadence_and_preserves_timing(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            video = self._make_duplicate_cadence_video(root)
+            output = root / "output"
+            result = MODULE.main(
+                [
+                    "run", "--input", str(video), "--output", str(output),
+                    "--target-short-edge", "64", "--cycle-start", "0",
+                    "--cycle-end", str(23 / 24),
+                    "--collapse-near-duplicate-frames",
+                ]
+            )
+            self.assertEqual(result, 0)
+            job = json.loads((output / "job.json").read_text(encoding="utf-8"))
+            self.assertEqual(job["input"]["sha256"], MODULE._sha256(video))
+            self.assertEqual(job["cadence"]["schema"], "adjacent-near-duplicate-collapse/v1")
+            self.assertEqual(job["cadence"]["source_frame_count"], 24)
+            self.assertEqual(job["cadence"]["output_frame_count"], 12)
+            self.assertEqual(
+                job["cadence"]["source_frame_groups"],
+                [[index, index + 1] for index in range(0, 24, 2)],
+            )
+            selected_cycle = json.loads(
+                (output / "analysis" / "selected-cycle.json").read_text(encoding="utf-8")
+            )
+            self.assertAlmostEqual(
+                sum(frame["duration"] for frame in job["frame_timing"]),
+                sum(frame["duration"] for frame in selected_cycle["frames"]),
+                places=9,
+            )
+            self.assertEqual(MODULE.verify_output(output, emit=False), 0)
+
+    def test_verify_rejects_tampered_cadence_mapping(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            video = self._make_duplicate_cadence_video(root)
+            output = root / "output"
+            with redirect_stdout(io.StringIO()):
+                result = MODULE.main(
+                    [
+                        "run", "--input", str(video), "--output", str(output),
+                        "--target-short-edge", "64", "--cycle-start", "0",
+                        "--cycle-end", str(23 / 24),
+                        "--collapse-near-duplicate-frames",
+                    ]
+                )
+            self.assertEqual(result, 0)
+            job_path = output / "job.json"
+            job = json.loads(job_path.read_text(encoding="utf-8"))
+            job["cadence"]["source_frame_groups"][0] = [0, 2]
+            job_path.write_text(json.dumps(job), encoding="utf-8")
+            with self.assertRaisesRegex(MODULE.PipelineError, "verification failed"):
+                MODULE.verify_output(output, emit=False)
+
     def test_cli_inspect_reports_watermark_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
