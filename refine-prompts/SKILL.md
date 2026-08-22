@@ -30,6 +30,8 @@ Treat the “real need” as a reasoned hypothesis, not hidden knowledge about t
 ## Handle missing information
 
 - Choose a sensible default for low-impact gaps and state it only when it affects the result.
+- Treat a gap as material only when resolving it would change the task's scope, method, hard constraints, or acceptance criteria, or when the task cannot be completed reliably without the missing input.
+- Before adding a material placeholder, apply this test: if the downstream task can still be completed without inventing facts by staying appropriately general or explicitly noting a limitation, keep the prompt copy-ready and encode that constraint instead of adding a placeholder.
 - Use a concise labeled placeholder such as `[Target audience]` or `[Budget range]` for missing information that the user must supply.
 - When material gaps cannot be resolved with a sensible default, represent them with labeled assumptions or placeholders in one provisional optimized prompt.
 - Ask one to three questions after the provisional prompt. Ask only the highest-leverage questions, and make each question correspond to an assumption or placeholder that materially affects the prompt.
