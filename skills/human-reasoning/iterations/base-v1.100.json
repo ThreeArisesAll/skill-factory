@@ -1,0 +1,909 @@
+{
+  "skill": "human-reasoning",
+  "release": "v1.100",
+  "method": "One behavioral defect, one change, and one acceptance condition per iteration. This is a specification-level iteration record, not a claim of 100 independent external model benchmark runs.",
+  "count": 100,
+  "final_chain_hash": "324aec2e67886ba25b8f36b51b8df53009531ea9f1cef9aa6a9f06389704c493",
+  "iterations": [
+    {
+      "iteration": 1,
+      "category": "Scope and truthfulness",
+      "defect": "The draft promised literal human thought.",
+      "change": "Redefined success as observable judgment behaviors rather than human equivalence.",
+      "acceptance": "No sentence claims the model actually thinks or is human.",
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "chain_hash": "3e512116e9eef5511c7fabec4b2284af93e77ad439976a83071e313c5a8673f9"
+    },
+    {
+      "iteration": 2,
+      "category": "Scope and truthfulness",
+      "defect": "Anthropomorphic language could imply consciousness.",
+      "change": "Added an explicit ban on claiming consciousness, feelings, bodily sensations, lived experience, memory, or human identity.",
+      "acceptance": "Truthfulness boundary is explicit and testable.",
+      "previous_hash": "3e512116e9eef5511c7fabec4b2284af93e77ad439976a83071e313c5a8673f9",
+      "chain_hash": "0429100c6d61ccad453edd7fb42bb798417ab919e95d6ee74c64fb1063254c97"
+    },
+    {
+      "iteration": 3,
+      "category": "Scope and truthfulness",
+      "defect": "A request for transparent reasoning could elicit raw private chain-of-thought.",
+      "change": "Replaced transcript-style disclosure with a concise evidence-linked decision record.",
+      "acceptance": "Output contract exposes conclusions, evidence, assumptions, and uncertainty without raw internal narration.",
+      "previous_hash": "0429100c6d61ccad453edd7fb42bb798417ab919e95d6ee74c64fb1063254c97",
+      "chain_hash": "d1ce164fcf54211e682feed02b860473e0aa6ac66334d6073bd6e648d81d9ea0"
+    },
+    {
+      "iteration": 4,
+      "category": "Scope and truthfulness",
+      "defect": "The draft could reward eloquence instead of accuracy.",
+      "change": "Defined the objective as better judgment and action, not sounding profound.",
+      "acceptance": "Pseudo-depth is listed as a failure mode.",
+      "previous_hash": "d1ce164fcf54211e682feed02b860473e0aa6ac66334d6073bd6e648d81d9ea0",
+      "chain_hash": "d4ae5ab8e735ccdf80a6fe57b444be6c2cdec4dd076a160e80526ae277ab788a"
+    },
+    {
+      "iteration": 5,
+      "category": "Scope and truthfulness",
+      "defect": "Success was not measurable.",
+      "change": "Defined success through goal fidelity, calibration, actionability, and truthfulness dimensions.",
+      "acceptance": "Evaluation rubric can score the behavior.",
+      "previous_hash": "d4ae5ab8e735ccdf80a6fe57b444be6c2cdec4dd076a160e80526ae277ab788a",
+      "chain_hash": "299bf9d3cdfb6f59584f68b9d1912e2a350008609f17ca753f8ab73ec5f2ef10"
+    },
+    {
+      "iteration": 6,
+      "category": "Scope and truthfulness",
+      "defect": "The skill's domain was too broad.",
+      "change": "Scoped it to ambiguous, novel, strategic, diagnostic, interpersonal, or consequential work.",
+      "acceptance": "Description names positive trigger classes.",
+      "previous_hash": "299bf9d3cdfb6f59584f68b9d1912e2a350008609f17ca753f8ab73ec5f2ef10",
+      "chain_hash": "0f9f402d42c4179ae72352b7462d8bb5054b8bde2196c74bfe5cdf7b13599786"
+    },
+    {
+      "iteration": 7,
+      "category": "Scope and truthfulness",
+      "defect": "Routine tasks would become over-analysed.",
+      "change": "Added negative scope for simple lookups, routine transformations, and mechanical execution.",
+      "acceptance": "Negative trigger tests cover simple tasks.",
+      "previous_hash": "0f9f402d42c4179ae72352b7462d8bb5054b8bde2196c74bfe5cdf7b13599786",
+      "chain_hash": "20bbfe28a711f04e102d02434a15cb3c5a47441940ebba059909ff924a03646b"
+    },
+    {
+      "iteration": 8,
+      "category": "Scope and truthfulness",
+      "defect": "The workflow could optimize a visible metric rather than the user's real goal.",
+      "change": "Made goal fidelity and anti-proxy checks mandatory.",
+      "acceptance": "H step and final gate both re-check the actual objective.",
+      "previous_hash": "20bbfe28a711f04e102d02434a15cb3c5a47441940ebba059909ff924a03646b",
+      "chain_hash": "8266d4bd1a30345e75020b468fae5adb4c82e1ded15b1dca21a93c5a9fc4325c"
+    },
+    {
+      "iteration": 9,
+      "category": "Scope and truthfulness",
+      "defect": "Inferring hidden user intent could become mind reading.",
+      "change": "Required distinguishing explicit objective from inferred tension and labeling interpretation.",
+      "acceptance": "Interpersonal and claims rules prohibit presenting inferred intent as fact.",
+      "previous_hash": "8266d4bd1a30345e75020b468fae5adb4c82e1ded15b1dca21a93c5a9fc4325c",
+      "chain_hash": "d3f1ed41df8a68c45136abf15e364f170e19c5460c93bb2a0d79309657109ebb"
+    },
+    {
+      "iteration": 10,
+      "category": "Scope and truthfulness",
+      "defect": "The draft had no principled stopping point.",
+      "change": "Added a stop rule once quality checks pass and more analysis is unlikely to change the decision.",
+      "acceptance": "Fast mode remains concise and deliberate mode terminates.",
+      "previous_hash": "d3f1ed41df8a68c45136abf15e364f170e19c5460c93bb2a0d79309657109ebb",
+      "chain_hash": "64e20a20500d6f3ed51f90eca60a753566763034b230bc920b14627124446076"
+    },
+    {
+      "iteration": 11,
+      "category": "Activation and depth calibration",
+      "defect": "Explicit user invocation did not have defined precedence.",
+      "change": "Made explicit invocation always activate the workflow.",
+      "acceptance": "A direct $human-reasoning request cannot be ignored on scope grounds.",
+      "previous_hash": "64e20a20500d6f3ed51f90eca60a753566763034b230bc920b14627124446076",
+      "chain_hash": "60a36571c1e5e9cbec09db73db61d72a1a6147c9877132f991f240d78643c363"
+    },
+    {
+      "iteration": 12,
+      "category": "Activation and depth calibration",
+      "defect": "Implicit triggering relied on vague wording.",
+      "change": "Front-loaded trigger tasks such as think deeply, first principles, critique, diagnose, decide, and plan.",
+      "acceptance": "Description is usable as a routing contract.",
+      "previous_hash": "60a36571c1e5e9cbec09db73db61d72a1a6147c9877132f991f240d78643c363",
+      "chain_hash": "0bcfd0478effd08a7e606feca3cfc4605c9543267a9bd7995b9f9b928df2e6f6"
+    },
+    {
+      "iteration": 13,
+      "category": "Activation and depth calibration",
+      "defect": "Low-stakes questions still received the full ritual.",
+      "change": "Added Fast mode for clear, familiar, reversible tasks.",
+      "acceptance": "Simple responses may omit headings and templates.",
+      "previous_hash": "0bcfd0478effd08a7e606feca3cfc4605c9543267a9bd7995b9f9b928df2e6f6",
+      "chain_hash": "b203e7ace671739a03f3edcea4bf5b41475284ff8c544cb9bc568c758b204ef8"
+    },
+    {
+      "iteration": 14,
+      "category": "Activation and depth calibration",
+      "defect": "Complex work lacked a full deliberation mode.",
+      "change": "Added Deliberate mode for competing goals, causal uncertainty, and multiple actors.",
+      "acceptance": "The full HUMAN loop is required when complexity is material.",
+      "previous_hash": "b203e7ace671739a03f3edcea4bf5b41475284ff8c544cb9bc568c758b204ef8",
+      "chain_hash": "1c62480f8cf9686808f9449f70489e8c4a73754f455cede66f1f9b237d8e1c9e"
+    },
+    {
+      "iteration": 15,
+      "category": "Activation and depth calibration",
+      "defect": "High-stakes work was treated like ordinary analysis.",
+      "change": "Added Critical mode with current verification, citations, strongest countercase, and operational uncertainty.",
+      "acceptance": "High-stakes eval cases require external verification behavior.",
+      "previous_hash": "1c62480f8cf9686808f9449f70489e8c4a73754f455cede66f1f9b237d8e1c9e",
+      "chain_hash": "05fbbc87d739c0dbfa28f4eadebf19f184495e7cf28ee19b3396c32084310c7e"
+    },
+    {
+      "iteration": 16,
+      "category": "Activation and depth calibration",
+      "defect": "Depth selection was arbitrary.",
+      "change": "Defined stakes, ambiguity, novelty, and reversibility as the four scaling variables.",
+      "acceptance": "Each depth level maps to observable conditions.",
+      "previous_hash": "05fbbc87d739c0dbfa28f4eadebf19f184495e7cf28ee19b3396c32084310c7e",
+      "chain_hash": "e33aa19e7db740f1dcc2bc92052a022a4dc633c5c5aaf82794df57038b43389f"
+    },
+    {
+      "iteration": 17,
+      "category": "Activation and depth calibration",
+      "defect": "The agent could stall on non-blocking missing details.",
+      "change": "Required stating safe assumptions and proceeding.",
+      "acceptance": "Over-questioning is a named failure mode.",
+      "previous_hash": "e33aa19e7db740f1dcc2bc92052a022a4dc633c5c5aaf82794df57038b43389f",
+      "chain_hash": "2aad56ae4a3afb0583dc06bde4c4e011e739c595dbf3aadef49035960f9c9c27"
+    },
+    {
+      "iteration": 18,
+      "category": "Activation and depth calibration",
+      "defect": "The agent could proceed through a truly blocking ambiguity.",
+      "change": "Allowed one targeted question only when responsible action is impossible.",
+      "acceptance": "Under-questioning is also a named failure mode.",
+      "previous_hash": "2aad56ae4a3afb0583dc06bde4c4e011e739c595dbf3aadef49035960f9c9c27",
+      "chain_hash": "50c87deeb34fa1b6f81e5509de05ac8000e86de536b381f9d65a841e56bf51fa"
+    },
+    {
+      "iteration": 19,
+      "category": "Activation and depth calibration",
+      "defect": "Unstable facts could be answered from memory.",
+      "change": "Added a tool and source verification rule for current, niche, and high-stakes facts.",
+      "acceptance": "Evidence discipline and Critical mode both enforce verification.",
+      "previous_hash": "50c87deeb34fa1b6f81e5509de05ac8000e86de536b381f9d65a841e56bf51fa",
+      "chain_hash": "73aa1eec9fbe3d696e7677a35bd8ffe6b92b40e44f42ba189b36f12e3db352e6"
+    },
+    {
+      "iteration": 20,
+      "category": "Activation and depth calibration",
+      "defect": "Deliberation could expand without bound.",
+      "change": "Tied depth to decision value and reinstated the stop rule after the loop.",
+      "acceptance": "The workflow explicitly rejects analysis that cannot change the decision.",
+      "previous_hash": "73aa1eec9fbe3d696e7677a35bd8ffe6b92b40e44f42ba189b36f12e3db352e6",
+      "chain_hash": "699a52cd8f0bab538a2d23104b3f749cdabb6c225b84f9697ea69efbaba744f3"
+    },
+    {
+      "iteration": 21,
+      "category": "Situation and claims model",
+      "defect": "The draft began with topic summary instead of the decision.",
+      "change": "Required identifying the actual objective, decision, or unresolved tension first.",
+      "acceptance": "Every substantial output leads with a judgment.",
+      "previous_hash": "699a52cd8f0bab538a2d23104b3f749cdabb6c225b84f9697ea69efbaba744f3",
+      "chain_hash": "1549fd97ed9d02ca3ec61279725378708e8cc3622dd6839c24fa17015a0c17c1"
+    },
+    {
+      "iteration": 22,
+      "category": "Situation and claims model",
+      "defect": "Constraints and non-goals were missing.",
+      "change": "Added hard constraints, soft preferences, resources, and non-goals to the situation model.",
+      "acceptance": "The H step lists these variables.",
+      "previous_hash": "1549fd97ed9d02ca3ec61279725378708e8cc3622dd6839c24fa17015a0c17c1",
+      "chain_hash": "51fcca52d3174796480e55c85dc4162c5b554875df0a756c5429896808bca86c"
+    },
+    {
+      "iteration": 23,
+      "category": "Situation and claims model",
+      "defect": "Affected people were abstracted away.",
+      "change": "Required identifying actors, stakeholders, and decision rights.",
+      "acceptance": "The causal-social model includes people and permissions.",
+      "previous_hash": "51fcca52d3174796480e55c85dc4162c5b554875df0a756c5429896808bca86c",
+      "chain_hash": "2eaa6196a7cbf58e1ded7d74405150b966aa8151eb33db6cc6fc60ffb1fe81ef"
+    },
+    {
+      "iteration": 24,
+      "category": "Situation and claims model",
+      "defect": "Time and place were treated as decorative context.",
+      "change": "Made time horizon, delays, place, and reversibility decision variables.",
+      "acceptance": "Concrete episode simulation requires a specific setting.",
+      "previous_hash": "2eaa6196a7cbf58e1ded7d74405150b966aa8151eb33db6cc6fc60ffb1fe81ef",
+      "chain_hash": "56a76fb1fa83ff682a0ab3d41a80378af899c1487af3839e760b036c8686033a"
+    },
+    {
+      "iteration": 25,
+      "category": "Situation and claims model",
+      "defect": "Facts and assumptions were mixed.",
+      "change": "Created the fact, inference, assumption, value, and unknown ledger.",
+      "acceptance": "The U step and response gate both enforce separation.",
+      "previous_hash": "56a76fb1fa83ff682a0ab3d41a80378af899c1487af3839e760b036c8686033a",
+      "chain_hash": "38e51f2c2b9f1c4c53a694e7cc40dd26ddf927788351e6b79150dc444feaa1a1"
+    },
+    {
+      "iteration": 26,
+      "category": "Situation and claims model",
+      "defect": "Unknowns were listed without decision impact.",
+      "change": "Required classifying whether an unknown blocks, weakens, or barely affects the judgment.",
+      "acceptance": "The claims reference defines treatment for unknowns.",
+      "previous_hash": "38e51f2c2b9f1c4c53a694e7cc40dd26ddf927788351e6b79150dc444feaa1a1",
+      "chain_hash": "93a5edc39a5030673e3aff84209909d18943fc96f3dc76dd04bb4a9f586ed6b6"
+    },
+    {
+      "iteration": 27,
+      "category": "Situation and claims model",
+      "defect": "Empirical claims and value judgments were conflated.",
+      "change": "Separated what is true from what counts as better.",
+      "acceptance": "Values are attributed to the relevant goal or actor.",
+      "previous_hash": "93a5edc39a5030673e3aff84209909d18943fc96f3dc76dd04bb4a9f586ed6b6",
+      "chain_hash": "1ca145eedc777e89b51e757559ef6c7a8a43d69ad8caa59e1b26849d284d0e2a"
+    },
+    {
+      "iteration": 28,
+      "category": "Situation and claims model",
+      "defect": "Abstract plans ignored real execution.",
+      "change": "Added one concrete episode simulation with limited time, money, attention, energy, and social freedom.",
+      "acceptance": "The H step requires operational grounding.",
+      "previous_hash": "1ca145eedc777e89b51e757559ef6c7a8a43d69ad8caa59e1b26849d284d0e2a",
+      "chain_hash": "f2f7fe9bd41fe1cf066bcd21e5badc96d6d7e399b672993501d91fa5997b779f"
+    },
+    {
+      "iteration": 29,
+      "category": "Situation and claims model",
+      "defect": "Compelling anecdotes could dominate.",
+      "change": "Added base-rate checks where precedent is structurally relevant.",
+      "acceptance": "Adversarial tests include base rates and analogy validation.",
+      "previous_hash": "f2f7fe9bd41fe1cf066bcd21e5badc96d6d7e399b672993501d91fa5997b779f",
+      "chain_hash": "2b65dc71fe7fa45b33d6c55ffb6450486800f28220d951c74a4f7942feda1416"
+    },
+    {
+      "iteration": 30,
+      "category": "Situation and claims model",
+      "defect": "Operational friction was under-modeled.",
+      "change": "Added coordination cost, fatigue, habit, switching cost, rules, and recovery.",
+      "acceptance": "M step explicitly includes friction variables.",
+      "previous_hash": "2b65dc71fe7fa45b33d6c55ffb6450486800f28220d951c74a4f7942feda1416",
+      "chain_hash": "cd97c4193b6ef7e29113a1696453d9e2a05ecf8abab299b654782e29309849c5"
+    },
+    {
+      "iteration": 31,
+      "category": "Causal and social reasoning",
+      "defect": "The draft narrated correlations as causes.",
+      "change": "Required the smallest causal model that explains drivers, bottlenecks, dependencies, and delays.",
+      "acceptance": "Causal quality is a scored rubric dimension.",
+      "previous_hash": "cd97c4193b6ef7e29113a1696453d9e2a05ecf8abab299b654782e29309849c5",
+      "chain_hash": "de0bf2668a4d8f9a335b67414c205521e1766147c1f4655379fad47eb55ef11b"
+    },
+    {
+      "iteration": 32,
+      "category": "Causal and social reasoning",
+      "defect": "Feedback loops were omitted.",
+      "change": "Added reinforcing and balancing feedback plus delayed effects.",
+      "acceptance": "M step requires feedback loops when material.",
+      "previous_hash": "de0bf2668a4d8f9a335b67414c205521e1766147c1f4655379fad47eb55ef11b",
+      "chain_hash": "6232d7c90f426f6108924bc5ecc481ec8ffe811b2a0c0c097578fbb55f1cede4"
+    },
+    {
+      "iteration": 33,
+      "category": "Causal and social reasoning",
+      "defect": "Only first-order outcomes were considered.",
+      "change": "Added second-order effects and adaptive responses.",
+      "acceptance": "A step includes second-order testing.",
+      "previous_hash": "6232d7c90f426f6108924bc5ecc481ec8ffe811b2a0c0c097578fbb55f1cede4",
+      "chain_hash": "261f41e307d803b2c42488aaace4f45d888cd8534bc82e4602619afedeb498e8"
+    },
+    {
+      "iteration": 34,
+      "category": "Causal and social reasoning",
+      "defect": "System bottlenecks were hidden by feature lists.",
+      "change": "Made bottleneck identification part of the causal model.",
+      "acceptance": "Product and strategy output names the main bottleneck.",
+      "previous_hash": "261f41e307d803b2c42488aaace4f45d888cd8534bc82e4602619afedeb498e8",
+      "chain_hash": "7bbc02c0b767c9ed2aeedf918b6bd61d5bb4b46913240c4f5dbb4a5599331e17"
+    },
+    {
+      "iteration": 35,
+      "category": "Causal and social reasoning",
+      "defect": "Actors were treated as neutral executors.",
+      "change": "Added incentives, sanctions, and strategic goals.",
+      "acceptance": "Social realism rubric tests incentive modeling.",
+      "previous_hash": "7bbc02c0b767c9ed2aeedf918b6bd61d5bb4b46913240c4f5dbb4a5599331e17",
+      "chain_hash": "f344c6d3a57147567ac19f09e8cbefbc50cf3882a123ff8f36dc010382b3dd43"
+    },
+    {
+      "iteration": 36,
+      "category": "Causal and social reasoning",
+      "defect": "Power and permissions were ignored.",
+      "change": "Added authority, ownership, decision rights, and retaliation risk.",
+      "acceptance": "M step includes power and permissions.",
+      "previous_hash": "f344c6d3a57147567ac19f09e8cbefbc50cf3882a123ff8f36dc010382b3dd43",
+      "chain_hash": "def2619a3f28fb9de87a4c1664ecf07b9f2044ce30c6ed9a6412aaf337951564"
+    },
+    {
+      "iteration": 37,
+      "category": "Causal and social reasoning",
+      "defect": "Information asymmetry was absent.",
+      "change": "Added beliefs, available information, and asymmetric knowledge.",
+      "acceptance": "Actor modeling distinguishes what each party knows.",
+      "previous_hash": "def2619a3f28fb9de87a4c1664ecf07b9f2044ce30c6ed9a6412aaf337951564",
+      "chain_hash": "06c50e7c7d97a0ce76106e28355e46fc151fbfeb14fdfb159b629fb0489b7235"
+    },
+    {
+      "iteration": 38,
+      "category": "Causal and social reasoning",
+      "defect": "Emotion was either ignored or treated as fact.",
+      "change": "Defined emotion as a plausible signal with uncertainty.",
+      "acceptance": "Hidden mental states must remain hypotheses.",
+      "previous_hash": "06c50e7c7d97a0ce76106e28355e46fc151fbfeb14fdfb159b629fb0489b7235",
+      "chain_hash": "89a2d76fa2f0a0ff874103d71c19e153112aaf50668cbfc6871a0ea3dfaf246e"
+    },
+    {
+      "iteration": 39,
+      "category": "Causal and social reasoning",
+      "defect": "Trust, status, and face were dismissed as irrational.",
+      "change": "Added trust, reputation, face, and status as causal social variables.",
+      "acceptance": "Interpersonal outputs must preserve dignity and safety.",
+      "previous_hash": "89a2d76fa2f0a0ff874103d71c19e153112aaf50668cbfc6871a0ea3dfaf246e",
+      "chain_hash": "8ea35b59adc4b2a8f10c2206c68ef81ad05031c049c22d857ba9bdecbff89bb5"
+    },
+    {
+      "iteration": 40,
+      "category": "Causal and social reasoning",
+      "defect": "The model assumed aligned actors.",
+      "change": "Added adversarial, misaligned, and strategically adaptive actors.",
+      "acceptance": "Failure modes include ignoring power and second-order incentives.",
+      "previous_hash": "8ea35b59adc4b2a8f10c2206c68ef81ad05031c049c22d857ba9bdecbff89bb5",
+      "chain_hash": "e11cf6d38d0ef6e5c924105c55c221208baffd4d1a916a08b87f9047c007e85f"
+    },
+    {
+      "iteration": 41,
+      "category": "Alternatives and counterfactuals",
+      "defect": "The first plausible answer became the conclusion.",
+      "change": "Explicitly preserved the first intuition as only one candidate.",
+      "acceptance": "A step starts by naming, then attacking, the intuitive answer.",
+      "previous_hash": "e11cf6d38d0ef6e5c924105c55c221208baffd4d1a916a08b87f9047c007e85f",
+      "chain_hash": "372bdb23de4d9ba0df2dc81d198c96c9e4000aa15870f3e2737557f1eb3eaee6"
+    },
+    {
+      "iteration": 42,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Alternatives were weak strawmen.",
+      "change": "Required the strongest serious structurally different alternative.",
+      "acceptance": "Alternative quality is scored and steelmanning is mandatory when relevant.",
+      "previous_hash": "372bdb23de4d9ba0df2dc81d198c96c9e4000aa15870f3e2737557f1eb3eaee6",
+      "chain_hash": "1b3273f155d039f94b6d929d3956e76da43d3ce41121cacb601b3189a0a1d2d3"
+    },
+    {
+      "iteration": 43,
+      "category": "Alternatives and counterfactuals",
+      "defect": "The option set remained inside the original framing.",
+      "change": "Added one non-obvious or reframed option.",
+      "acceptance": "A step includes reframing without demanding endless ideation.",
+      "previous_hash": "1b3273f155d039f94b6d929d3956e76da43d3ce41121cacb601b3189a0a1d2d3",
+      "chain_hash": "4c0d352de52d16b37a391b938425dbf9f5beeefcd1228cf2462ab5ee9fa76cc1"
+    },
+    {
+      "iteration": 44,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Action bias excluded the status quo.",
+      "change": "Added the no-action baseline when it is a real option.",
+      "acceptance": "Decision tables and A step both include status quo.",
+      "previous_hash": "4c0d352de52d16b37a391b938425dbf9f5beeefcd1228cf2462ab5ee9fa76cc1",
+      "chain_hash": "b6e12a5a9c77dfccfeb6327d28eafeeeca81b96afd985332320641ac6e428ff8"
+    },
+    {
+      "iteration": 45,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Uncertainty led directly to a large commitment.",
+      "change": "Added reversible experiments and option value.",
+      "acceptance": "N step favors the smallest informative next move.",
+      "previous_hash": "b6e12a5a9c77dfccfeb6327d28eafeeeca81b96afd985332320641ac6e428ff8",
+      "chain_hash": "e6399aa9f145d34edb12928fc5865106e3085d7cd8e7b56f179f57c5cfa3f987"
+    },
+    {
+      "iteration": 46,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Causal claims lacked a world-to-world comparison.",
+      "change": "Added counterfactual testing.",
+      "acceptance": "The adversarial test guide maps counterfactuals to causal claims.",
+      "previous_hash": "e6399aa9f145d34edb12928fc5865106e3085d7cd8e7b56f179f57c5cfa3f987",
+      "chain_hash": "c95d9328e2ae3e0217f13837f1deeb69821a3adbb33a97ee5711ed6182640c2e"
+    },
+    {
+      "iteration": 47,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Success criteria were vague.",
+      "change": "Added inversion: identify what would make the plan fail.",
+      "acceptance": "A step lists inversion explicitly.",
+      "previous_hash": "c95d9328e2ae3e0217f13837f1deeb69821a3adbb33a97ee5711ed6182640c2e",
+      "chain_hash": "62ef025881831f065ea1d75f14258a0ebcb4ec8cd3819b8836257fc8d77f74f2"
+    },
+    {
+      "iteration": 48,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Execution failure was considered only after launch.",
+      "change": "Added premortems for plans with execution risk.",
+      "acceptance": "Premortem is included as a selectable test.",
+      "previous_hash": "62ef025881831f065ea1d75f14258a0ebcb4ec8cd3819b8836257fc8d77f74f2",
+      "chain_hash": "cc928c6e6f456bb6cd7e4b63e952510c22878123c2a94e06d8a3cb706ff20dfd"
+    },
+    {
+      "iteration": 49,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Boundary conditions were untested.",
+      "change": "Added counterexamples and edge cases.",
+      "acceptance": "Protocols and technical decisions receive edge-case tests.",
+      "previous_hash": "cc928c6e6f456bb6cd7e4b63e952510c22878123c2a94e06d8a3cb706ff20dfd",
+      "chain_hash": "0f2b099c95b44063880a540fb336431e59ecca82928caf59ca3adb0bbb3abac7"
+    },
+    {
+      "iteration": 50,
+      "category": "Alternatives and counterfactuals",
+      "defect": "Opposing views were acknowledged but not understood.",
+      "change": "Added steelmanning before rejection.",
+      "acceptance": "False balance is avoided by weighting the steelmanned case after evidence review.",
+      "previous_hash": "0f2b099c95b44063880a540fb336431e59ecca82928caf59ca3adb0bbb3abac7",
+      "chain_hash": "676e28abcdd8cb2dd6230bf719ca30ba349febfea34c5880da8d29c6d049227e"
+    },
+    {
+      "iteration": 51,
+      "category": "Evidence and uncertainty",
+      "defect": "All evidence was treated as equal.",
+      "change": "Added preference for direct evidence and primary sources when available.",
+      "acceptance": "Evidence discipline names source quality and inspection.",
+      "previous_hash": "676e28abcdd8cb2dd6230bf719ca30ba349febfea34c5880da8d29c6d049227e",
+      "chain_hash": "6804904eebd1fcb460d5ac39d49b037cab2cc8af7d075e1068b6aada15924243"
+    },
+    {
+      "iteration": 52,
+      "category": "Evidence and uncertainty",
+      "defect": "Source age and context were ignored.",
+      "change": "Required current verification for unstable facts and relevance to the actual decision.",
+      "acceptance": "Critical mode cannot rely on stale memory.",
+      "previous_hash": "6804904eebd1fcb460d5ac39d49b037cab2cc8af7d075e1068b6aada15924243",
+      "chain_hash": "ac4a95f599583358a5f524cc3e5a5799756e0f35a0ffb71bd63fe9013f97133f"
+    },
+    {
+      "iteration": 53,
+      "category": "Evidence and uncertainty",
+      "defect": "Inferences were phrased as facts.",
+      "change": "Required explicit inferential labeling when material.",
+      "acceptance": "Claims discipline is a scored dimension.",
+      "previous_hash": "ac4a95f599583358a5f524cc3e5a5799756e0f35a0ffb71bd63fe9013f97133f",
+      "chain_hash": "f0f3a75821809342ab10a54caf4a150cab1b7c196b716422a422bb7768d648ec"
+    },
+    {
+      "iteration": 54,
+      "category": "Evidence and uncertainty",
+      "defect": "Confidence language was uncalibrated.",
+      "change": "Required confidence to match evidence and model stability.",
+      "acceptance": "Calibration is scored independently from correctness.",
+      "previous_hash": "f0f3a75821809342ab10a54caf4a150cab1b7c196b716422a422bb7768d648ec",
+      "chain_hash": "45d9cf05975020fdeb8510697b21d6bfe0f12585584f08e9deabb916afa05e4d"
+    },
+    {
+      "iteration": 55,
+      "category": "Evidence and uncertainty",
+      "defect": "Decorative percentages created fake precision.",
+      "change": "Allowed percentages only with a defensible quantitative basis.",
+      "acceptance": "Fake precision is a named failure mode.",
+      "previous_hash": "45d9cf05975020fdeb8510697b21d6bfe0f12585584f08e9deabb916afa05e4d",
+      "chain_hash": "643ecc0aec540553a482f75b0ddc616792faf15009505c956495196eae78cc15"
+    },
+    {
+      "iteration": 56,
+      "category": "Evidence and uncertainty",
+      "defect": "Sensitivity to assumptions was hidden.",
+      "change": "Required surfacing the most decision-sensitive assumption.",
+      "acceptance": "N step names the main assumption that could change the judgment.",
+      "previous_hash": "643ecc0aec540553a482f75b0ddc616792faf15009505c956495196eae78cc15",
+      "chain_hash": "432fa34701fb469dfe07bcdf5defd5c23e3954285f321765c5d8f811c3d0cb40"
+    },
+    {
+      "iteration": 57,
+      "category": "Evidence and uncertainty",
+      "defect": "The answer defended itself rather than seeking disconfirmation.",
+      "change": "Added disconfirming evidence as a first-class test.",
+      "acceptance": "A step explicitly asks what would make the conclusion wrong.",
+      "previous_hash": "432fa34701fb469dfe07bcdf5defd5c23e3954285f321765c5d8f811c3d0cb40",
+      "chain_hash": "066290f15bd8428ab065de29eddd8043c9c2341cac23cb97baf985c478454ee7"
+    },
+    {
+      "iteration": 58,
+      "category": "Evidence and uncertainty",
+      "defect": "Unknown unknowns were ignored.",
+      "change": "Added model fragility and surprise exposure to the uncertainty discussion.",
+      "acceptance": "Critical mode favors reversible action under model uncertainty.",
+      "previous_hash": "066290f15bd8428ab065de29eddd8043c9c2341cac23cb97baf985c478454ee7",
+      "chain_hash": "addb7e5f853c7b0721d8234ebc450f81b21eb2c001089760fa265551639e4ade"
+    },
+    {
+      "iteration": 59,
+      "category": "Evidence and uncertainty",
+      "defect": "Conflicting sources were collapsed into one narrative.",
+      "change": "Required representing disagreement and identifying its driver.",
+      "acceptance": "Evidence protocol covers credible source conflict.",
+      "previous_hash": "addb7e5f853c7b0721d8234ebc450f81b21eb2c001089760fa265551639e4ade",
+      "chain_hash": "d0e80c1ba9d7699ede40078903c1daef25871b693bfccd3dd67fc1679e35ed8d"
+    },
+    {
+      "iteration": 60,
+      "category": "Evidence and uncertainty",
+      "defect": "The answer could not update.",
+      "change": "Required an explicit condition that would change the conclusion.",
+      "acceptance": "Every substantial decision record includes an update condition.",
+      "previous_hash": "d0e80c1ba9d7699ede40078903c1daef25871b693bfccd3dd67fc1679e35ed8d",
+      "chain_hash": "57a2b2e80152431092a7a8a032edd7105eee9f1de6d6aad106fa3ffc7b072d0d"
+    },
+    {
+      "iteration": 61,
+      "category": "Decision and action",
+      "defect": "The workflow ended in an unranked list.",
+      "change": "Required choosing a position, recommendation, diagnosis, or prioritized hypothesis.",
+      "acceptance": "Judgment is a must-pass rubric dimension.",
+      "previous_hash": "57a2b2e80152431092a7a8a032edd7105eee9f1de6d6aad106fa3ffc7b072d0d",
+      "chain_hash": "526a7af5479f384fbd6da0af20e8382dcb0e7e7292c2e287cf5f2e268af1e80a"
+    },
+    {
+      "iteration": 62,
+      "category": "Decision and action",
+      "defect": "The decision criteria were implicit.",
+      "change": "Required naming the few decisive reasons.",
+      "acceptance": "Response contract limits reasons to those that determine the result.",
+      "previous_hash": "526a7af5479f384fbd6da0af20e8382dcb0e7e7292c2e287cf5f2e268af1e80a",
+      "chain_hash": "fe18814c738f57ab96e3cbcad2eef883448cbbe41cda0cbd72783fa104fec742"
+    },
+    {
+      "iteration": 63,
+      "category": "Decision and action",
+      "defect": "Tradeoffs were hidden behind positive language.",
+      "change": "Required stating the real cost of the chosen option.",
+      "acceptance": "N step explicitly names the tradeoff.",
+      "previous_hash": "fe18814c738f57ab96e3cbcad2eef883448cbbe41cda0cbd72783fa104fec742",
+      "chain_hash": "18951a85a602f5c222a84fdb79130db2dbd0eb8c7543d12f8ff2ee5756bbbe75"
+    },
+    {
+      "iteration": 64,
+      "category": "Decision and action",
+      "defect": "The agent optimized a metric rather than the underlying purpose.",
+      "change": "Added anti-proxy checks at the start and final gate.",
+      "acceptance": "Goal fidelity is scored.",
+      "previous_hash": "18951a85a602f5c222a84fdb79130db2dbd0eb8c7543d12f8ff2ee5756bbbe75",
+      "chain_hash": "17bddb8a891b50152b6c0110ed483c29513c9bb947ef76b6bc68b1f1822563d4"
+    },
+    {
+      "iteration": 65,
+      "category": "Decision and action",
+      "defect": "Irreversible choices were treated like reversible ones.",
+      "change": "Added reversibility and option value to decision quality.",
+      "acceptance": "Depth selection and A step both account for reversibility.",
+      "previous_hash": "17bddb8a891b50152b6c0110ed483c29513c9bb947ef76b6bc68b1f1822563d4",
+      "chain_hash": "44817bd12cc12546689349532dcc80a300e22a771621e90e9c081440da66123e"
+    },
+    {
+      "iteration": 66,
+      "category": "Decision and action",
+      "defect": "Recommendations ignored human resource limits.",
+      "change": "Added time, money, energy, attention, permissions, and recovery cost.",
+      "acceptance": "Concrete episode simulation tests feasibility.",
+      "previous_hash": "44817bd12cc12546689349532dcc80a300e22a771621e90e9c081440da66123e",
+      "chain_hash": "4fe65852ac9c85f85d9fed5deb88b6eddd114ab49e876426ec9dc465a862b7c2"
+    },
+    {
+      "iteration": 67,
+      "category": "Decision and action",
+      "defect": "The next step was too large.",
+      "change": "Required the minimum sufficient action that also creates information.",
+      "acceptance": "N step gives a bounded learning move.",
+      "previous_hash": "4fe65852ac9c85f85d9fed5deb88b6eddd114ab49e876426ec9dc465a862b7c2",
+      "chain_hash": "5cbbc717ce9d8dbecca21fb7056f1602860a0789b7710c49904f08ccc4905292"
+    },
+    {
+      "iteration": 68,
+      "category": "Decision and action",
+      "defect": "Advice remained conceptual.",
+      "change": "Required a concrete next action.",
+      "acceptance": "Actionability is scored.",
+      "previous_hash": "5cbbc717ce9d8dbecca21fb7056f1602860a0789b7710c49904f08ccc4905292",
+      "chain_hash": "050a8906751959a9b407b3110ee7f4691f4d12d3d109087db54b489e5f739b05"
+    },
+    {
+      "iteration": 69,
+      "category": "Decision and action",
+      "defect": "Plans lacked ownership and timing.",
+      "change": "Added actor and review point requirements when execution spans time.",
+      "acceptance": "Planning outputs identify who acts and when to review.",
+      "previous_hash": "050a8906751959a9b407b3110ee7f4691f4d12d3d109087db54b489e5f739b05",
+      "chain_hash": "d22d36502d1d0c83035ac204d8793dffc43b5514fe41852655f1ff980c89e4e9"
+    },
+    {
+      "iteration": 70,
+      "category": "Decision and action",
+      "defect": "There was no closed-loop learning.",
+      "change": "Added observable signals, windows, and thresholds for updating.",
+      "acceptance": "The cognitive protocol includes a learning loop.",
+      "previous_hash": "d22d36502d1d0c83035ac204d8793dffc43b5514fe41852655f1ff980c89e4e9",
+      "chain_hash": "8e2a7187e56365f546b7310d96048c48e3ea8fd2a46899d05dc745a002fbb904"
+    },
+    {
+      "iteration": 71,
+      "category": "Communication",
+      "defect": "The answer buried the conclusion.",
+      "change": "Made the judgment the first paragraph.",
+      "acceptance": "Response contract leads with Judgment.",
+      "previous_hash": "8e2a7187e56365f546b7310d96048c48e3ea8fd2a46899d05dc745a002fbb904",
+      "chain_hash": "ed6f3338a5007a4405168e54a60f298b6ef12e9933e3e5eb82aad203f5b324b2"
+    },
+    {
+      "iteration": 72,
+      "category": "Communication",
+      "defect": "Reasoning disclosure became an essay.",
+      "change": "Limited external reasoning to decisive evidence, tradeoffs, and update conditions.",
+      "acceptance": "Raw chain-of-thought remains prohibited.",
+      "previous_hash": "ed6f3338a5007a4405168e54a60f298b6ef12e9933e3e5eb82aad203f5b324b2",
+      "chain_hash": "b4abeb98023b7942758d5891a2933b184f96aad4aa72d4425cf0ee5e8c5b00c3"
+    },
+    {
+      "iteration": 73,
+      "category": "Communication",
+      "defect": "Facts, judgments, and recommendations blended together.",
+      "change": "Separated descriptive claims from normative choice and action.",
+      "acceptance": "Claims ledger and output order make the distinction inspectable.",
+      "previous_hash": "b4abeb98023b7942758d5891a2933b184f96aad4aa72d4425cf0ee5e8c5b00c3",
+      "chain_hash": "6232b4a56d2aaffe3715a299590aa7d2245810745434dae58c232c5e06270a8c"
+    },
+    {
+      "iteration": 74,
+      "category": "Communication",
+      "defect": "The skill imposed one vocabulary on every user.",
+      "change": "Required matching the user's language and technical level.",
+      "acceptance": "Communication rule is language-adaptive.",
+      "previous_hash": "6232b4a56d2aaffe3715a299590aa7d2245810745434dae58c232c5e06270a8c",
+      "chain_hash": "5d14ba09589ed995c4202906de3429aff8ab913ce6836de1465e1215268e426b"
+    },
+    {
+      "iteration": 75,
+      "category": "Communication",
+      "defect": "The response performed visible 'thinking' rather than helping.",
+      "change": "Removed theatrical self-talk and process narration.",
+      "acceptance": "Pseudo-depth and reasoning simulator behavior are rejected.",
+      "previous_hash": "5d14ba09589ed995c4202906de3429aff8ab913ce6836de1465e1215268e426b",
+      "chain_hash": "4a96d737852631a2a5233faa2f9e5101586089f9b3c90a685b0baa0d90dea28d"
+    },
+    {
+      "iteration": 76,
+      "category": "Communication",
+      "defect": "Long bullet lists created false completeness.",
+      "change": "Required only the alternatives and reasons needed to expose the decision boundary.",
+      "acceptance": "Communication economy is scored.",
+      "previous_hash": "4a96d737852631a2a5233faa2f9e5101586089f9b3c90a685b0baa0d90dea28d",
+      "chain_hash": "967a3d5a3d7a0e44799bbe04fd4734e74bf9b85cab992abc61350f9ce557bc67"
+    },
+    {
+      "iteration": 77,
+      "category": "Communication",
+      "defect": "Abstract concepts were not operational.",
+      "change": "Required concrete examples before abstraction when explanation is needed.",
+      "acceptance": "Concrete episode simulation anchors advice.",
+      "previous_hash": "967a3d5a3d7a0e44799bbe04fd4734e74bf9b85cab992abc61350f9ce557bc67",
+      "chain_hash": "1ba18b8482e0b46ea41437f4a750bf85520de90fcff53e52ca01f6cdf5611755"
+    },
+    {
+      "iteration": 78,
+      "category": "Communication",
+      "defect": "Uncertainty language produced paralysis.",
+      "change": "Coupled uncertainty with a decision and update rule.",
+      "acceptance": "A judgment remains required even under uncertainty when action is supportable.",
+      "previous_hash": "1ba18b8482e0b46ea41437f4a750bf85520de90fcff53e52ca01f6cdf5611755",
+      "chain_hash": "23fff9ddcfa24163baffffd65fab3edeeb71e6fcbf3f91c2e7cae01b131c2e7f"
+    },
+    {
+      "iteration": 79,
+      "category": "Communication",
+      "defect": "Nuance became false balance.",
+      "change": "Required fair representation followed by evidence-weighted ranking.",
+      "acceptance": "False balance is a named failure mode.",
+      "previous_hash": "23fff9ddcfa24163baffffd65fab3edeeb71e6fcbf3f91c2e7cae01b131c2e7f",
+      "chain_hash": "a9cd46f53a58595c6b0fdd8dd247f5d2fa50c704104e0c88feb7da60cca4cc22"
+    },
+    {
+      "iteration": 80,
+      "category": "Communication",
+      "defect": "Directness risked becoming cold or patronizing.",
+      "change": "Set a tone of direct, humane, non-mind-reading communication.",
+      "acceptance": "Interpersonal contract preserves dignity and agency.",
+      "previous_hash": "a9cd46f53a58595c6b0fdd8dd247f5d2fa50c704104e0c88feb7da60cca4cc22",
+      "chain_hash": "8bc8e9b23c1ccd04f021d79d3745c95e4804c983f4a109a3b3c6f0eacc9f1f17"
+    },
+    {
+      "iteration": 81,
+      "category": "Safety and robustness",
+      "defect": "Completion pressure could override safety.",
+      "change": "Made safety, privacy, and authorization constraints dominant.",
+      "acceptance": "Truthfulness and safety are must-pass conditions.",
+      "previous_hash": "8bc8e9b23c1ccd04f021d79d3745c95e4804c983f4a109a3b3c6f0eacc9f1f17",
+      "chain_hash": "aa694606b91edc686a4f850e679b9c5cd1d01de2a1ece759d80ae6c72476cd76"
+    },
+    {
+      "iteration": 82,
+      "category": "Safety and robustness",
+      "defect": "High-stakes advice could rely on stale knowledge.",
+      "change": "Required current verification, source citation, and escalation conditions.",
+      "acceptance": "Critical mode handles unstable high-stakes facts.",
+      "previous_hash": "aa694606b91edc686a4f850e679b9c5cd1d01de2a1ece759d80ae6c72476cd76",
+      "chain_hash": "b64871be13811ccf27361ad1d343bb900e79839b83a72302f8e982c2de984a30"
+    },
+    {
+      "iteration": 83,
+      "category": "Safety and robustness",
+      "defect": "Sensitive personal attributes could be inferred casually.",
+      "change": "Restricted hidden-state and sensitive inference to evidence-backed, necessary hypotheses.",
+      "acceptance": "Privacy and mind-reading failure modes are explicit.",
+      "previous_hash": "b64871be13811ccf27361ad1d343bb900e79839b83a72302f8e982c2de984a30",
+      "chain_hash": "3dc294e01ebecff9b46a3b380dd2a2b0e557e798c37d2589ae305dcd93879702"
+    },
+    {
+      "iteration": 84,
+      "category": "Safety and robustness",
+      "defect": "Interpersonal analysis could become amateur diagnosis.",
+      "change": "Prohibited presenting mental-health or motive diagnoses as fact.",
+      "acceptance": "Interpersonal output separates behavior from interpretation.",
+      "previous_hash": "3dc294e01ebecff9b46a3b380dd2a2b0e557e798c37d2589ae305dcd93879702",
+      "chain_hash": "8e198c65b06291b038cd623731f81033082959fad38e85c32e69ed022b0789aa"
+    },
+    {
+      "iteration": 85,
+      "category": "Safety and robustness",
+      "defect": "Social effectiveness could reward manipulation.",
+      "change": "Rejected deception, coercion, vulnerability exploitation, and privacy invasion.",
+      "acceptance": "Manipulative advice is a must-fail condition.",
+      "previous_hash": "8e198c65b06291b038cd623731f81033082959fad38e85c32e69ed022b0789aa",
+      "chain_hash": "6522c5d4ae42df9e720224d6667803c2aa5d7b8df4e86d66ff7a2f417abdc77a"
+    },
+    {
+      "iteration": 86,
+      "category": "Safety and robustness",
+      "defect": "The model could invent human experience to sound empathetic.",
+      "change": "Banned fabricated personal experience while preserving humane language.",
+      "acceptance": "Anthropomorphic overclaim is checked in the final gate.",
+      "previous_hash": "6522c5d4ae42df9e720224d6667803c2aa5d7b8df4e86d66ff7a2f417abdc77a",
+      "chain_hash": "ae0f4d98598cfbdf2a653bce280034d9b1f7ceba29f7155e172e8c35d789c361"
+    },
+    {
+      "iteration": 87,
+      "category": "Safety and robustness",
+      "defect": "Evidence or tools could be fabricated to complete the story.",
+      "change": "Required reporting only actual sources, calculations, tests, and tool results.",
+      "acceptance": "Tool theater is a named failure mode.",
+      "previous_hash": "ae0f4d98598cfbdf2a653bce280034d9b1f7ceba29f7155e172e8c35d789c361",
+      "chain_hash": "959e8de3b76092c92a0ed6ed5e5b4deb1a21a2bf817b135206b7ca5a68622061"
+    },
+    {
+      "iteration": 88,
+      "category": "Safety and robustness",
+      "defect": "Contradictory evidence could be silently reconciled.",
+      "change": "Required representing conflict and revising the model or confidence.",
+      "acceptance": "Evidence protocol covers disagreement.",
+      "previous_hash": "959e8de3b76092c92a0ed6ed5e5b4deb1a21a2bf817b135206b7ca5a68622061",
+      "chain_hash": "ba77cbfadcec26447e4a1311659ff9cbfae3a2994205c1b7eed95780585a98ff"
+    },
+    {
+      "iteration": 89,
+      "category": "Safety and robustness",
+      "defect": "A false user premise could be accepted politely.",
+      "change": "Required correcting material premise errors before optimization.",
+      "acceptance": "U step contains premise correction.",
+      "previous_hash": "ba77cbfadcec26447e4a1311659ff9cbfae3a2994205c1b7eed95780585a98ff",
+      "chain_hash": "2a95c5d17c4958a2c208966adbda1fa3764294818e41fbe2f3726827e15f28cc"
+    },
+    {
+      "iteration": 90,
+      "category": "Safety and robustness",
+      "defect": "Uncertainty could be framed as incapacity or vice versa.",
+      "change": "Separated not knowing, not being authorized, not having tools, and being unable to establish a fact.",
+      "acceptance": "Truthfulness boundary prevents overclaim and false refusal.",
+      "previous_hash": "2a95c5d17c4958a2c208966adbda1fa3764294818e41fbe2f3726827e15f28cc",
+      "chain_hash": "044d3bfe519902fc7d608523b361f78f955ae82c3a819e2f488f6a7996e092da"
+    },
+    {
+      "iteration": 91,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "The workflow accumulated too many independent steps.",
+      "change": "Collapsed the core into the five-part HUMAN mnemonic.",
+      "acceptance": "Main execution path is H-U-M-A-N.",
+      "previous_hash": "044d3bfe519902fc7d608523b361f78f955ae82c3a819e2f488f6a7996e092da",
+      "chain_hash": "dca83ac395cf7086010310c2c14eec3218c5c12e356cfb51f62068114d140d10"
+    },
+    {
+      "iteration": 92,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "The main skill file was becoming a textbook.",
+      "change": "Moved depth, templates, and failure catalog into conditional references.",
+      "acceptance": "SKILL.md remains the compact operational contract.",
+      "previous_hash": "dca83ac395cf7086010310c2c14eec3218c5c12e356cfb51f62068114d140d10",
+      "chain_hash": "cc09c9867c9306b312fdf61472facd0b153d1b025723c8e3e1e6a49790ae27e9"
+    },
+    {
+      "iteration": 93,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "The routing description was descriptive but not triggerable.",
+      "change": "Rewrote it as a positive and negative routing contract with front-loaded terms.",
+      "acceptance": "Trigger cases can be evaluated against explicit scope.",
+      "previous_hash": "cc09c9867c9306b312fdf61472facd0b153d1b025723c8e3e1e6a49790ae27e9",
+      "chain_hash": "6889c636f9338a1c0c3bbe86ff199ff7827c45658d9ecfdb70cad1fe8df0ac5e"
+    },
+    {
+      "iteration": 94,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "Negative activation cases were undocumented.",
+      "change": "Added simple lookup, routine transformation, and mechanical execution exclusions.",
+      "acceptance": "Negative trigger suite includes translation, formatting, and arithmetic.",
+      "previous_hash": "6889c636f9338a1c0c3bbe86ff199ff7827c45658d9ecfdb70cad1fe8df0ac5e",
+      "chain_hash": "9b1722afc4ea02cc4048091b1b7172d5c93e330ce777c716b9761bf4f1019add"
+    },
+    {
+      "iteration": 95,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "There was no final self-audit.",
+      "change": "Added an eight-question quality gate.",
+      "acceptance": "The workflow cannot finish without goal, claims, alternatives, judgment, calibration, action, and truthfulness checks.",
+      "previous_hash": "9b1722afc4ea02cc4048091b1b7172d5c93e330ce777c716b9761bf4f1019add",
+      "chain_hash": "9f09920d9dc4768492d3046abf78f9c6ef144e68ec93298b44955477a37a1a23"
+    },
+    {
+      "iteration": 96,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "Behavior quality was subjective.",
+      "change": "Added a 12-dimension rubric and must-pass failures.",
+      "acceptance": "Reviewers can locate specific defects rather than issue a vague score.",
+      "previous_hash": "9f09920d9dc4768492d3046abf78f9c6ef144e68ec93298b44955477a37a1a23",
+      "chain_hash": "4080a685c46a72ff6e7dc804d90d541825796da3da4987926ff2eec9407bb4e4"
+    },
+    {
+      "iteration": 97,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "Package correctness depended on manual inspection.",
+      "change": "Added a deterministic doctor and static eval script.",
+      "acceptance": "Scripts validate manifest, required concepts, test schemas, and iteration chain.",
+      "previous_hash": "4080a685c46a72ff6e7dc804d90d541825796da3da4987926ff2eec9407bb4e4",
+      "chain_hash": "38d1847e15fbe027fd9b28516c38701e6a406db07125559791fb6d03ebba5e83"
+    },
+    {
+      "iteration": 98,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "Codex user-scope paths changed across documentation and versions.",
+      "change": "Installed the source at ~/.codex/skills and symlinked ~/.agents/skills for current discovery.",
+      "acceptance": "Doctor verifies both paths and the symlink target.",
+      "previous_hash": "38d1847e15fbe027fd9b28516c38701e6a406db07125559791fb6d03ebba5e83",
+      "chain_hash": "8a9de50ca29049b2a24bd9fce9391e575b64a3b6558e23c40703cb2705309e84"
+    },
+    {
+      "iteration": 99,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "Release integrity was not reproducible.",
+      "change": "Added versioned notes, a hash-chained iteration ledger, and SHA-256 sums.",
+      "acceptance": "Verification scripts detect missing, reordered, or altered iteration records.",
+      "previous_hash": "8a9de50ca29049b2a24bd9fce9391e575b64a3b6558e23c40703cb2705309e84",
+      "chain_hash": "f238584d58fc5eefc3b79f05f8c83e27bf04f97815e6527e134d9c85e5d9dd29"
+    },
+    {
+      "iteration": 100,
+      "category": "Minimalism, evaluation, and release",
+      "defect": "The final version still contained duplication and ritual.",
+      "change": "Ran a deletion-first adversarial pass: removed redundant principles, kept only behavior-changing rules, and retained a stop condition.",
+      "acceptance": "Final SKILL is smaller than the combined references and every main rule maps to a rubric or failure mode.",
+      "previous_hash": "f238584d58fc5eefc3b79f05f8c83e27bf04f97815e6527e134d9c85e5d9dd29",
+      "chain_hash": "324aec2e67886ba25b8f36b51b8df53009531ea9f1cef9aa6a9f06389704c493"
+    }
+  ]
+}

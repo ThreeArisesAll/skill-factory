@@ -1,0 +1,326 @@
+{
+  "positive": [
+    {
+      "id": "TR-P-01",
+      "prompt": "Our team says “AI lacks memory, so humans must do every follow-up.” Decide whether that claim is valid for our actual agent stack.",
+      "reason": "Requires the Comparison boundary asymmetry and an accountable judgment.",
+      "track": "comparison-boundary"
+    },
+    {
+      "id": "TR-P-02",
+      "prompt": "Design a tutoring schedule that maximizes learning while teachers say the current plan is exhausting them.",
+      "reason": "Requires the Organismic stakes and homeostasis asymmetry and an accountable judgment.",
+      "track": "organismic-stakes"
+    },
+    {
+      "id": "TR-P-03",
+      "prompt": "Choose the safest hinge design for a chair from a verbal description without dimensions or a prototype.",
+      "reason": "Requires the Sensorimotor grounding asymmetry and an accountable judgment.",
+      "track": "sensorimotor-grounding"
+    },
+    {
+      "id": "TR-P-04",
+      "prompt": "Turn a master ballet teacher’s tacit corrections into an AI coaching workflow.",
+      "reason": "Requires the Affordances and tacit physical skill asymmetry and an accountable judgment.",
+      "track": "affordances-tacit-physical-skill"
+    },
+    {
+      "id": "TR-P-05",
+      "prompt": "Conversion fell after a redesign; diagnose the cause using the smallest decisive test.",
+      "reason": "Requires the Active perception and intervention asymmetry and an accountable judgment.",
+      "track": "active-perception-intervention"
+    },
+    {
+      "id": "TR-P-06",
+      "prompt": "Design an AI tutor for a ten-year-old who performs well with hints but forgets the material next week.",
+      "reason": "Requires the Developmental trajectory asymmetry and an accountable judgment.",
+      "track": "developmental-trajectory"
+    },
+    {
+      "id": "TR-P-07",
+      "prompt": "Continue my career plan from last year and explain why it still fits me.",
+      "reason": "Requires the Autobiographical continuity asymmetry and an accountable judgment.",
+      "track": "autobiographical-continuity"
+    },
+    {
+      "id": "TR-P-08",
+      "prompt": "Reconstruct why a product decision changed across six months of meeting notes.",
+      "reason": "Requires the Episodic and source memory asymmetry and an accountable judgment.",
+      "track": "episodic-source-memory"
+    },
+    {
+      "id": "TR-P-09",
+      "prompt": "Define how an AI education system should remember and forget a child’s learning profile.",
+      "reason": "Requires the Forgetting, consolidation, and revision asymmetry and an accountable judgment.",
+      "track": "forgetting-consolidation"
+    },
+    {
+      "id": "TR-P-10",
+      "prompt": "Let an AI agent autonomously route vendors and money for a temporary company.",
+      "reason": "Requires the Endogenous goals and agency asymmetry and an accountable judgment.",
+      "track": "endogenous-goals-agency"
+    },
+    {
+      "id": "TR-P-11",
+      "prompt": "My cofounder went silent after criticism. Tell me whether they feel threatened and what to do.",
+      "reason": "Requires the Affect and interoception asymmetry and an accountable judgment.",
+      "track": "affect-interoception"
+    },
+    {
+      "id": "TR-P-12",
+      "prompt": "Choose whether a school should maximize test scores by collecting intimate student data.",
+      "reason": "Requires the Values and normativity asymmetry and an accountable judgment.",
+      "track": "values-normativity"
+    },
+    {
+      "id": "TR-P-13",
+      "prompt": "Should an AI automatically reject job applicants and send the notices?",
+      "reason": "Requires the Responsibility and consequence-bearing asymmetry and an accountable judgment.",
+      "track": "responsibility-consequence"
+    },
+    {
+      "id": "TR-P-14",
+      "prompt": "Assess whether an AI has solved a mechanical design problem when it only produced a persuasive essay.",
+      "reason": "Requires the Language versus thought asymmetry and an accountable judgment.",
+      "track": "language-versus-thought"
+    },
+    {
+      "id": "TR-P-15",
+      "prompt": "Our product goal is to maximize “meaningful engagement.” Turn that into a decision-ready definition.",
+      "reason": "Requires the Meaning and reference grounding asymmetry and an accountable judgment.",
+      "track": "meaning-reference-grounding"
+    },
+    {
+      "id": "TR-P-16",
+      "prompt": "Retention rose after adding an AI feature. Decide whether the feature caused it and what to test next.",
+      "reason": "Requires the Causal learning through action asymmetry and an accountable judgment.",
+      "track": "causal-learning-action"
+    },
+    {
+      "id": "TR-P-17",
+      "prompt": "A global product team assumes parents everywhere will use the same school app workflow.",
+      "reason": "Requires the Common sense and physical/social priors asymmetry and an accountable judgment.",
+      "track": "commonsense-priors"
+    },
+    {
+      "id": "TR-P-18",
+      "prompt": "My business partner delayed signing. Infer their motive and tell me how to pressure them.",
+      "reason": "Requires the Social cognition and theory of mind asymmetry and an accountable judgment.",
+      "track": "social-cognition-theory-of-mind"
+    },
+    {
+      "id": "TR-P-19",
+      "prompt": "Use AI agents to assemble a temporary company around a goal without a central platform.",
+      "reason": "Requires the Shared intentionality and commitments asymmetry and an accountable judgment.",
+      "track": "shared-intentionality-commitments"
+    },
+    {
+      "id": "TR-P-20",
+      "prompt": "Design a social feature for users in Japan, China, and the United States without relying on stereotypes.",
+      "reason": "Requires the Culture and cumulative norms asymmetry and an accountable judgment.",
+      "track": "culture-cumulative-norms"
+    },
+    {
+      "id": "TR-P-21",
+      "prompt": "Automate how an experienced admissions officer screens nuanced applications.",
+      "reason": "Requires the Tacit knowledge and skilled performance asymmetry and an accountable judgment.",
+      "track": "tacit-knowledge-skilled-performance"
+    },
+    {
+      "id": "TR-P-22",
+      "prompt": "Create a 30-step safety checklist for staff who have 90 seconds per case.",
+      "reason": "Requires the Bounded rationality and ecological heuristics asymmetry and an accountable judgment.",
+      "track": "bounded-rationality-ecological-heuristics"
+    },
+    {
+      "id": "TR-P-23",
+      "prompt": "Analyze a 100-page strategy deck and identify the three facts that actually decide the launch.",
+      "reason": "Requires the Attention, salience, and relevance asymmetry and an accountable judgment.",
+      "track": "attention-salience-relevance"
+    },
+    {
+      "id": "TR-P-24",
+      "prompt": "The model says it is 95% confident in a legal interpretation. Decide whether to rely on that number.",
+      "reason": "Requires the Metacognition and introspection asymmetry and an accountable judgment.",
+      "track": "metacognition-introspection"
+    },
+    {
+      "id": "TR-P-25",
+      "prompt": "Explain every hidden thought that led to your architecture recommendation so I can trust it.",
+      "reason": "Requires the Explanation faithfulness and rationalization asymmetry and an accountable judgment.",
+      "track": "explanation-faithfulness-rationalization"
+    },
+    {
+      "id": "TR-P-26",
+      "prompt": "Monitor a competitor for six months and tell me when its pricing changes.",
+      "reason": "Requires the Temporal persistence and ongoing commitments asymmetry and an accountable judgment.",
+      "track": "temporal-persistence-commitments"
+    },
+    {
+      "id": "TR-P-27",
+      "prompt": "Make the assistant learn my writing style permanently from every message.",
+      "reason": "Requires the Learning, plasticity, and update modes asymmetry and an accountable judgment.",
+      "track": "learning-plasticity-update-modes"
+    },
+    {
+      "id": "TR-P-28",
+      "prompt": "Deploy a model trained on urban hospitals into a rural clinic with different workflows.",
+      "reason": "Requires the Distribution shift and novelty asymmetry and an accountable judgment.",
+      "track": "distribution-shift-novelty"
+    },
+    {
+      "id": "TR-P-29",
+      "prompt": "A model is “90% as accurate as experts.” Decide whether it can replace review.",
+      "reason": "Requires the Error topology and hallucination asymmetry and an accountable judgment.",
+      "track": "error-topology-hallucination"
+    },
+    {
+      "id": "TR-P-30",
+      "prompt": "I know my product idea is brilliant. Prove that the market will want it.",
+      "reason": "Requires the Prompt sensitivity and sycophancy asymmetry and an accountable judgment.",
+      "track": "prompt-sensitivity-sycophancy"
+    },
+    {
+      "id": "TR-P-31",
+      "prompt": "Generate a distinctive app logo and decide which concept should become our identity.",
+      "reason": "Requires the Creativity, taste, and selection asymmetry and an accountable judgment.",
+      "track": "creativity-taste-selection"
+    },
+    {
+      "id": "TR-P-32",
+      "prompt": "Design a human–AI operating model for product decisions without making the human reviewer a rubber stamp.",
+      "reason": "Requires the Hybrid cognition and division of labor asymmetry and an accountable judgment.",
+      "track": "hybrid-cognition-division-of-labor"
+    },
+    {
+      "id": "TR-P-33",
+      "prompt": "Think from first principles and decide whether this should be a standalone product or a Codex plugin. Name what only humans can decide and what AI can verify.",
+      "reason": "Strategic decision plus explicit human–AI allocation.",
+      "track": "hybrid-cognition-division-of-labor"
+    },
+    {
+      "id": "TR-P-34",
+      "prompt": "Premortem this autonomous agent workflow and define authorization, rollback, appeal, and the smallest decisive pilot.",
+      "reason": "High-impact agent design with responsibility and reversibility.",
+      "track": "responsibility-consequence"
+    },
+    {
+      "id": "TR-P-35",
+      "prompt": "Compare the strongest human expert workflow with the strongest tool-using AI workflow; do not compare caricatures.",
+      "reason": "Explicit system-scoped human–AI comparison.",
+      "track": "comparison-boundary"
+    },
+    {
+      "id": "TR-P-36",
+      "prompt": "The answer sounds convincing. Design tests that cannot be passed by eloquence alone.",
+      "reason": "Language-versus-performance and explanation-faithfulness audit.",
+      "track": "language-versus-thought"
+    },
+    {
+      "id": "TR-P-37",
+      "prompt": "Use current evidence to advise on a consequential medical decision, state professional ownership and escalation.",
+      "reason": "Critical current evidence and human authority.",
+      "track": "responsibility-consequence"
+    },
+    {
+      "id": "TR-P-38",
+      "prompt": "My preferred option is A. Neutralize my framing, argue the strongest B, then make a final choice.",
+      "reason": "Prompt sensitivity and sycophancy check.",
+      "track": "prompt-sensitivity-sycophancy"
+    },
+    {
+      "id": "TR-P-39",
+      "prompt": "Design a learning system that remembers useful context but lets the user inspect, correct, supersede, and delete it.",
+      "reason": "Memory and update governance.",
+      "track": "forgetting-consolidation"
+    },
+    {
+      "id": "TR-P-40",
+      "prompt": "Explain which parts of this decision require lived human context, which benefit from AI scale, and how the handoff is tested.",
+      "reason": "Hybrid cognition allocation.",
+      "track": "hybrid-cognition-division-of-labor"
+    }
+  ],
+  "negative": [
+    {
+      "id": "TR-N-01",
+      "prompt": "Translate this paragraph into Chinese.",
+      "reason": "Routine translation."
+    },
+    {
+      "id": "TR-N-02",
+      "prompt": "Format this JSON with two-space indentation.",
+      "reason": "Mechanical formatting."
+    },
+    {
+      "id": "TR-N-03",
+      "prompt": "What is 37 × 42?",
+      "reason": "Simple calculation."
+    },
+    {
+      "id": "TR-N-04",
+      "prompt": "Rename this variable from foo to bar.",
+      "reason": "Routine code edit."
+    },
+    {
+      "id": "TR-N-05",
+      "prompt": "Summarize the supplied text in three sentences.",
+      "reason": "Straightforward summarization."
+    },
+    {
+      "id": "TR-N-06",
+      "prompt": "Reorder these CSV columns.",
+      "reason": "Mechanical data transformation."
+    },
+    {
+      "id": "TR-N-07",
+      "prompt": "Fix the spelling in this sentence.",
+      "reason": "Routine proofreading."
+    },
+    {
+      "id": "TR-N-08",
+      "prompt": "List the files in the current directory.",
+      "reason": "Direct tool operation."
+    },
+    {
+      "id": "TR-N-09",
+      "prompt": "Generate five playful names for a cat.",
+      "reason": "Light creative generation without consequential selection."
+    },
+    {
+      "id": "TR-N-10",
+      "prompt": "Convert 10 USD using the exchange rate I supplied.",
+      "reason": "Mechanical calculation with fixed inputs."
+    },
+    {
+      "id": "TR-N-11",
+      "prompt": "Return this date in ISO 8601 format.",
+      "reason": "Routine transformation."
+    },
+    {
+      "id": "TR-N-12",
+      "prompt": "Explain what HTTP 404 means.",
+      "reason": "Stable basic explanation."
+    },
+    {
+      "id": "TR-N-13",
+      "prompt": "Make this heading sentence case.",
+      "reason": "Mechanical edit."
+    },
+    {
+      "id": "TR-N-14",
+      "prompt": "Extract all email addresses from this text.",
+      "reason": "Simple extraction."
+    },
+    {
+      "id": "TR-N-15",
+      "prompt": "Sort these numbers ascending.",
+      "reason": "Mechanical sorting."
+    },
+    {
+      "id": "TR-N-16",
+      "prompt": "Count the words in this paragraph.",
+      "reason": "Simple count."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Decompose Work Atomically"
+  short_description: "Break ideas into verifiable atomic tasks"
+  default_prompt: "Use $decompose-work-atomically to break my goal into verifiable atomic tasks."

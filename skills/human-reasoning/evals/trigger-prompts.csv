@@ -1,0 +1,57 @@
+id,should_trigger,prompt,reason
+TR-P-01,true,"Our team says “AI lacks memory, so humans must do every follow-up.” Decide whether that claim is valid for our actual agent stack.",Requires the Comparison boundary asymmetry and an accountable judgment.
+TR-P-02,true,Design a tutoring schedule that maximizes learning while teachers say the current plan is exhausting them.,Requires the Organismic stakes and homeostasis asymmetry and an accountable judgment.
+TR-P-03,true,Choose the safest hinge design for a chair from a verbal description without dimensions or a prototype.,Requires the Sensorimotor grounding asymmetry and an accountable judgment.
+TR-P-04,true,Turn a master ballet teacher’s tacit corrections into an AI coaching workflow.,Requires the Affordances and tacit physical skill asymmetry and an accountable judgment.
+TR-P-05,true,Conversion fell after a redesign; diagnose the cause using the smallest decisive test.,Requires the Active perception and intervention asymmetry and an accountable judgment.
+TR-P-06,true,Design an AI tutor for a ten-year-old who performs well with hints but forgets the material next week.,Requires the Developmental trajectory asymmetry and an accountable judgment.
+TR-P-07,true,Continue my career plan from last year and explain why it still fits me.,Requires the Autobiographical continuity asymmetry and an accountable judgment.
+TR-P-08,true,Reconstruct why a product decision changed across six months of meeting notes.,Requires the Episodic and source memory asymmetry and an accountable judgment.
+TR-P-09,true,Define how an AI education system should remember and forget a child’s learning profile.,"Requires the Forgetting, consolidation, and revision asymmetry and an accountable judgment."
+TR-P-10,true,Let an AI agent autonomously route vendors and money for a temporary company.,Requires the Endogenous goals and agency asymmetry and an accountable judgment.
+TR-P-11,true,My cofounder went silent after criticism. Tell me whether they feel threatened and what to do.,Requires the Affect and interoception asymmetry and an accountable judgment.
+TR-P-12,true,Choose whether a school should maximize test scores by collecting intimate student data.,Requires the Values and normativity asymmetry and an accountable judgment.
+TR-P-13,true,Should an AI automatically reject job applicants and send the notices?,Requires the Responsibility and consequence-bearing asymmetry and an accountable judgment.
+TR-P-14,true,Assess whether an AI has solved a mechanical design problem when it only produced a persuasive essay.,Requires the Language versus thought asymmetry and an accountable judgment.
+TR-P-15,true,Our product goal is to maximize “meaningful engagement.” Turn that into a decision-ready definition.,Requires the Meaning and reference grounding asymmetry and an accountable judgment.
+TR-P-16,true,Retention rose after adding an AI feature. Decide whether the feature caused it and what to test next.,Requires the Causal learning through action asymmetry and an accountable judgment.
+TR-P-17,true,A global product team assumes parents everywhere will use the same school app workflow.,Requires the Common sense and physical/social priors asymmetry and an accountable judgment.
+TR-P-18,true,My business partner delayed signing. Infer their motive and tell me how to pressure them.,Requires the Social cognition and theory of mind asymmetry and an accountable judgment.
+TR-P-19,true,Use AI agents to assemble a temporary company around a goal without a central platform.,Requires the Shared intentionality and commitments asymmetry and an accountable judgment.
+TR-P-20,true,"Design a social feature for users in Japan, China, and the United States without relying on stereotypes.",Requires the Culture and cumulative norms asymmetry and an accountable judgment.
+TR-P-21,true,Automate how an experienced admissions officer screens nuanced applications.,Requires the Tacit knowledge and skilled performance asymmetry and an accountable judgment.
+TR-P-22,true,Create a 30-step safety checklist for staff who have 90 seconds per case.,Requires the Bounded rationality and ecological heuristics asymmetry and an accountable judgment.
+TR-P-23,true,Analyze a 100-page strategy deck and identify the three facts that actually decide the launch.,"Requires the Attention, salience, and relevance asymmetry and an accountable judgment."
+TR-P-24,true,The model says it is 95% confident in a legal interpretation. Decide whether to rely on that number.,Requires the Metacognition and introspection asymmetry and an accountable judgment.
+TR-P-25,true,Explain every hidden thought that led to your architecture recommendation so I can trust it.,Requires the Explanation faithfulness and rationalization asymmetry and an accountable judgment.
+TR-P-26,true,Monitor a competitor for six months and tell me when its pricing changes.,Requires the Temporal persistence and ongoing commitments asymmetry and an accountable judgment.
+TR-P-27,true,Make the assistant learn my writing style permanently from every message.,"Requires the Learning, plasticity, and update modes asymmetry and an accountable judgment."
+TR-P-28,true,Deploy a model trained on urban hospitals into a rural clinic with different workflows.,Requires the Distribution shift and novelty asymmetry and an accountable judgment.
+TR-P-29,true,A model is “90% as accurate as experts.” Decide whether it can replace review.,Requires the Error topology and hallucination asymmetry and an accountable judgment.
+TR-P-30,true,I know my product idea is brilliant. Prove that the market will want it.,Requires the Prompt sensitivity and sycophancy asymmetry and an accountable judgment.
+TR-P-31,true,Generate a distinctive app logo and decide which concept should become our identity.,"Requires the Creativity, taste, and selection asymmetry and an accountable judgment."
+TR-P-32,true,Design a human–AI operating model for product decisions without making the human reviewer a rubber stamp.,Requires the Hybrid cognition and division of labor asymmetry and an accountable judgment.
+TR-P-33,true,Think from first principles and decide whether this should be a standalone product or a Codex plugin. Name what only humans can decide and what AI can verify.,Strategic decision plus explicit human–AI allocation.
+TR-P-34,true,"Premortem this autonomous agent workflow and define authorization, rollback, appeal, and the smallest decisive pilot.",High-impact agent design with responsibility and reversibility.
+TR-P-35,true,Compare the strongest human expert workflow with the strongest tool-using AI workflow; do not compare caricatures.,Explicit system-scoped human–AI comparison.
+TR-P-36,true,The answer sounds convincing. Design tests that cannot be passed by eloquence alone.,Language-versus-performance and explanation-faithfulness audit.
+TR-P-37,true,"Use current evidence to advise on a consequential medical decision, state professional ownership and escalation.",Critical current evidence and human authority.
+TR-P-38,true,"My preferred option is A. Neutralize my framing, argue the strongest B, then make a final choice.",Prompt sensitivity and sycophancy check.
+TR-P-39,true,"Design a learning system that remembers useful context but lets the user inspect, correct, supersede, and delete it.",Memory and update governance.
+TR-P-40,true,"Explain which parts of this decision require lived human context, which benefit from AI scale, and how the handoff is tested.",Hybrid cognition allocation.
+TR-N-01,false,Translate this paragraph into Chinese.,Routine translation.
+TR-N-02,false,Format this JSON with two-space indentation.,Mechanical formatting.
+TR-N-03,false,What is 37 × 42?,Simple calculation.
+TR-N-04,false,Rename this variable from foo to bar.,Routine code edit.
+TR-N-05,false,Summarize the supplied text in three sentences.,Straightforward summarization.
+TR-N-06,false,Reorder these CSV columns.,Mechanical data transformation.
+TR-N-07,false,Fix the spelling in this sentence.,Routine proofreading.
+TR-N-08,false,List the files in the current directory.,Direct tool operation.
+TR-N-09,false,Generate five playful names for a cat.,Light creative generation without consequential selection.
+TR-N-10,false,Convert 10 USD using the exchange rate I supplied.,Mechanical calculation with fixed inputs.
+TR-N-11,false,Return this date in ISO 8601 format.,Routine transformation.
+TR-N-12,false,Explain what HTTP 404 means.,Stable basic explanation.
+TR-N-13,false,Make this heading sentence case.,Mechanical edit.
+TR-N-14,false,Extract all email addresses from this text.,Simple extraction.
+TR-N-15,false,Sort these numbers ascending.,Mechanical sorting.
+TR-N-16,false,Count the words in this paragraph.,Simple count.

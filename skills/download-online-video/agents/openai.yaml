@@ -1,0 +1,4 @@
+interface:
+  display_name: "Download Online Video"
+  short_description: "Download source-quality videos from major platforms"
+  default_prompt: "Use $download-online-video to download this video at the best available native quality."

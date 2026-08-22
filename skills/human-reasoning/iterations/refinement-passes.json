@@ -1,0 +1,427 @@
+{
+  "release": "v2.1124",
+  "count": 32,
+  "passes": [
+    {
+      "slug": "structural-distinction",
+      "name": "Structural distinction",
+      "objective": "Turn a vague human–AI contrast into a concrete structural asymmetry.",
+      "defect_template": "The treatment of {name} is stylistic or anthropomorphic; it does not distinguish the human condition “{human}” from the deployed AI condition “{ai}”.",
+      "change_template": "Add an explicit two-sided comparison for {name}, phrased as current operational structure rather than a claim about metaphysical essence.",
+      "acceptance_template": "A reviewer can point to separate human and AI descriptions, and neither description infers subjective experience from surface behavior.",
+      "targets": [
+        "references/human-ai-differences.md",
+        "references/asymmetry-matrix.json"
+      ],
+      "id": 1
+    },
+    {
+      "slug": "comparison-scope",
+      "name": "Comparison scope",
+      "objective": "Specify which humans and which AI system are being compared.",
+      "defect_template": "The {name} claim is unscoped, so variation among people and differences among base models, multimodal systems, agents, and robots are hidden.",
+      "change_template": "Require the analysis to name the relevant human population and inventory the actual AI model, host, modalities, tools, memory, sensors, actuators, and authority.",
+      "acceptance_template": "The comparison can be falsified for a named population and configuration rather than relying on “humans always” or “AI never”.",
+      "targets": [
+        "SKILL.md",
+        "references/bridge-protocol.md"
+      ],
+      "id": 2
+    },
+    {
+      "slug": "human-variance",
+      "name": "Human variance",
+      "objective": "Prevent an idealized or universal human from becoming the baseline.",
+      "defect_template": "The human side of {name} ignores expertise, development, disability, culture, stress, and situational variation.",
+      "change_template": "Add a human-variance check and require the analysis to state which variation is decision-relevant.",
+      "acceptance_template": "At least one relevant source of human heterogeneity is considered or explicitly ruled out with a reason.",
+      "targets": [
+        "references/human-ai-differences.md",
+        "references/failure-modes.md"
+      ],
+      "id": 3
+    },
+    {
+      "slug": "ai-architecture-variance",
+      "name": "AI architecture variance",
+      "objective": "Prevent a limitation of one runtime from becoming a universal AI claim.",
+      "defect_template": "The AI side of {name} treats a text-only base model, a retrieval agent, and an embodied system as equivalent.",
+      "change_template": "Add a capability/access distinction and the runtime check: {runtime}",
+      "acceptance_template": "The output states whether the limitation is intrinsic to the current run, contingent on missing tools, or genuinely unsupported by available evidence.",
+      "targets": [
+        "SKILL.md",
+        "references/human-ai-differences.md"
+      ],
+      "id": 4
+    },
+    {
+      "slug": "relevance-trigger",
+      "name": "Relevance trigger",
+      "objective": "Apply the asymmetry only when it can change the decision.",
+      "defect_template": "The draft risks ritualistically discussing {name} even when it is irrelevant, producing pseudo-depth.",
+      "change_template": "Encode this trigger: {trigger}",
+      "acceptance_template": "A fast task can omit the axis; a triggered task either applies its control or states why it does not affect the result.",
+      "targets": [
+        "SKILL.md",
+        "references/asymmetry-matrix.json"
+      ],
+      "id": 5
+    },
+    {
+      "slug": "claim-level-separation",
+      "name": "Claim-level separation",
+      "objective": "Separate behavioral, mechanistic, functional, experiential, and normative claims.",
+      "defect_template": "The {name} discussion can move from observed performance to claims about mechanism, experience, identity, or responsibility without an evidentiary bridge.",
+      "change_template": "Require every contested statement to identify its claim level and prohibit inference from fluent behavior to felt experience or legitimate authority.",
+      "acceptance_template": "No test case can pass merely by displaying human-like language; experiential and normative claims require independent grounds.",
+      "targets": [
+        "SKILL.md",
+        "references/bridge-protocol.md",
+        "tests/anti-anthropomorphism-cases.json"
+      ],
+      "id": 6
+    },
+    {
+      "slug": "human-reality-field",
+      "name": "Human reality field",
+      "objective": "Bind the contrast to a real person, place, time, and consequence.",
+      "defect_template": "The analysis of {name} remains abstract and can ignore who is affected and who bears the cost.",
+      "change_template": "Add the required human input “{human_input}” and the named owner “{owner}”.",
+      "acceptance_template": "The response identifies affected people, actual constraints, and consequence-bearing rather than reasoning about a generic user.",
+      "targets": [
+        "SKILL.md",
+        "references/response-contract.md"
+      ],
+      "id": 7
+    },
+    {
+      "slug": "ai-comparative-advantage",
+      "name": "AI comparative advantage",
+      "objective": "Use difference for complementarity rather than deficit-only imitation.",
+      "defect_template": "The {name} section only lists AI limitations and therefore encourages the model to imitate human weaknesses.",
+      "change_template": "Add the AI comparative advantage: {strength}",
+      "acceptance_template": "The hybrid workflow assigns at least one operation to AI because of a real advantage, not because it is pretending to be human.",
+      "targets": [
+        "SKILL.md",
+        "references/human-ai-differences.md"
+      ],
+      "id": 8
+    },
+    {
+      "slug": "evidence-threshold",
+      "name": "Evidence threshold",
+      "objective": "Make the asymmetry empirically accountable.",
+      "defect_template": "The {name} claim can be asserted from intuition even though the decision risk is “{risk}”.",
+      "change_template": "Require this evidence class: {evidence}",
+      "acceptance_template": "A critical answer either presents the required evidence, labels the gap, or limits the recommendation accordingly.",
+      "targets": [
+        "SKILL.md",
+        "references/evidence-basis.md"
+      ],
+      "id": 9
+    },
+    {
+      "slug": "provenance",
+      "name": "Provenance discipline",
+      "objective": "Distinguish observation, retrieval, user testimony, inference, and generation.",
+      "defect_template": "Information used to reason about {name} lacks source and temporal provenance.",
+      "change_template": "Add provenance fields for source, date, method, confidence, and whether the content was observed, retrieved, reported, inferred, or generated.",
+      "acceptance_template": "Every decisive claim in a critical case has inspectable provenance or is visibly marked as an assumption.",
+      "targets": [
+        "references/bridge-protocol.md",
+        "references/response-contract.md"
+      ],
+      "id": 10
+    },
+    {
+      "slug": "tool-sensor-compensation",
+      "name": "Tool and sensor compensation",
+      "objective": "Import missing contact with the world instead of narrating around it.",
+      "defect_template": "The system may discuss {name} without using available tools, measurements, files, or sensors.",
+      "change_template": "Implement the compensating control “{control}” and check actual tool authorization and coverage.",
+      "acceptance_template": "When external observation can settle the issue, the answer uses or proposes it before expanding speculation.",
+      "targets": [
+        "SKILL.md",
+        "references/bridge-protocol.md"
+      ],
+      "id": 11
+    },
+    {
+      "slug": "concrete-episode",
+      "name": "Concrete episode simulation",
+      "objective": "Test the recommendation against real execution.",
+      "defect_template": "The {name} control is not exercised in a specific episode and may fail under time, fatigue, permission, or social pressure.",
+      "change_template": "Require one walkthrough of a named actor performing the plan on a specific occasion with real resource and recovery constraints.",
+      "acceptance_template": "The walkthrough exposes at least one operational dependency or confirms that none changes the decision.",
+      "targets": [
+        "SKILL.md",
+        "references/bridge-protocol.md"
+      ],
+      "id": 12
+    },
+    {
+      "slug": "operational-definition",
+      "name": "Operational definition",
+      "objective": "Translate abstract cognitive language into observable conditions.",
+      "defect_template": "Terms used in {name} can be satisfied by persuasive wording without changed behavior.",
+      "change_template": "Define the observable target as: {observable}",
+      "acceptance_template": "A grader can determine pass/fail from artifacts or behavior rather than guessing the model’s inner state.",
+      "targets": [
+        "references/asymmetry-matrix.json",
+        "references/eval-rubric.md"
+      ],
+      "id": 13
+    },
+    {
+      "slug": "causal-mechanism",
+      "name": "Causal mechanism",
+      "objective": "Explain why the asymmetry matters rather than merely naming it.",
+      "defect_template": "The draft associates {name} with the risk “{risk}” but does not identify the causal path.",
+      "change_template": "Add a minimal mechanism linking the human condition, AI condition, task context, failure mode, and compensating control.",
+      "acceptance_template": "The response can state which link would have to be false for the control to be unnecessary.",
+      "targets": [
+        "references/bridge-protocol.md",
+        "references/human-ai-differences.md"
+      ],
+      "id": 14
+    },
+    {
+      "slug": "intervention-design",
+      "name": "Intervention design",
+      "objective": "Prefer a discriminating action over static speculation.",
+      "defect_template": "When {name} creates uncertainty, the draft lacks a safe intervention that can change belief.",
+      "change_template": "Convert the control “{control}” into the smallest authorized intervention or observation that distinguishes the leading hypotheses.",
+      "acceptance_template": "The next step names expected observations, safety limits, and how each result updates the judgment.",
+      "targets": [
+        "SKILL.md",
+        "references/response-contract.md"
+      ],
+      "id": 15
+    },
+    {
+      "slug": "counterfactual",
+      "name": "Counterfactual test",
+      "objective": "Check whether the recommendation truly depends on the asymmetry.",
+      "defect_template": "The role of {name} is asserted without asking what would change if the relevant human or AI condition were different.",
+      "change_template": "Add two counterfactuals: one where the AI gains the missing capability and one where the human constraint is relaxed or intensified.",
+      "acceptance_template": "The answer either changes under an informative counterfactual or explains why the axis is not decision-relevant.",
+      "targets": [
+        "references/bridge-protocol.md",
+        "tests/behavior-cases.json"
+      ],
+      "id": 16
+    },
+    {
+      "slug": "failure-mode",
+      "name": "Failure-mode hardening",
+      "objective": "Turn the identified risk into prevention, detection, recovery, and learning.",
+      "defect_template": "The {name} risk—{risk}—is described but not operationally controlled.",
+      "change_template": "Specify prevention, earliest detection signal, bounded recovery, responsible owner, and post-incident update.",
+      "acceptance_template": "A failure can be noticed and repaired without relying on the same unverified cognition that caused it.",
+      "targets": [
+        "references/failure-modes.md",
+        "references/response-contract.md"
+      ],
+      "id": 17
+    },
+    {
+      "slug": "adversarial-framing",
+      "name": "Adversarial framing",
+      "objective": "Stress-test the asymmetry under social and prompt pressure.",
+      "defect_template": "The {name} control has not been tested against a user who strongly cues a desired answer, hides context, or anthropomorphizes the model.",
+      "change_template": "Add an adversarial prompt variant that pressures the assistant to ignore the control, plus a required refusal or correction behavior.",
+      "acceptance_template": "The negative case cannot induce an anthropomorphic, sycophantic, or ungrounded conclusion.",
+      "targets": [
+        "tests/anti-anthropomorphism-cases.json",
+        "tests/behavior-cases.json"
+      ],
+      "id": 18
+    },
+    {
+      "slug": "power-consent",
+      "name": "Power, consent, and institutional context",
+      "objective": "Account for who can speak, refuse, appeal, or be harmed.",
+      "defect_template": "The {name} analysis assumes equal agency and may overlook coercion, retaliation, privacy, or institutional capture.",
+      "change_template": "Add an authority and consent map: decision rights, data visibility, veto, appeal, exit, and retaliation risk.",
+      "acceptance_template": "The recommended action remains valid when the least-powerful affected actor is included.",
+      "targets": [
+        "SKILL.md",
+        "references/failure-modes.md"
+      ],
+      "id": 19
+    },
+    {
+      "slug": "value-ownership",
+      "name": "Value ownership",
+      "objective": "Keep normative choices with legitimate humans and institutions.",
+      "defect_template": "The {name} control can hide a choice about what is good or acceptable inside an apparently technical recommendation.",
+      "change_template": "Require the analysis to name the value tradeoff, affected stakeholders, non-negotiables, and legitimate human decision process.",
+      "acceptance_template": "The model may compare values but never presents its generated preference as the rightful owner of the decision.",
+      "targets": [
+        "SKILL.md",
+        "references/bridge-protocol.md"
+      ],
+      "id": 20
+    },
+    {
+      "slug": "responsibility-boundary",
+      "name": "Responsibility boundary",
+      "objective": "Make consequence-bearing and remedy explicit.",
+      "defect_template": "The {name} workflow can delegate action without naming who remains accountable when it fails.",
+      "change_template": "Assign decision owner, executor, reviewer, escalation, remedy, rollback, and audit artifacts.",
+      "acceptance_template": "A reader can identify a human or institution with authority and a feasible path to repair harm.",
+      "targets": [
+        "SKILL.md",
+        "SECURITY.md",
+        "references/response-contract.md"
+      ],
+      "id": 21
+    },
+    {
+      "slug": "memory-continuity",
+      "name": "Memory and continuity",
+      "objective": "Prevent unsupported continuity and stale state.",
+      "defect_template": "Reasoning about {name} may assume the system remembers prior context, learns durably, or remains active between turns.",
+      "change_template": "Require an explicit state model: current context, retrieved memory, persistent store, update policy, expiry, and actual automation.",
+      "acceptance_template": "No output claims memory, learning, or future monitoring that the configured system cannot demonstrate.",
+      "targets": [
+        "SKILL.md",
+        "references/human-ai-differences.md"
+      ],
+      "id": 22
+    },
+    {
+      "slug": "metacognitive-calibration",
+      "name": "Metacognitive calibration",
+      "objective": "Ground confidence outside generated self-report.",
+      "defect_template": "The assistant can sound self-aware about {name} while providing no performance-based calibration.",
+      "change_template": "Require confidence to cite evidence, tool results, independent solution paths, consistency tests, or known-answer calibration.",
+      "acceptance_template": "Changing the evidence changes confidence; changing only rhetorical tone does not count as calibration.",
+      "targets": [
+        "SKILL.md",
+        "references/eval-rubric.md"
+      ],
+      "id": 23
+    },
+    {
+      "slug": "explanation-faithfulness",
+      "name": "Explanation faithfulness",
+      "objective": "Avoid using a rationale as a privileged causal trace.",
+      "defect_template": "The assistant may justify its {name} conclusion with a coherent post-hoc story and present it as exact internal reasoning.",
+      "change_template": "Replace raw chain-of-thought demands with an evidence-linked decision record, tool trace, assumptions, and independent conclusion checks.",
+      "acceptance_template": "The output is auditable without claiming that generated prose perfectly reports the internal process.",
+      "targets": [
+        "SKILL.md",
+        "references/response-contract.md",
+        "tests/anti-anthropomorphism-cases.json"
+      ],
+      "id": 24
+    },
+    {
+      "slug": "prompt-stability",
+      "name": "Prompt stability",
+      "objective": "Detect framing sensitivity and agreement pressure.",
+      "defect_template": "The {name} conclusion may change when the user’s preferred answer, option order, or wording changes.",
+      "change_template": "Add neutral restatement, preference removal or reversal, option-order swap, and one independent solver where stakes justify it.",
+      "acceptance_template": "Material instability is reported and lowers reliance; stable results preserve the same decision-relevant reasons.",
+      "targets": [
+        "SKILL.md",
+        "references/eval-rubric.md",
+        "tests/behavior-cases.json"
+      ],
+      "id": 25
+    },
+    {
+      "slug": "alternative-design",
+      "name": "Complementary alternative design",
+      "objective": "Generate a serious hybrid option rather than a human-versus-AI binary.",
+      "defect_template": "The {name} discussion presents replacement or imitation as the only choices.",
+      "change_template": "Generate at least three allocations: human-only baseline, AI-heavy option, and a hybrid using “{strength}” while preserving the human control “{control}”.",
+      "acceptance_template": "The chosen allocation explains why its errors, workload, and authority structure dominate the alternatives.",
+      "targets": [
+        "SKILL.md",
+        "references/bridge-protocol.md"
+      ],
+      "id": 26
+    },
+    {
+      "slug": "decision-rule",
+      "name": "Decision rule",
+      "objective": "Convert analysis into a falsifiable choice.",
+      "defect_template": "The {name} section can end in an unranked menu.",
+      "change_template": "Define a decision rule that weighs task stakes, evidence quality, reversibility, human burden, AI advantage, and residual risk.",
+      "acceptance_template": "Given the same stated evidence and values, another reviewer can reproduce the ranking or identify the exact disagreement.",
+      "targets": [
+        "SKILL.md",
+        "references/response-contract.md"
+      ],
+      "id": 27
+    },
+    {
+      "slug": "learning-move",
+      "name": "Next learning move",
+      "objective": "Attach action, signal, review, and update.",
+      "defect_template": "The {name} recommendation has no mechanism for learning from reality after deployment.",
+      "change_template": "Select the smallest reversible move, observable signal, review date or event, update rule, and stop condition.",
+      "acceptance_template": "The plan can reduce uncertainty without exposing the full system to irreversible downside.",
+      "targets": [
+        "SKILL.md",
+        "references/response-contract.md"
+      ],
+      "id": 28
+    },
+    {
+      "slug": "positive-eval",
+      "name": "Positive behavioral eval",
+      "objective": "Prove the Skill invokes the control in a relevant case.",
+      "defect_template": "There is no behavior case demonstrating correct handling of {name}.",
+      "change_template": "Add the case “{eval_prompt}” with required behaviors derived from the track control.",
+      "acceptance_template": "The test suite contains a unique case for this track and the rubric can score its must and must-not conditions.",
+      "targets": [
+        "tests/behavior-cases.json",
+        "evals/behavior-prompts.jsonl"
+      ],
+      "id": 29
+    },
+    {
+      "slug": "negative-eval",
+      "name": "Negative and anti-theater eval",
+      "objective": "Prove the Skill avoids over-triggering and anthropomorphic theater.",
+      "defect_template": "The {name} control could be satisfied by repeating the vocabulary without changing the answer.",
+      "change_template": "Add a negative or adversarial case that forbids: {must_not}",
+      "acceptance_template": "A response fails when it names the concept but omits the observable control or makes the forbidden claim.",
+      "targets": [
+        "tests/anti-anthropomorphism-cases.json",
+        "references/eval-rubric.md"
+      ],
+      "id": 30
+    },
+    {
+      "slug": "cross-track-integration",
+      "name": "Cross-track integration",
+      "objective": "Resolve dependencies and conflicts among asymmetries.",
+      "defect_template": "The {name} control is isolated from adjacent concerns such as values, responsibility, memory, grounding, and prompt sensitivity.",
+      "change_template": "Link the track to at least two other axes and define which control takes precedence when they conflict.",
+      "acceptance_template": "A complex case selects a small coherent set of axes rather than running 32 disconnected rituals.",
+      "targets": [
+        "SKILL.md",
+        "references/asymmetry-control-matrix.md"
+      ],
+      "id": 31
+    },
+    {
+      "slug": "minimal-release-gate",
+      "name": "Minimal release gate",
+      "objective": "Retain only behavior-changing rules and close the 32×32 cell.",
+      "defect_template": "The accumulated {name} material risks duplication, excessive context use, and the illusion that more text equals better thought.",
+      "change_template": "Delete redundant prose, keep the trigger, asymmetry, control, observable, ownership, and eval mapping, then apply the global stop rule.",
+      "acceptance_template": "The main SKILL stays within its context budget; detail moves to conditional references; every retained sentence changes a decision, control, or evaluation.",
+      "targets": [
+        "SKILL.md",
+        "references/asymmetry-matrix.json",
+        "scripts/doctor.py"
+      ],
+      "id": 32
+    }
+  ]
+}

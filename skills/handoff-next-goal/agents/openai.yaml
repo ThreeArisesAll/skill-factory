@@ -1,0 +1,4 @@
+interface:
+  display_name: "Handoff Next Goal"
+  short_description: "Start the next development stage in Goal mode"
+  default_prompt: "Use $handoff-next-goal to identify the next development stage, build its self-contained Goal Contract, and start exactly one new Codex thread in Goal mode."

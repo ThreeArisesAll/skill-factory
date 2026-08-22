@@ -1,0 +1,6 @@
+interface:
+  display_name: "Human Reasoning Bridge"
+  short_description: "Bridge human–AI cognitive asymmetries into accountable judgment"
+  default_prompt: "Use $human-reasoning to compare the real human situation with the actual AI system, import missing reality contact, make a judgment, preserve human ownership, and define the next learning move."
+policy:
+  allow_implicit_invocation: true

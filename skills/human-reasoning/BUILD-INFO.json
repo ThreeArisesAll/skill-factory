@@ -1,0 +1,12 @@
+{
+  "skill": "human-reasoning",
+  "release": "v2.1124",
+  "date": "2026-08-22",
+  "base_release": "v1.100",
+  "base_iterations": 100,
+  "new_iterations": 1024,
+  "total_iterations": 1124,
+  "matrix": "32 asymmetry tracks × 32 refinement passes",
+  "final_chain_hash": "85564233f6c04f1fa508b03366d19e33fe8f5dc6e70802ec4196d7fd62ab232c",
+  "truthfulness": "Specification-level iterations and deterministic package tests; no claim of 1024 independent live model runs."
+}
