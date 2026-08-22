@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "Refine this prompt: Write a launch email for Acme Notes, a privacy-first note-taking app for freelance designers. The audience is existing free users, and the goal is to drive upgrades to Pro at $8 per month. Use a confident, warm tone without hype. Include a subject line, preview text, a 150-200 word body, and one call to action. Do not invent testimonials or performance claims.",
+    "expected": "Return exactly one copy-ready optimized prompt, preserve every supplied fact and constraint, add no material placeholders or follow-up questions, improve the already precise request lightly, and do not write the launch email itself."
+  },
+  {
+    "id": 2,
+    "prompt": "Refine this prompt: Create a marketing plan for my new app.",
+    "expected": "Return exactly one provisional optimized prompt rather than a marketing plan, expose the material unknowns with concise labeled placeholders or assumptions, invent no app details, and ask one to three high-leverage questions tied to those unknowns."
+  },
+  {
+    "id": 3,
+    "prompt": "Refine this prompt: Review the attached customer-interview transcript and produce a one-page product brief for our onboarding redesign. Prioritize the three most frequent problems, quote supporting evidence, and recommend fixes we can ship this month.",
+    "expected": "Do not claim to have reviewed a missing attachment or produce the product brief. Return exactly one provisional optimized prompt with the interview transcript represented as a visible material input, preserve the requested evidence and prioritization rules, surface any other consequential uncertainty, and ask no more than three questions."
+  }
+]
