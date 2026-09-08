@@ -1,7 +1,7 @@
 interface:
   display_name: "Refine Prompts"
-  short_description: "Turn rough requests into reliable prompts with clear unknowns"
-  default_prompt: "Use $refine-prompts to uncover the need, expose material unknowns, and return one optimized prompt:"
+  short_description: "Discover intent and craft precise GPT-6 Astra prompts"
+  default_prompt: "Use $refine-prompts to uncover the supported intent behind my rough request and return one GPT-6 Astra optimized prompt with clear outcomes, constraints, and visible material uncertainty:"
 
 policy:
   allow_implicit_invocation: false

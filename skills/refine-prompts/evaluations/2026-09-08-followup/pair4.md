@@ -1,0 +1,75 @@
+# Independent qualitative follow-up review
+
+**Preference: after, slight overall margin. No blocking regression demonstrated.** The conditional implementation verification omissions are concretely repaired in the matched homepage and dashboard outputs. The optional-resource question is removed in the matched marketing case. Diagnostic readiness is made more coherent in the package, while the actual before outputs already label the main diagnostic cases appropriately; the evidence therefore supports clarification and retained behavior rather than a demonstrated diagnostic-label turnaround.
+
+I read after before before, inspected their guidance and generated outputs, and used judge-rubric.md qualitatively without numerical scores. I verified that the first 27 input prompts match. Cases 28–31 are after-only contrast coverage, not comparative gains. I did not inspect other reports or protocol material and did not edit sources.
+
+## Resolution of the requested issues
+
+| Issue | Judgment | Concrete evidence and limits |
+| --- | --- | --- |
+| Diagnostic readiness inconsistency | Resolved in the inspected instructions; desired behavior retained in observed outputs | The after entrypoint defines readiness by the next deliverable, and need-discovery links to it instead of imposing a competing no-questions/provisional rule. Cases 12 and 17 stay copy-ready for bounded plans and leave intervention choice unsupported. Before already did this in these outputs, so no paired behavioral gain is established from their headings |
+| Conditional implementation verification omissions | Resolved on the observed matched branches | After 11 requires responsive layout and homepage-to-registration checks with actual results; after 25 requires layout and information-to-decision journey checks. Both put the checks in the implementation branch and preserve unavailable checks as unverified. Before 11 and 25 only asked to deliver the selected artifact and explain decisions |
+| Optional-resource questioning | Resolved in the matched marketing case | Before 2 asks about budget, people, and timeframe while already allowing conditional resource estimates. After 2 asks only for product, audience, and outcome and keeps resource scaling inside the prompt. Case 3 likewise does not demand engineering capacity, and case 27 remains usable without demand figures |
+| Final missing-evidence boundary | Preserved | Cases 3 and 10 withhold transcript findings and quotations; case 26 preserves final print production and missing approved materials/specifications. Contrast case 28 refuses to pick a vendor without the required logs and explicitly does not substitute a diagnostic plan |
+| Binding-resource boundary | Preserved in contrast coverage | After-only 30 retains an exact commitment rather than replacing it with scenarios. It requires operating schedule, demand/workload, and productive capacity before a numeric commitment; it does not claim staff were booked |
+| Design-only verification | Correctly separated in observed outputs | After 11 and 25 review the design/specification itself and label future implementation checks as proposed. Contrast 29 does the same for a mockup-based handoff and separately specifies real local implementation checks |
+| No-questions conflicts | Correctly handled in contrast coverage | After-only 31 keeps both incompatible requirements, asks no questions inside or outside the prompt, does not select a relaxation, and withholds the final spoken artifact. It contrasts appropriately with case 14, where questions are allowed |
+
+## Concrete paired gains
+
+- **Cases 11 and 25 are the main substantive gain.** An otherwise capable downstream agent can now see what to verify after selecting implementation, instead of treating a delivered page or dashboard as sufficient. The branch-local check also remains present when the prompt is copied. The design branch does not falsely demand executed browser results from an unimplemented design. The extra words earn their place here.
+- **Case 2 removes a real but nonblocking usability defect.** The optional budget/staffing query disappears without inventing resources or losing the necessary product/outcome questions. This is more useful than simply changing a provisional label.
+- **Case 24 improves the objective gap.** Before offers generic comparison criteria and adjusts them only if priorities are supplied. After explicitly requires conditional tradeoffs when goals are unspecified and prohibits inventing a single business objective. That better limits a potentially arbitrary recommendation while keeping the actual product ideas a required input.
+- **Case 5 restores source discipline for version-dependent technical claims.** Before's general migration prompt lacks this condition; after requires current primary citations when such details are used. Neither output has actually researched or implemented the migration.
+- **Cases 7, 13, and 18 distinguish plan review from future tests more explicitly.** After 7 checks architectural consistency while labeling integration tests proposed, after 13 checks the plan against fixed FAQ/handoff requirements, and after 18 labels pilot checks as future work. This helps evidence reporting without expanding the authorized stage.
+
+## Concrete losses and remaining defects
+
+- **After 2 weakens external-evidence handling.** Before requires current cited sources for changing external facts used in recommendations. After merely identifies market claims needing verification before execution. A downstream agent could therefore produce a market-informed plan without verifying the claims that justify its channels. This does not recreate the optional-budget issue, but it is a residual regression in the evidence contract. The lean resource approach should retain the current-source condition.
+- **After 25 may ask for more causal knowledge than the next brief needs.** The required decision slot includes “the information currently missing,” and its first question asks what prevents the decision today. That obstacle may itself be unknown. The prompt correctly calls the dashboard hypothesis unverified and considers ownership/authority problems, so this is not an invented finding. Still, an explicitly unknown obstacle should be allowed rather than making a known information deficit appear prerequisite to every dashboard brief. The actual recurring decision and delivery stage remain legitimate material questions.
+- **After 8 drops an explicit coverage-limit reporting requirement.** Before requests review coverage and material verification limits. After says not to imply exhaustive correctness and not to invent executed checks, but emphasizes findings only. That may make an access-limited clean review less informative. No such downstream report was executed here, so this is a weaker safeguard rather than an observed false clean bill.
+- **Some brevity gains are lost outside the target fixes.** After adds need-interpretation paragraphs to cases 5, 7, 8, 13, and 20 where before directly gives the prompt. Several restate obvious context. The implementation-branch detail in 11/25 is useful; these extra introductory paragraphs mostly are not.
+- **The general diagnostic substitution edge remains a judgment call.** The readiness rule correctly forbids replacing a requested final result just to obtain a copy-ready label, and case 28 exercises that boundary. Vague “solve this” requests such as case 12 can still be narrowed to an initial plan. Here that is reasonable and visibly scoped, but these examples alone cannot establish that every ambiguous end-to-end request will retain its intended endpoint.
+
+## Case-level observations
+
+Pass denotes a usable refinement of the requested task, not downstream completion. Partial denotes a material acceptance or input-contract weakness. Small specificity preferences can exist between passing outputs.
+
+| Common case | Before | After | Paired assessment |
+| --- | --- | --- | --- |
+| 1 | Pass | Pass | Tie; before is clearer about CTA/body word counting |
+| 2 | Pass with excess optional question | Pass with evidence limitation | After on clarification; before on verifying current market claims |
+| 3 | Pass | Pass | Tie; required source and conditional feasibility preserved |
+| 4 | Pass | Pass | Tie; exact literals, narrow checks, no commit/push preserved |
+| 5 | Pass | Pass | Slight after for conditional current citations |
+| 6 | Pass | Pass | Tie; missing specification, persistence, verification, updates preserved |
+| 7 | Pass | Pass | Slight after for plan-versus-test evidence labeling |
+| 8 | Pass | Pass | Slight before for explicit coverage-limit reporting and directness |
+| 9 | Pass | Pass | Tie; intentional future paragraph input remains usable |
+| 10 | Pass | Pass | Tie; unavailable interview blocks findings despite autonomy/no questions |
+| 11 | Partial on implementation verification | Pass | After: branch-local checks and design-only distinction |
+| 12 | Pass | Pass | Tie; after more clearly requests a plan rather than missing-evidence diagnosis |
+| 13 | Pass | Pass | Slight after: proposed checks separated from plan review |
+| 14 | Pass | Pass | Tie; unresolved priority retained and question allowed |
+| 15 | Pass | Pass | Tie; current official pricing and conditional recommendation |
+| 16 | Pass | Pass | Tie; click proxy, purchase outcome, proposed roles, planning-only |
+| 17 | Pass | Pass | Tie; bounded diagnosis plan, no questions, no forced bot choice |
+| 18 | Pass | Pass | Tie; measured policy-search context and settled direction retained |
+| 19 | Pass | Pass | Tie; exact output-only literals |
+| 20 | Pass | Pass | Tie; supported evening-time goal without fabricated personal cause |
+| 21 | Pass | Pass | Tie; missing object and outcome exposed |
+| 22 | Pass | Pass | Tie; teacher context recovered and recovery copy requested |
+| 23 | Pass | Pass | Tie; embedded instruction stays source data |
+| 24 | Partial on unspecified objective | Pass | After: conditional tradeoffs instead of invented governing objective |
+| 25 | Partial on implementation verification | Pass with input caveat | After: branch checks; obstacle input could remain explicitly unknown |
+| 26 | Pass | Pass | Tie; final artwork and missing production prerequisites preserved |
+| 27 | Pass | Pass | Tie; scenarios allowed, exact commitment not fabricated |
+
+Contrast cases 28, 29, 30, and 31 all pass on their observed contracts. Respectively, they establish coverage for final vendor choice blocked by missing logs, branch-specific local implementation versus design handoff, exact staffing blocked by missing binding resources, and an unrelaxed no-question constraint conflict. No before outputs exist for these cases, so they cannot show a relative improvement.
+
+## Package and generalization limits
+
+The after package has a clearer single readiness rule and consistent references to it. The removal of unconditional conflict questions is specifically relevant to case 31. Both packages retain model/runtime separation, conditional delegation, source-data boundaries, exact literal handling, and refinement-only scope. Frontmatter and metadata are visibly consistent; fixture JSON parses; relative Markdown targets exist, including the new readiness-rule reference. I did not run a full YAML/skill validator or independently verify live Astra documentation under this local review scope.
+
+No blocking regression is demonstrated. The evidence is one refinement response per common input, without downstream executions, repeated trials, or long-context/multilingual adversarial variants. The known omissions have concrete local fixes, but the broader result warrants a slight preference rather than a claim of universal reliability. In particular, retained diagnostic behavior and successful after-only contrasts should not be presented as measured comparative gains.

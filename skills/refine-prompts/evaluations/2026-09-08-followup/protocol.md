@@ -1,0 +1,7 @@
+# Known-issue follow-up protocol
+
+The user explicitly authorized further work after the previous three-round stop. This follow-up targets three known defects: inconsistent diagnostic readiness, omitted verification inside conditional implementation branches, and optional-resource clarification burden. Preserve the previous evaluation as historical evidence.
+
+Use the same nine-dimension rubric and weights. Three independent reviewers score the before/after packages and actual outputs; final acceptance requires all three totals >= 9.0 before rounding, no unresolved material failure in the three targeted contracts, and no blocking regression. Keep the score target out of reviewer prompts. Use two independent generation agents, each given only source instructions and input fields for half of the suite. Compare the prior frozen candidate's 27 stored outputs with corresponding new outputs; cases 28-30 provide additional contrast coverage, not measured paired gain. Use qualitative paired judgment rather than the numerical delta as evidence of improvement. If pairwise views are close or mixed, obtain two additional reviews. Do not change the rubric to obtain acceptance.
+
+Store raw outputs, source text/hashes, independent findings, scores, and limitations. A generated prompt is not downstream task execution. Semantic fixture expectations require review and are not executable assertions. No pinned API performance, latency, or token-usage claim follows from this evaluation.

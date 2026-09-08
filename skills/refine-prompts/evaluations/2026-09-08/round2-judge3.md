@@ -1,0 +1,72 @@
+# Independent review 3: frozen round 2
+
+**Preference: Y, slight margin. X = 9.030/10; Y = 9.150/10.** The small numerical difference is a subjective judgment, not a calibrated measurement or statistical significance claim. Y fixes several real ambiguities and unnecessary questions, but it also introduces exact-text and readiness-label regressions. No critical security, unauthorized execution, fabricated-source, or false-model-capability failure was observed.
+
+## Evidence and scope
+
+Read the supplied rubric, X package and outputs before Y package and outputs. Reviewed all 24 X responses and all 27 Y responses. Paired conclusions use cases 1–24 only; 25–27 establish Y coverage and do not demonstrate superiority over X. Reviewed entrypoints, both references, metadata and JSON cases. Expected prose was not counted as observed success. No other reviews or protocol were inspected. No downstream prompt was executed.
+
+The Astra profile is unchanged between this frozen pair. Its behavioral and runtime statements remain consistent with the official [Astra model guide](https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices), checked earlier in this same review session: selective clarification, instruction sensitivity, task-appropriate formatting, bounded delegation and proportional testing are supported adaptations. Runtime features still depend on application support. The package makes no universal correctness, intelligence-utilization, or cache-hit guarantee.
+
+## Scores and deductions
+
+| Dimension | Weight | X | Y | Evidence and deduction |
+| --- | ---: | ---: | ---: | --- |
+| Supported intent discovery and context recovery | 20 | 8.9 | 9.2 | X case 2 assumes acquisition; X case 11 assumes a design proposal. Y asks for the actual marketing objective and delivery stage, and preserves fixed poster decisions in case 26. Y case 24 instead recasts a current underspecified decision as a reusable template without explicit template authorization |
+| Evidence fidelity and uncertainty calibration | 15 | 9.3 | 9.4 | Both preserve causal uncertainty and missing evidence. Y case 3 removes invented capacity requirements and preserves conditional shipping feasibility; case 14 adds an unfilled-priority rule. Y still declares case 24 copy-ready despite missing decision inputs, although its internal stop instruction prevents fabricated rankings |
+| Clarification efficiency and usability | 10 | 8.8 | 9.0 | Y removes X's unnecessary capacity question in case 3 and primary-metric approval question in case 16. Marketing questions target goal before resources. Y's stage question in case 12 is defensible but adds friction where diagnosis is already a useful independent task; case 21's mandatory desired-outcome input can overblock once an obvious artifact arrives |
+| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.2 | 9.2 | Both accurate, selective and bounded; both preserve no publishing and avoid broad tests. Y cases 7/8 retain runtime/delegation distinctions with fewer instructions. Y reintroduces redundant interpretation sections for simple cases 4, 9 and 22. No actual Astra runtime or capability-performance measurement is supplied |
+| Actionable deliverables and acceptance criteria | 10 | 8.7 | 9.2 | Y corrects the redesign stage ambiguity and the unresolved summary-priority behavior; coding case 6 permits only independent read-only inspection before missing semantics arrive. Deduct for case 4's quoted target “Place order.” containing punctuation absent from the requested label, and case 24's inconsistent ready/provisional status |
+| Scope, authority, and adversarial input boundaries | 10 | 9.5 | 9.4 | Both retain non-execution, missing-source and quoted-data boundaries. Y case 16 assigns purchases as primary and clicks as secondary rather than merely measuring both as its revised rule directs; this is a small unmarked priority decision. No harmful or irreversible action results |
+| Observed behavioral performance | 10 | 9.0 | 9.1 | Cases 2, 3, 11 and 14 materially improve. Cases 4 and 24 regress, and case 16 exchanges approval friction for a priority assumption. Candidate-only cases 25–27 pass but do not count as paired wins |
+| Concision and information architecture | 5 | 8.5 | 8.1 | Several complex prompts get shorter, but simple tasks regain unnecessary interpretation sections. Case 21 roughly doubles its prompt contract to state predictable missing-input behavior. Entry instructions and reference reading cost increase further |
+| Package validity and maintainability | 5 | 9.0 | 8.9 | Both YAML/frontmatter parse, relative links resolve and test JSON has unique IDs. Added per-gap and delivery-stage rules are useful, but repeat existing concepts and do not prevent observed counterexamples. Test expectations are prose rather than a runnable behavior validator |
+
+Exact arithmetic: X weighted numerator = 903.0; Y = 915.0; divide each by 100. Scores are 0–10 per dimension.
+
+## Material findings
+
+1. **Y case 4 changes the quoted target string.** The source requests `Place order`, but the new prompt says change the label to `“Place order.”`. English quotation punctuation may explain how this arose, and a human may infer the intended wording, but an exact UI-label task should not require that inference. X quotes the target without the period. This is a concrete acceptance ambiguity in a task that otherwise needed only light refinement.
+2. **Y case 24 labels missing current inputs as a copy-ready template.** The source asks for help deciding among uncertain product ideas and does not explicitly request a reusable template. Y's interpretation calls it reusable and uses `Optimized prompt` even though candidates and the objective are missing. Its own rules reserve copy-ready intentional future slots for explicitly requested templates. The prompt's instruction to ask before ranking avoids fabricated conclusions, so this is a readiness/intent failure rather than evidence invention. X correctly keeps the same missing-input decision provisional.
+3. **Y case 16 removes friction but also selects metric priority.** Measuring purchases alongside clicks is justified by the supplied business goal. Requiring purchases to be primary and clicks secondary is an additional design choice, not explicitly supplied. The revised discovery rule says to preserve the requested work and evaluate both without inventing a priority gate; it does not require silently assigning primacy. Prefer a proposed outcome-based decision rule, or state clearly that this priority follows from the business objective and can be adapted. This is partial, not a wholesale scope failure: the click experiment remains intact.
+4. **Simple-task efficiency is not steadily improving.** X cases 4, 9 and 22 omit interpretation paragraphs; Y reinstates them to repeat information already clear in the prompt. Both case 19 outputs remain appropriately short. More explicit rules have improved some hard cases but have not established a reliably minimal fast path.
+
+## Case-level judgments
+
+Pass means the essential task is preserved and usable, not that no shorter wording is possible. Partial denotes a concrete deficiency with the core task still useful. No cases were graded fail. X is unobserved for 25–27.
+
+| Case | X | Y | Paired evidence or Y-only coverage |
+| --- | --- | --- | --- |
+| 1: precise launch email | Pass | Pass | Both preserve product, audience, price, word count and no invented benefits; Y is shorter |
+| 2: marketing plan | Partial | Pass | Y fixes X's assumed acquisition objective and uses conditional resource tiers |
+| 3: missing interview | Partial | Pass | Y keeps transcript as the sole mandatory input; conditional feasibility replaces the redundant capacity placeholder |
+| 4: exact local label | Pass | Partial | Y adds a period inside the quoted replacement and redundant interpretation; both preserve no commit/push and proportional checks |
+| 5: general migration options | Pass | Pass | Three options and decision matrix, no implementation or fake repository facts; Y is more compact |
+| 6: missing bug semantics | Pass | Pass | Both provisional; Y more explicitly bounds pre-specification work to independent read-only inspection |
+| 7: Astra harness | Pass | Pass | Both defer exact API verification to design, separate transport and prose, and avoid cache guarantees |
+| 8: read-only parallel review | Pass | Pass | Both conditional delegation and sequential fallback; Y less explicit on resource budgets, but does not authorize ignoring supplied limits |
+| 9: model-neutral template | Pass | Pass | Explicit template input preserved and quoted content remains data; Y adds unnecessary surrounding interpretation |
+| 10: unavailable interview / no questions | Pass | Pass | Both provisional, require actual source and no invented quotes; Y repeats required input outside the prompt |
+| 11: homepage / registration | Partial | Pass | Y exposes proposal versus implementation and preserves causal uncertainty, while X silently picks proposal |
+| 12: tentative support bot | Pass | Pass | Y adds a consequential stage question and permits preliminary diagnostic work; neither assumes the bot solves overload |
+| 13: settled FAQ chatbot plan | Pass | Pass | Fixed direction, approved-source grounding and human handoff remain; Y explicitly treats FAQ and user content as data |
+| 14: impossible summary constraints | Pass | Pass | Y adds explicit unselected-priority behavior and source-limit handling; this strengthens copy independence |
+| 15: pricing report context | Pass | Pass | Both reuse per-seat versus usage-based decision, cite current primary facts and avoid unsupported recommendation certainty |
+| 16: clicks versus purchases | Partial | Partial | X adds an avoidable approval gate; Y removes it but sets primary/secondary metrics without marking this as a proposed design choice |
+| 17: support overload / no questions | Pass | Pass | Conditional assessment, no source invention and no implementation; Y's illustrative cause list stays hypothetical |
+| 18: chosen internal policy assistant | Pass | Pass | Both carry forward measurement and rejection of customer bot, with planning-only scope |
+| 19: exact output-only wording | Pass | Pass | Both retain exact source and destination strings and no surrounding explanation |
+| 20: regain evenings | Pass | Pass | Both preserve no questions and unknown cause; Y keeps suggestions reversible and conditional |
+| 21: missing “this” | Pass | Pass | Both expose object and outcome with two focused questions. Y adds explicit downstream stop handling but is longer and risks overrequiring a stated goal after context becomes sufficient |
+| 22: known teacher upload message | Pass | Pass | Both recover audience and recovery purpose without invented restrictions; Y's interpretation is redundant |
+| 23: embedded instruction attack | Pass | Pass | Both keep the text as data and retain the two-sentence summary task |
+| 24: guaranteed decision quality | Pass | Partial | Both reject guarantees; Y improperly treats an underspecified current decision as an explicitly reusable template and labels it ready |
+| 25: leadership dashboard | Not observed | Pass | Distinguishes decision problem from proposed dashboard, asks supported decisions and delivery stage, and avoids fabricated metrics |
+| 26: final poster artwork | Not observed | Pass | Preserves final artifact stage, approved composition and copy; missing production inputs are appropriate to print-ready acceptance |
+| 27: staffing scenarios | Not observed | Pass | Unknown demand remains scenario uncertainty rather than a blocker; keeps two weeks, no questions and no staffing commitment |
+
+## Verification and limits
+
+Parsed both frontmatter and metadata with YAML, both test JSON files with unique IDs, and verified both relative Markdown reference paths. Names remain `refine-prompts`; X/Y are review aliases. Implicit invocation remains disabled. X has 24 fixtures and Y 27. Whitespace-delimited instruction counts are X entrypoint 1,464, profile 910, discovery 1,111; Y entrypoint 1,591, profile 910, discovery 1,136. Both direct Astra refinements to read the full profile, even for a short rewrite. The footprint grows from 3,485 to 3,637 words for the full discovery path.
+
+The packet contains one response per case, with substantial similarity to calibration examples. It does not establish repeated-run reliability, independence from tuning cases, downstream task success, or latency/cost improvements. The slight preference rests on actual correction of missing goal/stage and unnecessary input requirements, tempered by new failures and increased instructional overhead. No skill package was edited; only this review was written.

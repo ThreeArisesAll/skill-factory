@@ -1,0 +1,643 @@
+{
+  "rubric": "protocol.md",
+  "rounds": [
+    {
+      "round": 1,
+      "judges": [
+        {
+          "judge": 1,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "8.8",
+              "Y": "8.8"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.2",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "8.7",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.0",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "8.8"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.1",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.7",
+              "Y": "9.1"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "9.0",
+              "Y": "9.2"
+            }
+          ],
+          "previous_total": "8.935",
+          "candidate_total": "9.155",
+          "preference": "candidate",
+          "margin": "slight"
+        },
+        {
+          "judge": 2,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "8.5",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.0",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "8.5",
+              "Y": "8.5"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.0",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "8.5"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "8.5",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "8.6",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.7",
+              "Y": "8.4"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "8.8",
+              "Y": "8.8"
+            }
+          ],
+          "previous_total": "8.735",
+          "candidate_total": "8.985",
+          "preference": "candidate",
+          "margin": "slight"
+        },
+        {
+          "judge": 3,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "8.5",
+              "Y": "8.9"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.2",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "8.6",
+              "Y": "8.8"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.0",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "8.7"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.2",
+              "Y": "8.5"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "9.0",
+              "Y": "9.0"
+            }
+          ],
+          "previous_total": "8.81",
+          "candidate_total": "9.03",
+          "preference": "candidate",
+          "margin": "slight"
+        }
+      ],
+      "mean": "9.056666666666666666666666667",
+      "minimum": "8.985",
+      "numeric_gate_passed": false
+    },
+    {
+      "round": 2,
+      "judges": [
+        {
+          "judge": 1,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "8.8",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.5",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.5",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.5",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "9.1",
+              "Y": "8.8"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "9.2",
+              "Y": "9.3"
+            }
+          ],
+          "previous_total": "9.155",
+          "candidate_total": "9.33",
+          "preference": "candidate",
+          "margin": "slight"
+        },
+        {
+          "judge": 2,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "9.0",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.4",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "8.5",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.3",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "8.5",
+              "Y": "8.8"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.2",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "8.8"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.4",
+              "Y": "8.3"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "8.8",
+              "Y": "8.8"
+            }
+          ],
+          "previous_total": "8.985",
+          "candidate_total": "9.06",
+          "preference": "candidate",
+          "margin": "slight"
+        },
+        {
+          "judge": 3,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "8.9",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.3",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "9.0"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.2",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "8.7",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.5",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "9.1"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.5",
+              "Y": "8.1"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "9.0",
+              "Y": "8.9"
+            }
+          ],
+          "previous_total": "9.03",
+          "candidate_total": "9.15",
+          "preference": "candidate",
+          "margin": "slight"
+        }
+      ],
+      "mean": "9.18",
+      "minimum": "9.06",
+      "numeric_gate_passed": true
+    },
+    {
+      "round": 3,
+      "judges": [
+        {
+          "judge": 1,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "9.3",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.4",
+              "Y": "9.6"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "9.2",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.5",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "9.3",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.5",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "9.3",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.8",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "9.3",
+              "Y": "9.1"
+            }
+          ],
+          "previous_total": "9.33",
+          "candidate_total": "9.435",
+          "preference": "candidate",
+          "margin": "slight"
+        },
+        {
+          "judge": 2,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "9.2",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.2",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "9.1"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.3",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "9.1"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.3",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "8.8",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.3",
+              "Y": "8.5"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "8.8",
+              "Y": "8.7"
+            }
+          ],
+          "previous_total": "9.06",
+          "candidate_total": "9.185",
+          "preference": "candidate",
+          "margin": "slight"
+        },
+        {
+          "judge": 3,
+          "dimensions": [
+            {
+              "dimension": "Supported intent discovery and context recovery",
+              "weight": 20,
+              "X": "9.2",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Evidence fidelity and uncertainty calibration",
+              "weight": 15,
+              "X": "9.4",
+              "Y": "9.4"
+            },
+            {
+              "dimension": "Clarification efficiency and usability",
+              "weight": 10,
+              "X": "9.0",
+              "Y": "9.2"
+            },
+            {
+              "dimension": "Task-relevant Astra adaptation and model claim accuracy",
+              "weight": 15,
+              "X": "9.2",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Actionable deliverables and acceptance criteria",
+              "weight": 10,
+              "X": "9.2",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Scope, authority, and adversarial input boundaries",
+              "weight": 10,
+              "X": "9.4",
+              "Y": "9.5"
+            },
+            {
+              "dimension": "Observed behavioral performance",
+              "weight": 10,
+              "X": "9.1",
+              "Y": "9.3"
+            },
+            {
+              "dimension": "Concision and information architecture",
+              "weight": 5,
+              "X": "8.1",
+              "Y": "8.6"
+            },
+            {
+              "dimension": "Package validity and maintainability",
+              "weight": 5,
+              "X": "8.9",
+              "Y": "8.8"
+            }
+          ],
+          "previous_total": "9.15",
+          "candidate_total": "9.265",
+          "preference": "candidate",
+          "margin": "slight"
+        }
+      ],
+      "mean": "9.295",
+      "minimum": "9.185",
+      "numeric_gate_passed": true
+    }
+  ],
+  "final_round": 3,
+  "final_pair_votes": {
+    "candidate": 5,
+    "previous": 0,
+    "tie": 0,
+    "margin": "slight"
+  },
+  "unresolved_critical_failures": 0,
+  "acceptance": "passed",
+  "generation_coverage": [
+    {
+      "version": "round1",
+      "generated_cases": 24,
+      "output_files": [
+        "round1-outputs.md",
+        "round1-regression-outputs.md"
+      ]
+    },
+    {
+      "version": "round2",
+      "generated_cases": 27,
+      "output_files": [
+        "round2-a.md",
+        "round2-b.md"
+      ]
+    },
+    {
+      "version": "round3",
+      "generated_cases": 27,
+      "output_files": [
+        "round3-a.md",
+        "round3-b.md"
+      ]
+    }
+  ],
+  "baseline_generated_cases": 8,
+  "total_english_generations": 86,
+  "localized_smoke_generations": {
+    "round2": 2,
+    "round3": 2
+  },
+  "limitations": [
+    "Single generation per English case per candidate; no downstream task execution or pinned API performance benchmark",
+    "Case 17 diagnostic-ready behavior conflicts with retained provisional-label expectation and a reference statement",
+    "Case 11 output omits an explicit verification clause for the implementation branch",
+    "Case 2 may ask for optional resources despite a conditional fallback"
+  ]
+}

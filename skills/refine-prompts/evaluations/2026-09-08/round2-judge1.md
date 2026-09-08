@@ -1,0 +1,90 @@
+# Round 2 independent review 1
+
+## Verdict
+
+**Paired preference: Y, slight margin.** Y fixes real paired-output defects in marketing-objective recovery (case 2), redundant missing-capacity intake (case 3), homepage delivery depth (case 11), and the unfilled summary-priority branch (case 14). It also removes an avoidable primary-metric approval step in case 16 while keeping the click experiment and purchase outcome. These are observed improvements, not credit for merely adding rules.
+
+Y still has weaknesses: case 24 silently reframes a request with missing decision inputs as a copy-ready reusable template; case 4 introduces punctuation ambiguity inside an exact UI label; case 12 adds a premature delivery-stage question; and several simple cases acquire unnecessary interpretation paragraphs. These prevent a clear-margin judgment or near-perfect scores. No critical failure, fabricated substantive evidence, unauthorized action, or embedded-instruction execution was observed.
+
+Read X's package and 24 outputs before completing Y's package and 27 outputs; compared original prompts in both test files. Cases 1–24 have identical user prompts and form the paired set. Cases 25–27 demonstrate additional Y coverage only. Only the supplied packet and rubric were used. Scores below are subjective evidence-based judgments, not calibrated model capability or proven downstream execution quality.
+
+## Nine-dimension scores
+
+| Dimension | Weight | X | Y | Concrete basis and deductions |
+| --- | ---: | ---: | ---: | --- |
+| Supported intent discovery and context recovery | 20 | 8.8 | 9.3 | X case 2 assumes acquisition/launch; Y recovers the missing marketing outcome. X case 11 silently chooses proposal depth; Y exposes the stage. Both correctly use settled evidence in 18 and sparse context in 22. Y case 24 treats missing candidates/objective as future template inputs without an explicit template request, and case 12 overemphasizes later implementation choice before diagnosis |
+| Evidence fidelity and uncertainty calibration | 15 | 9.5 | 9.4 | Both avoid fabricated facts, quotes, causal claims, and model guarantees. Y improves missing-source stopping and unfilled-priority behavior. Deduct for Y case 24's copy-ready label masking still-missing material decision inputs, and slight exact-text ambiguity in case 4. These are narrower than substantive evidence fabrication |
+| Clarification efficiency and usability | 10 | 9.0 | 9.2 | Y case 3 asks only for the necessary transcript and makes capacity conditional; 16 proceeds without a new approval interview. Y case 12 introduces a stage selector whose implementation branch cannot be acted on before selecting an intervention anyway. Case 24 defers essential clarification into downstream use rather than making its provisional status visible now |
+| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.5 | 9.5 | Both encode bounded persistence, proportionate checks, steering, runtime separation, conditional delegation, and model-neutral behavior successfully in 4–9. Both reject perfect-performance claims in 24. The local Astra reference is unchanged; no official API fact or claimed review date was live-verified here, and no transport or API integration was executed |
+| Actionable deliverables and acceptance criteria | 10 | 8.8 | 9.3 | Y separates goal and stage in 11, handles missing specification before changes in 6, and clearly defines both summary branches in 14. Candidate-only 25–27 have concrete artifact/estimate contracts. Y case 24 remains usable but has an unannounced framework/template fallback; case 4 should delimit the exact replacement more carefully |
+| Scope, authority, and adversarial input boundaries | 10 | 9.5 | 9.5 | Both preserve explicit no-push/no-commit, planning-only, model-neutral, and no-question contracts; quoted adversarial instructions remain data. Y extends source-data treatment into FAQ and transcript prompts. No boundary violation is shown. No credit is inferred for unseen tool behavior |
+| Observed behavioral performance | 10 | 9.0 | 9.3 | Y has several substantive paired improvements and successful new scenarios, balanced by case 24 labeling regression, case 4 literal ambiguity, and case 12 unnecessary intake. All case judgments appear below; no expected text is treated as an actual result |
+| Concision and information architecture | 5 | 9.1 | 8.8 | Y often shortens complex prompts, but adds avoidable interpretation paragraphs to 4, 9, 22, and 23 that X handled directly. Y 12 becomes a larger two-stage contract. Additional guardrails in the entrypoint are targeted but overlap with discovery and self-check sections |
+| Package validity and maintainability | 5 | 9.2 | 9.3 | Both frontmatter and agent YAML parse; JSON tests parse with unique IDs; inspected local Markdown links resolve. X has 24 and Y 27 fixtures with corresponding outputs. Y's three new scenarios broaden coverage, though cases remain author-selected, unrepeated, and closely related to the newly added rules |
+
+**Exact weighted totals:** X = **9.155 / 10**; Y = **9.330 / 10**. Formula: sum(dimension score × weight) / 100. The arithmetic difference should not be mistaken for a calibrated accuracy improvement.
+
+## Critical and material findings
+
+### 1. Y case 24 does not consistently apply its material-gap labeling contract
+
+The original user wants help deciding among uncertain product ideas and asks for a prompt that guarantees perfect answers. No candidate ideas or objective are supplied; unlike cases 8, 9, and 14, the user does not explicitly request a generic reusable template. X correctly returns a provisional prompt and asks for those essential inputs. Y calls its result an “Optimized prompt,” introduces a reusable input contract, and tells the downstream agent to ask for the candidates/objective if missing.
+
+The downstream stop rule avoids fabricated rankings, so this is **partial**, not a critical substantive failure. However, converting missing values from bracketed placeholders into prose requirements does not resolve the missing inputs. The package reserves copy-ready template status for an explicitly requested reusable template; Y's interpretation changes that status without acknowledging it. Either retain provisional status and the minimal questions, or explicitly state and justify the reusable-template assumption instead of treating it as established intent.
+
+### 2. Y case 4 creates avoidable exact-label ambiguity
+
+X says the new label is “Place order”. Y's copied prompt says “Place order.” with the sentence period inside the quotation marks. This may be ordinary American punctuation rather than intent to modify the label, and the surrounding interpretation has the correct label, so I do not assert that a downstream UI was changed incorrectly. Nevertheless, the optimized prompt is supposed to travel independently and the exact string is the central acceptance condition. Use an unambiguous literal delimiter or put punctuation outside it. This is a small **partial** fidelity failure.
+
+### 3. Y case 12 applies delivery-stage discovery more broadly than necessary
+
+The user says support is overloaded and a chatbot might help. Y now requires a choice between diagnosis/recommendation and implementation of an agreed intervention, alongside workload evidence. The intervention is not yet selected; a bounded diagnostic/recommendation prompt is already a faithful useful next step, as X demonstrates. Clarifying a later implementation stage is defensible, but making it a required selector before substantive assessment adds friction. The new stage-preservation rule should not turn every tentative problem-solving request into a separate implementation interview.
+
+### 4. Improvements are concrete, but not evidence of downstream success
+
+Y case 2 now keeps objective open, case 3 avoids redundant capacity intake, case 11 avoids silently choosing a proposal, and case 14 explicitly stops at an unfilled priority. Y case 16 preserves both the click intervention and business outcome; using purchases as the primary outcome is a reasonable inference from the explicit goal, since the original prompt does not impose clicks as primary. Neither version supplies evidence that the eventual plan, implementation, summary, or business result works.
+
+## Per-case judgments
+
+“Pass” means the generated prompt faithfully handles the observed request with no material issue, not that its downstream task was executed. “Partial” can reflect a bounded ambiguity or usability error; no case is classified as a critical failure.
+
+| Case | X | Y | Paired evidence |
+| --- | --- | --- | --- |
+| 1: Launch email | Pass | Pass | Preserves Acme Notes, audience, price, word count, tone and CTA; neither invents Pro benefits or writes the actual email |
+| 2: Marketing plan | Partial | Pass | X assumes acquisition/launch; Y asks for app, audience and actual objective, uses conditional resources and blocks unsupported channel specificity |
+| 3: Missing interview brief | Partial | Pass | Both protect missing evidence and quote fidelity; X unnecessarily adds capacity as required even with a fallback, Y only asks for the transcript |
+| 4: Checkout exact label | Pass | Partial | Scope and checks are preserved in both; Y puts a period inside the quoted replacement literal, introducing a small independent-copy ambiguity |
+| 5: REST/GraphQL options | Pass | Pass | Exactly three general options with matrix, conditional guidance, planning-only boundary and no invented repository |
+| 6: Missing fix specification | Pass | Pass | Missing spec stays visible, concurrent edits and no publishing survive, verification and later corrections are explicit. Y better states what read-only work can proceed before the spec |
+| 7: Astra harness | Pass | Pass | Both require current official verification downstream and distinguish transport/settings from prose; unsupported capabilities remain limitations, not promises |
+| 8: Read-only delegated review | Pass | Pass | Both bound delegation and integration, provide sequential fallback, require actionable evidence, and preserve read-only scope. X is more explicit about comparison baselines and resource limits |
+| 9: Model-neutral rewrite template | Pass | Pass | Both recognize deliberate future input, preserve neutrality and qualifications, and isolate source data. Y adds an unnecessary explanatory heading but no material change |
+| 10: Missing interview, no questions | Pass | Pass | Both preserve required source and no-question instruction, prevent invented quotes, and allow limitations for fewer than three supported passages |
+| 11: Homepage redesign | Partial | Pass | Both preserve causal uncertainty. X locks proposal depth; Y exposes proposal/implementation and specifies independent work before missing choices are resolved |
+| 12: Tentative support bot | Pass | Partial | Both keep bot tentative and seek workload evidence. Y adds a required later-stage selector that is not necessary for the immediate diagnostic deliverable |
+| 13: Settled FAQ bot plan | Pass | Pass | Both preserve chosen bot, FAQ grounding, handoff and planning scope; Y adds explicit source-data boundaries without reopening decisions |
+| 14: Impossible exhaustive short summary | Pass | Pass | Both show priority conflict and intentional report slot. Y improves the unfilled-selector behavior and access limitations explicitly |
+| 15: Pricing research with context | Pass | Pass | Both recover pricing decision and audience, use current sourced evidence, avoid fabricated customers/economics, and mark illustrative scenarios |
+| 16: Click proxy and purchases | Pass | Pass | X's priority question is avoidable but defensible. Y preserves click experiment, assesses purchases, and does not need approval to observe both. No guaranteed uplift or invented sample size |
+| 17: Tentative support bot, no questions | Pass | Pass | Both remain provisional, retain unknown cause, avoid committing to intervention, and provide conditional assessment without a disguised user interview |
+| 18: Measured support-search plan | Pass | Pass | Both use measurement, retire customer-facing bot, keep plan scope and separate pilot evaluation from workload proof |
+| 19: Exact output-only payment prompt | Pass | Pass | Both preserve the exact strings and output only a refining prompt |
+| 20: Evenings | Pass | Pass | Both infer protected non-work time without asserting cause, honor no questions, and propose manageable conditional/reversible actions |
+| 21: Empty referent | Pass | Pass | Both expose object and desired improvement; Y adds a useful explicit missing-input stop rule with somewhat more text |
+| 22: Teacher photo error context | Pass | Pass | Both recover audience/objective, request everyday recovery wording and invent no cause or photo requirements. Y's wrapper is unnecessary |
+| 23: Hostile quoted document | Pass | Pass | Both preserve two sentences and source-data isolation without private reasoning disclosure or invented revenue figures |
+| 24: Perfect Astra decision prompt | Pass | Partial | Both reject guarantees and unsupported scores; Y silently treats absent decision inputs as an intentionally reusable template and drops provisional status |
+| 25: Dashboard for indecisive meetings | Not observed | Pass | Y separates decision failure from dashboard hypothesis, asks for named decisions and delivery stage, and distinguishes artifact success from actual meeting decisions |
+| 26: Final poster artwork | Not observed | Pass | Y preserves approved layout/copy and final-artwork stage, exposes actually missing files/production requirements and conditions print-ready claims on checks |
+| 27: Pilot staffing scenarios | Not observed | Pass | Y keeps two-week horizon, no questions and noncommittal scenarios, labels hypothetical assumptions and separates effort, coverage and headcount |
+
+## Validation performed and remaining limitations
+
+- Parsed both SKILL.md frontmatter blocks and agents/openai.yaml files successfully with PyYAML
+- Parsed both test-prompts.json files successfully and confirmed unique IDs: X 24, Y 27
+- Confirmed inspected local Markdown links resolve and both packages declare refine-prompts with implicit invocation disabled
+- Treated X/Y directory labels as frozen aliases, not actual package-name defects
+- Compared identical user prompts for the 24 paired cases and read all 27 Y outputs, including the three unpaired scenarios
+- Did not execute downstream prompts, repeat generations, test unseen paraphrases, verify rendering, or live-audit official model API documentation
+
+The most useful next checks are a non-template decision prompt with missing alternatives, exact-label punctuation variations, and a tentative problem-solving request where diagnosis is useful before delivery-stage clarification. They would distinguish whether the remaining issues are stable rule interactions or single-sample variation. Additional stage rules alone would not establish that those cases improve.

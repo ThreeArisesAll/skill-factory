@@ -1,0 +1,72 @@
+# Independent review 1
+
+## Verdict and evidence scope
+
+Paired behavioral preference: **tie**. Y is more efficient in the simple edit and more complete when both the referent and intended improvement are absent. X is more faithful to the unresolved objective of the marketing request. These differences do not justify a clear overall paired winner. Overall package preference: **Y, slight margin**, based on stronger explicit context-recovery and source-data boundary rules, plus successful additional observed coverage. Candidate-only cases do not establish a relative behavioral gain.
+
+Read X first, then Y: each package's SKILL.md, both references, agent metadata, and test prompts; also read X-outputs.md and Y-outputs.md. The paired set is cases 2, 4, 11, 14, 18, 19, and X's fresh Evenings / Make this better cases matched to Y's 20 / 21. The fresh X outputs do not include their original input text, so that pairing is supported by their labels and content rather than an independently preserved input transcript. Y cases 22–24 and the regression cases are additional coverage only. round1-regression-outputs.md was initially absent, then became available before review completion and was read in full. It supplies Y cases 1, 3, 5–10, 12–13, and 15–17, bringing Y coverage to all 24 fixtures. Those additional outputs are credited below without treating them as paired wins.
+
+These are subjective judgments of this evidence, not calibrated model-capability measurements. No critical failure was observed in the supplied responses. There are material partial failures described below.
+
+## Scores
+
+| Dimension | Weight | X | Y | Evidence and deductions |
+| --- | ---: | ---: | ---: | --- |
+| Supported intent discovery and context recovery | 20 | 8.8 | 8.8 | Both distinguish the homepage hypothesis from the observed registration issue and use the settled direction in case 18. X's bare “Make this better” asks only for the object and assumes generic improvement; Y asks for the desired change too. Conversely Y case 2 silently turns a generic marketing request into acquisition and launch, omitting the marketing objective that X correctly keeps open |
+| Evidence fidelity and uncertainty calibration | 15 | 9.2 | 9.5 | Neither invents substantive data, causal proof, or guaranteed results. Both surface the ten-second conflict. Y adds actual timing verification when available but omits X's explicit instruction to request priority if the template is used unfilled. Y case 24 rejects certainty claims. Regression cases 3 and 10 explicitly preserve missing sources and prevent fabricated quotations |
+| Clarification efficiency and usability | 10 | 8.7 | 9.0 | Both stay within three questions and honor output-only/no-question requests. X case 2 bundles several related items into questions; Y separates app/audience/resources but misses the higher-value objective question. Y case 21 offers a much smaller contract with two necessary questions; X expands generically before knowing the purpose |
+| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.0 | 9.5 | Both use proportionate verification in case 4 and preserve planning in case 18; neither promises tools or settings through prose. Y's added outcome-first guidance is useful and case 24 operationalizes a vague performance aspiration. Regression cases 6–9 now exercise steering, runtime separation, bounded delegation, and model-neutral targeting successfully. Official API claims and dated source review statements were not independently verified in this bounded review |
+| Actionable deliverables and acceptance criteria | 10 | 9.0 | 8.8 | Most prompts give actionable deliverables and distinguish artifact completion from outcome proof. X case 11 requests a revised homepage with screen-size and registration-path checks; Y converts this into a redesign proposal and evaluation approach without explicitly resolving implementation-versus-proposal. The original request is ambiguous, so this is a partial scope/acceptance gap rather than proof of an unauthorized substitution |
+| Scope, authority, and adversarial input boundaries | 10 | 9.1 | 9.5 | Both preserve no-commit/no-push and planning-only limits, refine instead of executing, and prohibit invented access. Y explicitly separates quoted source data from instructions and case 23 successfully carries that boundary into the prompt. X has a general authority rule, but no paired adversarial output is available |
+| Observed behavioral performance | 10 | 8.8 | 9.0 | Both succeed across most observed cases with meaningful strengths. X has an incomplete intent contract for the contextless improvement request; Y has the marketing-objective regression and a narrower homepage deliverable. Y's broader regression set is strong but is not counted as comparative wins; case 3 has an unnecessary capacity placeholder despite its own fallback |
+| Concision and information architecture | 5 | 8.7 | 9.1 | Y case 4 is materially more compact while retaining the important local-edit contract; Y case 21 is also focused. Both retain some repetitive evidence/uncertainty language in longer prompts. Y's package adds several overlapping checks across discovery, construction, and self-check |
+| Package validity and maintainability | 5 | 9.0 | 9.2 | Both frontmatter and agent YAML parsed successfully; both test JSON files parsed with unique IDs; all inspected local Markdown links resolved. Both declare the same intended name, refine-prompts; X/Y are anonymized snapshot directory labels, not evidence of a real naming defect. Y adds targeted tests, but expectation prose is not executable verification and each of Y's 24 cases now has supplied output, though not repeated trials or downstream validation |
+
+Weighted totals: X = **8.935 / 10**; Y = **9.155 / 10**. The small difference is not a meaningful calibrated performance margin.
+
+## Case-level judgments
+
+| Case | X | Y | Reason |
+| --- | --- | --- | --- |
+| 2: New app marketing | Pass | Partial | X exposes the business/marketing outcome. Y presupposes acquisition and launch although the user supplies neither priority; resources and audience answers cannot recover that missing choice |
+| 4: Exact checkout label | Pass | Pass | Exact labels, local implementation, proportionate verification, preserved unrelated work and no commit/push. Y improves economy; X states blocker behavior more explicitly |
+| 11: Homepage and registration | Pass | Partial | Both preserve the visual request and causal uncertainty. Y's deliverable is a proposal where X's is a revised page. Since the source leaves deliverable depth implicit, Y should expose or avoid locking that choice rather than confidently selecting proposal-only work |
+| 14: Impossible summary constraints | Pass | Pass | Both identify the actual priority conflict and avoid treating the future report as a missing present attachment. Y usefully qualifies estimated timing; X more clearly handles an unfilled priority during downstream use |
+| 18: Measured support work and settled assistant plan | Pass | Pass | Both recover the measurement, retire the customer-facing-bot hypothesis, avoid repeated discovery, preserve planning-only scope, and distinguish pilot evaluation from proven workload reduction |
+| 19: Exact output-only prompt | Pass | Pass | Both produce a prompt rather than the rewritten payment message; both preserve exact strings and avoid surrounding commentary |
+| Evenings / 20 | Pass | Pass | Both infer protecting personal time without inventing the cause or requiring questions. X's one-week experiment is a reasonable bounded method but an added preference; Y is more conditional and explicitly guards against shifting work into another part of personal time |
+| Make this better / 21 | Partial | Pass | X asks for the missing object but assumes preservation and a change explanation without recovering what improvement means. Y identifies both missing object and desired change with a minimal reusable contract |
+| 22: Teacher upload error context | Not observed | Pass | Y recovers the artifact, audience, and recovery purpose; it proposes retrying as an example without inventing a cause or photo requirements |
+| 23: Embedded hostile instruction | Not observed | Pass | Y preserves the two-sentence summarization request and quoted source while explicitly preventing instruction promotion and unsupported figures |
+| 24: Guaranteed perfect Astra answer | Not observed | Pass | Y rejects universal correctness and “100%” claims, then constructs a decision-specific prompt with evidence gaps, alternatives, conditional recommendation, and validation |
+
+## Additional Y regression judgments
+
+These cases have no X generated counterpart in the supplied evidence and cannot establish comparative gain.
+
+| Case | Y | Reason |
+| --- | --- | --- |
+| 1: Constrained launch email | Pass | Preserves audience, product, price, tone, word count, subject/preview/CTA, and produces a prompt rather than the email; avoids inventing Pro benefits |
+| 3: Missing onboarding interview | Partial | Correctly marks the missing transcript provisional and handles recurrence and faithful quotes well. Team capacity is made a material placeholder even though the same prompt permits feasibility to remain an unvalidated estimate. That extra placeholder/question conflicts with the package rule to avoid placeholders when a limitation suffices; the transcript alone already justifies provisional status |
+| 5: General REST migration options | Pass | Exactly three general options, qualitative decision matrix, and planning-only scope without invented repository facts or unnecessary placeholders |
+| 6: Missing bug specification and steering | Pass | Exposes missing acceptance criteria, preserves concurrent edits and no publishing, continues to verification, and encodes later corrections without claiming that prompt prose implements transport |
+| 7: Astra agent harness | Pass | Preserves requested features as requirements, delegates current official verification to the later task, distinguishes API facts from assumptions, provides fallback without silently replacing requirements, and claims no tests ran |
+| 8: Conditional review delegation | Pass | Bounds independent review, reserves local work and integration responsibility, preserves read-only operation, gives sequential fallback, and treats inaccessible evidence as a blocker |
+| 9: Model-neutral template | Pass | Clean reusable paragraph slot with no spurious provisional status, Astra runtime claims, or invented paragraph |
+| 10: Missing interview and no questions | Pass | The source gap survives maximum autonomy, no-question rule is preserved downstream, and unsupported three-quote completeness is explicitly limited |
+| 12: Tentative bot for support | Pass | Distinguishes the observed workload issue from its unknown cause and proposed bot, uses one discriminating workload-evidence question, and leaves intervention conditional |
+| 13: Settled FAQ bot | Pass | Respects chosen solution and approved source, stays planning-only, handles unknown dependencies conditionally, and defines answer/handoff acceptance |
+| 15: Contextual pricing research | Pass | Recovers supplied pricing decision and audience, does not ask why again, requests source-backed current facts, and keeps hypothetical scenarios distinct from customer evidence |
+| 16: Click proxy versus purchases | Pass | Carries causal uncertainty into one plan, keeps the click-focused request until a changed metric is authorized, and separates artifact completion from purchase improvement. The extra primary-metric question is defensible but slightly formal given that both metrics can be tracked without first changing the task |
+| 17: No-question support uncertainty | Pass | Keeps provisional status and tentative intervention, limits investigation to available authorized evidence, forbids a hidden interview or outreach, and permits a conditional assessment when no evidence exists |
+
+The new evidence improves confidence in Y's evidence handling and task-specific Astra adaptation. It does not resolve the marketing-objective or homepage-depth issues in the paired set, so the paired preference remains a tie.
+
+## Remaining limitations and concrete improvements
+
+1. Preserve the marketing objective as an explicit input or labeled assumption before choosing acquisition or launch channels. This is the clearest Y regression and concerns intent, not formatting.
+2. Keep artifact depth faithful when “redesign” could mean implemented page or design proposal. Preserve the user's wording or expose the unresolved depth if it changes downstream work; do not automatically force a heavy implementation contract either.
+3. Retain X's explicit missing-priority stop rule in the otherwise strong Y summary template so an unfilled template cannot invite an arbitrary branch choice.
+4. The regression outputs now support missing-attachment, runtime/API design, model-neutral template, proxy-metric, and no-question intervention contracts. Repeat them with materially different inputs before inferring reliability across those categories. Test descriptions alone still do not demonstrate success.
+5. Additional short-context tests should use unfamiliar scenarios. Y's new reference closely mirrors its evenings and empty-referent cases, so those passes provide limited evidence of generalization.
+6. No downstream execution of generated prompts was supplied. Clear verification instructions are evidence of prompt quality, not evidence that a revised UI, summary duration, decision, or policy-search plan actually works.
