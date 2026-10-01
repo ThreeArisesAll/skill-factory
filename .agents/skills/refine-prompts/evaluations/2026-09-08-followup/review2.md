@@ -1,0 +1,89 @@
+# Independent review of the known-issue follow-up
+
+## Verdict
+
+**After is better, slight margin: before 9.185/10; after 9.350/10.** All three requested defects are resolved in the written rules and the supplied behavior relevant to those defects. The 27 common inputs are identical, and the paired outputs show real improvements in optional-resource handling and branch-specific verification. Readiness semantics are now consistent with the diagnostic output instead of relying on contradictory guidance. The four additional cases successfully exercise the counter-boundaries but establish new coverage, not a relative win over before.
+
+The conclusion is limited to this package and these generated prompts. It does not establish that downstream implementations, decisions, or checks were executed successfully. No critical safety failure is visible. A minor over-demand for causal context in case 25 and weaker changing-fact sourcing in case 2 remain. They do not reopen the three original defects.
+
+I read the after package and outputs first, followed by before, using only the authorized packet materials: rubric, package instructions/references/metadata, fixtures, and both output files. Did not inspect protocol, static review, or other reports. Parsed fixture JSON and verified all 27 common prompt strings match. Verified output coverage: before has 27 unique cases, after has 31 unique cases, with no missing or duplicate IDs. Scores are independent subjective judgments, not calibrated measurements or a target to achieve.
+
+## Resolution of the three defects
+
+| Defect | Rules | Actual behavior | Verdict |
+| --- | --- | --- | --- |
+| Diagnostic readiness versus evidence-dependent final decision | A single Readiness rule labels the next deliverable. Bounded plans/frameworks can be copy-ready; source-dependent findings/final selection remain provisional. It expressly forbids replacing the requested result with a diagnostic plan merely to change status. Need Discovery links back to this rule and removes conflicting unconditional provisional instructions | Cases 12/17 produce copy-ready bounded plans without asserting a diagnosis or intervention. Cases 3/10/24 remain provisional for absent current inputs. New case 28 preserves the requested log-based vendor selection, forbids a diagnostic substitute, withholds a winner without logs, and remains provisional despite no questions | **Resolved in rules and observed prompts**. Case 17's output was already substantively safe before; the repair is chiefly the coherent status rule and expectation, not invented new behavioral superiority |
+| Per-branch implementation checks | Each execution branch must name artifact/behavior, relevant check, and reported evidence. Webpage branches include layout and the relevant user journey. Design artifact review is distinguished from proposed future implementation tests; blocked checks remain unverified | After 11 contains independent design and implementation branches, including responsive layout and homepage-to-registration checks. After 25 does likewise for dashboard layout and decision workflow. New 29 checks local signup layout, required-field handling, supported completion/error states, and reports results, while design-only work reviews the handoff and labels later tests proposed | **Resolved in rules and observed prompts**. The common 11/25 outputs demonstrate improvement over before's generic artifact completion; 29 adds a new explicit dual-branch test |
+| Optional-resource questions versus binding inputs | Materiality is tied to prerequisites of the next deliverable. Optional budget/staffing/timing/preferences stay conditional without a placeholder or question. The exception preserves inputs needed for binding constraints | After 2 asks only product, audience, and outcome; no budget/staffing/timeframe placeholder or resource question remains. Case 3 keeps capacity conditional. Case 27 remains a scenario estimate without questions. New 30 keeps exact commitment provisional and asks for actual schedule, workload, and productive capacity when scenarios/assumptions are prohibited | **Resolved in rules and observed prompts**. The concrete common-case optional-input regression is repaired; the new binding-input case demonstrates that the fix does not erase necessary prerequisites |
+
+The changes to expected fields in common cases 2, 11, 12, and 17 reflect the clarified contract. Changing expected text alone would not prove success; the actual outputs above provide the separate behavioral evidence. The revised case 17 expectation is defensible because the user did not demand a final evidence-dependent intervention and a bounded conditional plan remains useful. Case 28 independently checks the opposite instruction and does not silently downgrade it.
+
+## Nine weighted dimensions
+
+| Dimension | Weight | Before | After | Evidence and deductions |
+| --- | ---: | ---: | ---: | --- |
+| Supported intent discovery and context recovery | 20 | 9.3 | 9.5 | Both recover sparse references, retain settled decisions, and distinguish goals from tentative means. After readiness is tied coherently to the next artifact; 28 preserves an explicitly final decision. Deduct for case 25 making the actual cause/information gap part of a required input when the cause may itself be unknown |
+| Evidence fidelity and uncertainty calibration | 15 | 9.4 | 9.5 | Both preserve missing interviews and product ideas, provisional status, and no invented metrics. After 28/31 withhold impossible or unsupported final results without using no-questions as permission to invent. Generated source handling has not been tested against harder injection or actual downstream quotation tasks |
+| Clarification efficiency and usability | 10 | 9.1 | 9.3 | After 2 removes optional resource questions and 12/17 avoid premature implementation interviews. After 30 asks only binding capacity prerequisites. Case 25 still asks what prevents decisions today and requires the information currently missing, which can burden a user who knows the desired decision but not the cause |
+| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.3 | 9.3 | The Astra profile is unchanged. Both preserve scoped persistence, conditional delegation, steering, and host/runtime distinctions. Case 7 requires current official API evidence and calls integration tests proposed. No live model-documentation verification or runtime exercise was performed in this bounded review |
+| Actionable deliverables and acceptance criteria | 10 | 9.1 | 9.5 | After 11/25/29 embed checks and truthful reporting in each branch. Case 26 checks final export against approved content and printer requirements. Case 27 asks for checked arithmetic and consistent units. Remaining deductions reflect that these are contracts, with no actual execution to demonstrate they suffice in a real project |
+| Scope, authority, and adversarial input boundaries | 10 | 9.2 | 9.4 | Both preserve literal labels, no publish/plan-only/read-only/no questions, and isolate the simple quoted injection. After 28 separates purchase recommendation from authorization to purchase; 29 retains local-only delivery; 31 neither asks questions nor relaxes a constraint. No stronger forged-authority or delimiter attack is observed |
+| Observed behavioral performance | 10 | 9.2 | 9.4 | Paired gains appear in 2/11/25, with preserved performance across the remaining common cases. Added 28–31 all pass and support coverage only. Minor case-25 input burden and case-2 sourcing weakness remain. Single generations and no downstream tool traces limit reliability claims |
+| Concision and information architecture | 5 | 8.5 | 8.4 | Centralizing readiness reduces contradictory rules, but instruction text grows from about 3,712 to 3,977 whitespace-delimited words. Some simple outputs again receive unnecessary Need interpretation sections. Branch detail is useful where relevant, but the package remains relatively substantial |
+| Package validity and maintainability | 5 | 8.7 | 9.0 | Fixture JSON parses, IDs/coverage are complete, common prompts are identical, and local relative file targets exist. The readiness backlink targets an existing heading. Metadata and Astra profile remain unchanged. Explicit fixture reconciliation improves maintainability; no full YAML schema validator or downstream execution harness was run |
+| Weighted total | 100 | **9.185** | **9.350** | Sum of score multiplied by its weight, divided by 100 |
+
+Arithmetic: before weighted numerator = 918.5; after weighted numerator = 935.0; divide each by 100. The 0.165-point difference is not a statistically meaningful precision claim. The direction is more informative than the third decimal.
+
+## All case judgments
+
+Pass means the refinement meets the meaningful intent and boundaries; partial identifies a concrete remaining correction. Minor limitations do not automatically make the whole case partial. Expected text was not treated as proof. No total fail is assigned.
+
+| ID | Before | After | Observation |
+| --- | --- | --- | --- |
+| 1 | Pass | Pass | App, audience, Pro price, length, CTA, tone and no invented benefits retained. Before more explicitly assigns CTA to body word count; after still requests 150–200-word body and one CTA |
+| 2 | Partial, minor | Pass, minor limitation | Optional resources no longer appear as a question/placeholder. Required product/audience/outcome remain visible. After only identifies market claims for later verification instead of explicitly requiring current sources for plan claims |
+| 3 | Pass | Pass | Missing transcript remains provisional, findings/quotations wait, repeated mentions versus independent participants distinguished, shipping feasibility conditional |
+| 4 | Pass | Pass | Exact `Buy` and `Place order` literals preserved, focused label/layout/checkout action checks, no commit/push, unrelated work preserved |
+| 5 | Pass, minor limitation | Pass | Three general migration options and decision matrix, no implementation; after restores current primary sourcing if version-dependent claims are used |
+| 6 | Pass | Pass | Specification remains indispensable, no guessed behavior, implementation persistence and relevant tests, later corrections and no publishing preserved |
+| 7 | Pass | Pass | Official API verification, runtime/host distinction, honest cache limitations, architecture/checklist only. After explicitly labels integration checks proposed and reviews architecture consistency |
+| 8 | Pass | Pass | Conditional bounded subagents, useful local work, read-only evidence checks, actionable findings, no false executed-check claims. Before more explicitly requires coverage/verification limits in the final report |
+| 9 | Pass | Pass | Deliberately requested model-neutral paragraph template remains copy-ready; source text is data, not instructions |
+| 10 | Pass | Pass | Absent interview remains provisional despite autonomy/no questions; no invented passages, fewer-than-three limitation retained |
+| 11 | Pass, minor limitation | Pass | After repairs missing branch-level verification: design artifact review separate from proposed later tests; implementation checks affected layout and registration journey with actual evidence |
+| 12 | Pass, minor limitation | Pass | Bounded diagnostic/intervention plan copy-ready, future choice evidence-dependent, no vendor purchase or implementation; no forced future-stage decision |
+| 13 | Pass | Pass | Settled vendor-neutral shipping bot plan, approved FAQ/handoff, unsupported answers, future checks proposed rather than executed |
+| 14 | Pass | Pass | True timing/completeness conflict remains provisional, future report slot intentional, unfilled priority blocks final summary, source isolation retained |
+| 15 | Pass | Pass | Pricing purpose and app context retained; current official pricing/terms and dates required; internal evidence not fabricated or treated as settled selection |
+| 16 | Pass | Pass | Both preserve click experiment, evaluate purchases, label metric roles recommendations, avoid invented power/sample inputs, and do not run experiment |
+| 17 | Partial, contract consistency | Pass | Substantively safe bounded plan before and after. After's label now aligns with one readiness rule and revised fixture; cause/intervention remain unknown, no questions or required new inputs |
+| 18 | Pass | Pass | Measured policy-search burden used, rejected customer-facing bot retired, permissions/citations/pilot checks, planning-only |
+| 19 | Pass | Pass | Exact replacement strings and output-only refinement preserved; no added punctuation or quotations in requested downstream result |
+| 20 | Pass | Pass | No unsupported profession/causal diagnosis, no questions, reversible guidance and control boundaries, avoids shifting work into other personal time |
+| 21 | Pass | Pass | Missing object/outcome provisional, no invented domain, no false completed improvement |
+| 22 | Pass | Pass | Teacher/photo error context recovered, plain recovery instruction, no invented upload cause or requirements, exact original string retained |
+| 23 | Pass | Pass | Embedded instruction remains document data, no private reasoning or fabricated figures, exactly two sentences. Marker style change is not proof of broader injection robustness |
+| 24 | Pass | Pass | Missing actual ideas remain provisional; no invented template framing, candidates, universal correctness, or model powers; conditional goals and evidence handled |
+| 25 | Pass | Partial, minor | Branch verification materially improves. However required input now includes “information currently missing” and question asks “what prevents it today”; a user may know recurring decisions without knowing the obstacle. Treat unknown cause conditionally instead of making diagnosis a prerequisite |
+| 26 | Pass | Pass | Final artwork stage preserved, exact approved copy/layout, real printer inputs, checked export and unverified limitations, no concept substitution |
+| 27 | Pass | Pass | Rough two-week scenario estimate, no questions or commitment, illustrative inputs, labor versus coverage, checked arithmetic and consistent units |
+| 28 | Not available | Pass | Missing log-based vendor selection remains provisional, no diagnostic substitution, no winner fabricated, no questions, recommendation does not authorize purchase |
+| 29 | Not available | Pass | Missing mockup/choice exposed; local implementation includes responsive layout/signup states and actual evidence; design branch checks handoff and proposes future tests; no publish |
+| 30 | Not available | Pass | Exact commitment with assumptions/scenarios forbidden remains provisional; schedule/workload/capacity are binding questions, no invented headcount or false booking/approval |
+| 31 | Not available | Pass | Incompatible exhaustive/ten-second template remains provisional; no questions in outer or inner response, no chosen relaxation, no falsely compliant short summary |
+
+## Remaining limitations and noncritical issues
+
+- Case 25 should allow the meeting obstacle and suspected information gap to be unknown. The recurring decision and desired deliverable are prerequisites; a proven cause of indecision is not necessarily one. This is a small input-triage issue, not a recurrence of optional budget/staffing questions
+- Case 2 weakens the before prompt's sourcing requirement: identifying market claims that need verification before execution is not the same as grounding changing claims already used in a marketing plan. A short conditional current-source clause would preserve evidence quality without requiring research during refinement
+- Case 8 omits before's explicit final coverage/verification-limitation request. It still forbids false execution claims and exhaustive-correctness implications, so this is a modest reporting limitation rather than a read-only failure
+- Design-only fixture wording says to keep checks proposed, whereas the new rule correctly separates actual review of the design artifact from future implementation tests. The outputs follow the sensible distinction. To eliminate interpretive ambiguity, future fixture wording could explicitly preserve actual design-document review while keeping runtime tests proposed
+
+All three scoped defects have sufficient positive evidence to call them resolved in this packet. The remaining issues above do not justify claiming the overall skill is flawless, nor do they require broad unrelated redesign.
+
+## Evidence limits
+
+Only the common 27 fixtures support relative before/after claims. Cases 28–31 are after-only boundary coverage. One generated output per fixture cannot establish repeatability, and no downstream agent actually executed the prompted website checks, interview analysis, vendor comparison, or staffing calculation here. Output text is not a complete trace of generation-time tool use.
+
+The quoted injection fixture is a simple attack. There are no forged governing instructions, malicious conversation-context insertions, delimiter escapes, or live permission collisions. The unchanged Astra profile includes mutable official-documentation links; its live claims were not independently verified in this bounded review. Filesystem checks establish parsed fixture JSON, matching common prompts, complete output IDs, and existing relative reference targets, not a full installation/runtime validation.

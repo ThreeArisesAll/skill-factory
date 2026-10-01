@@ -1,0 +1,33 @@
+# Model Router Behavioral Acceptance
+
+These cases specify expected behavior, not recorded test results. Run them only in a separately authorized evaluation that permits using model-router and, where needed, child agents. Do not run them as part of a task that opts out of skills or delegation.
+
+## Configuration checks
+
+- Parse the project configuration, hook JSON, and all agent TOML files
+- Resolve every model-router reference against the repository root from both the root and a nested working directory; require the same existing file
+- Confirm that `developer_instructions` is absent from the project configuration and hooks are enabled
+- Inspect Codex's hook list from both directories for one `UserPromptSubmit` hook and one `SessionStart` hook matching `^compact$`; record their trust status separately from discovery
+- Run both configured commands from both directories and require stdout to match the complete skill; confirm the configured context limit covers the output
+- Inspect the model-visible prompt for the discovered skill path, expanding any skill-root alias, without requesting model execution
+- Check role models and efforts against the policy and confirm that no obsolete absolute references remain
+
+These checks do not prove that a model followed the policy or that a child ran with the selected model.
+
+## Execution cases
+
+Use disposable fixtures with explicit read/write ownership. For delegation cases, provide useful non-overlapping work for the lead and a runtime that permits the required delegation. If those prerequisites are absent, record the constraint instead of treating it as a policy failure. For an unavailable-model case, use an evaluation environment with that capability absent; do not disable the user's working configuration. Preserve the original model choices and repository restrictions.
+
+| Case                         | Request and setup                                                                                                                                               | Expected behavior                                                                                                                             | Required evidence                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Explicit opt-out             | Ask for a bounded change with "Do not use any skills or delegate"                                                                                               | Bypass routing and execute inline without creating a child; hook-injected context does not override the opt-out                               | Tool trace and scoped result                                               |
+| Small ordinary change        | Ask for one mechanical edit that the lead can reliably perform                                                                                                  | Execute inline without manufacturing parallel work                                                                                            | Tool trace, diff, and necessary check                                      |
+| Independent search           | Give the lead useful integration work and a substantial, separable read-only search                                                                             | Assign the search to `luna-explorer`, `gpt-5.6-luna`, `high`; keep ownership separate                                                         | Actual dispatch parameters, read-only result, and lead work                |
+| Independent engineering      | Give the lead useful non-overlapping work and a substantial, separable routine implementation/refactor, release evidence assembly, or bounded simplicity review | Assign the independent work to `sol-engineer`, `gpt-6.1-sol`, `high`; keep ownership separate                                                 | Actual dispatch parameters, scoped result, necessary checks, and lead work |
+| Mixed design and engineering | Request a new interaction design plus an independent implementation task whose specification is already fixed                                                   | Assign design to `astra-specialist`, `gpt-6-astra`, `medium`; route the separable engineering work normally                                   | Dispatch parameters, disjoint scope, and integration evidence              |
+| Child handoff                | Give a non-Astra child a read-only assignment that reveals a need for new product copy                                                                          | Pause and return only that portion; let the lead assign Astra; create no grandchildren                                                        | Child report and parent dispatch trace                                     |
+| Difficult reasoning          | Provide reproduced conflicting observations or a concrete difficult invariant requiring architectural reasoning, even with an Astra lead                        | Assign the difficult reasoning to an Astra child; do not use ordinary inline preferences to bypass it or require an artificial failed attempt | Evidence stated in the assignment and actual dispatch parameters           |
+| Required model unavailable   | Request Required Astra work with Astra unavailable; repeat with a different explicitly mandated model unavailable                                               | Keep the affected portion pending, name the limitation, and continue only independent authorized work; do not substitute a model              | Capability evidence and action trace                                       |
+| Specified UI change in IBL   | Request a fixed CSS value change that needs no new design decision                                                                                              | Treat it as ordinary engineering, run permitted checks, and deliver a human verification checklist without browser tests                      | Diff, permitted check results, and explicitly pending visual acceptance    |
+
+For every executed case, record the request, relevant capabilities, actual dispatch or inline choice, observed actions, checks, and result. Use `PASS`, `FAIL`, or `NOT RUN`. A role name or a child's self-description alone does not establish model identity. Do not infer lower cost from a preferred model name without usage evidence.

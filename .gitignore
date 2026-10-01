@@ -1,8 +1,98 @@
-.DS_Store
-__pycache__/
-*.py[cod]
-.ruff_cache/
-.env/
-.env.local
-.venv/
-.codex/
+# === 依赖与包管理 ===
+**/node_modules/
+**/.pnp/
+**/.pnp.js
+**/.npm/
+**/.yarn/
+**/.venv/
+**/Cargo.lock
+
+# === 构建与编译输出 ===
+**/dist/
+**/out/
+**/build/
+**/target/
+**/target-tests/
+**/gen/
+**/*.tsbuildinfo
+
+# === 缓存 ===
+**/.cache/
+**/.eslintcache
+**/.stylelintcache
+**/.turbo/
+**/.swc/
+**/.next/
+**/.rollup.cache/
+**/.parcel-cache/
+**/*cache*.json
+**/.vercel
+
+# === 环境与密钥 ===
+**/.env*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.cert
+**/*.tokens.json
+**/*auth*.json
+**/*credential*.json
+**/.supabase/
+
+# === 日志与调试 ===
+**/*.log*
+**/*.debug*
+**/logs/
+**/coverage/
+
+# === IDE 与编辑器 ===
+**/.vscode/
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+**/.devcontainer/
+
+# === AI 工具 ===
+**/.impeccable/
+**/.planning/
+**/output/
+**/.serena/
+**/auto-memory/
+**/.graphify_python/
+**/graphify-out/
+
+# === 数据库 ===
+**/*.sqlite*
+
+# === 备份与归档 ===
+**/*.bak
+**/*.backup
+**/*.old
+**/*.save
+**/*.orig
+**/*.previous
+**/backup/
+**/archive/
+**/archived/
+**/.archived/
+
+# === 临时与系统文件 ===
+**/*.tmp
+**/*.temp
+**/*.swp
+**/*.swo
+**/*~
+**/.DS_Store
+**/Thumbs.db
+**/*.cpq
+
+# === 测试 ===
+**/playwright-report/
+**/test-results/
+**/playwright/
+**/.playwright-cli/
+
+# === 其他 ===
+**/.ref/
+**/.design/

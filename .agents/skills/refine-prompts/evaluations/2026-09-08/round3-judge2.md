@@ -1,0 +1,90 @@
+# Independent frozen round 3 review
+
+## Judgment
+
+**Prefer Y, slight margin. Y: 9.185/10; X: 9.060/10.** Y actually repairs the exact-label ambiguity and missing-input template status in the observed outputs. It also labels proposed metric roles accurately and reduces premature future-stage questioning. However, its marketing input triage remains inconsistent, its support-diagnosis status conflicts with one fixture and part of the discovery guidance, and some useful boundary/verification clauses disappear from individual outputs. This is a modest improvement rather than uniformly stronger behavior.
+
+I read Y before X in review3, examined all 27 generated outputs on each side, and verified that the 27 paired fixture prompts are identical. Y's output headings switch from ID to Test after 14; all were included. Read the supplied rubric, SKILL.md files, references, metadata, and fixture JSON. Reference comparison confirmed the Astra guide and agent metadata are identical; the need-discovery difference explicitly marks metric-role recommendations as proposals. No other reviews or protocol were inspected. Expected fields are not evidence of executed success.
+
+## Scores
+
+| Dimension | Weight | Y | X | Grounds and deductions |
+| --- | ---: | ---: | ---: | --- |
+| Supported intent discovery and context recovery | 20 | 9.3 | 9.2 | Both recover the referent in 22, missing object/outcome in 21, and settled policy-search direction in 18. Y 24 now correctly treats absent product ideas as a current missing input. Y 12 separates the useful initial diagnosis from a future implementation decision. Deduct for some over-prescription of diagnostic versus final task framing and the status ambiguity in 17 |
+| Evidence fidelity and uncertainty calibration | 15 | 9.4 | 9.2 | Both protect unavailable interviews, avoid invented frequency/population claims, and distinguish outcome evidence from artifact completion. Y fixes literal boundaries in 4 and provisional labeling in 24. Some outputs, notably Y 3/10/13, omit X's explicit source-as-data reminders, so broader source authority remains less consistently visible across copied prompts |
+| Clarification efficiency and usability | 10 | 9.1 | 9.0 | Y 12 removes the early implementation-stage question, 24 asks only for the indispensable alternatives, and 16 treats metric roles as proposals without a gate. Y 2 again adds an execution-constraints placeholder and resource question despite allowing unknown resources and conditional estimates; this remains avoidable burden. Questions are still bounded and relevant |
+| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.3 | 9.3 | Both use proportional implementation persistence, conditional subagents, steering, and accurate runtime/prompt separation. Both 7 defer actual current API verification to the design task rather than inventing fields. Neither local source review assertions nor generated harness prompts prove present-day API facts or runtime functionality |
+| Actionable deliverables and acceptance criteria | 10 | 9.1 | 8.8 | Y 4 provides unambiguous literals and a focused exact-label check; Y 24 blocks ranking absent ideas and permits only framework work. Both retain concrete preconditions for report conflict, dashboard stage, and final artwork. Y 11 drops X's explicit implementation layout/registration verification clause, weakening completion evidence if implementation is selected |
+| Scope, authority, and adversarial input boundaries | 10 | 9.2 | 9.3 | Both visibly preserve no publish, plan-only, no questions, approved FAQ, and quoted injection boundaries. Y 6 forbids a guessed fix while the specification is missing. X is more explicit about read-only pre-spec work and source-data rules in several evidence-oriented prompts. No demonstrated unsafe action, but no stronger authority attack is tested |
+| Observed behavioral performance | 10 | 9.2 | 8.8 | Y repairs common cases 4/24 and improves 12/16, with no new severe failure. Small regressions remain in 2 and 11; 17's status contract is inconsistent despite useful safe behavior. All 27 comparisons are paired, but each has one visible generation and no downstream execution |
+| Concision and information architecture | 5 | 8.5 | 8.3 | Y omits needless framing in 4/5/7/8/9/13/20, improving actual output usability. Package instruction text grows from about 3,637 to 3,712 whitespace-delimited words. Added rules are specific, but repetition and the diagnostic/provisional tension prevent a stronger score |
+| Package validity and maintainability | 5 | 8.7 | 8.8 | Both fixture JSON files parse; relative SKILL.md references exist; metadata and logical package identity remain coherent. Deduct for the unresolved case-17 expectation/rule inconsistency and lack of demonstrated automated assertions. No full YAML schema validation or external documentation verification was performed; latest-model links can drift |
+| Weighted total | 100 | **9.185** | **9.060** | Sum of score multiplied by weight, divided by 100 |
+
+## Findings that matter
+
+### Exact strings are improved in behavior, not merely in the rule text
+
+X case 4 places a period inside the replacement quotation: `“Place order.”`. Y uses the literal `Place order` with punctuation outside its backticks and expressly checks the exact label. Both preserve no commit/push and unrelated edits. X's punctuation could be conventional prose rather than an intended added character, so its result is partial rather than proof of an incorrect downstream edit. Y removes that uncertainty. Case 19 likewise preserves both strings and explicitly prohibits added punctuation in the downstream answer.
+
+### Template status is repaired for the product-decision case
+
+X case 24 calls the result a reusable prompt despite no explicit reusable-template request, uses an optimized/copy-ready heading, and moves required inputs downstream. Y labels it provisional, exposes missing product ideas, and permits a framework but no invented candidates or ranking before the ideas arrive. Y proposes comparison criteria and adjusts them to supplied priorities, so it need not make every preference or evidence gap another required placeholder. Both reject universal correctness and fake capability percentages.
+
+### Marketing input triage still drifts
+
+Y case 2 adds `Execution constraints: [Available budget, people, and planning timeframe, or explicitly unknown]` and asks for these details even though the prompt itself offers conditional resource estimates. The new independent-gap rule says a conditional estimate does not also need a mandatory input for the same uncertainty. Allowing “unknown” softens the friction, and the prompt already has real missing product/audience/objective inputs, so this is a minor partial rather than an unsafe or unusable response. It nonetheless shows that adding a precise rule has not eliminated the pattern.
+
+### Diagnostic copy-ready status is not fully reconciled
+
+Y cases 12 and 17 return optimized prompts whose deliverable is a diagnostic/decision plan rather than an approved intervention. This can be defensible: the next artifact is well-defined, and the plan explicitly defers unsupported solution choice. Case 12 therefore passes with a minor limitation; no user instruction requires immediate implementation, and the scope is explained.
+
+Case 17 is more problematic as a package consistency issue. Its expected behavior explicitly calls for provisional status, and Need Discovery still says to retain provisional status when the actual task direction needs a decision. Elsewhere the same reference allows a diagnostic task to be copy-ready with a complete evidence-gathering contract. Y now chooses that latter branch without explaining why the unresolved intervention no longer requires provisional labeling. The response is useful, preserves no questions, and invents no diagnosis. I rate it partial for unresolved status semantics, not a safety failure. Resolve the overlapping rules and fixture expectation rather than blindly penalizing every diagnostic prompt or adding another broad prohibition.
+
+### Some copied prompts lose useful boundary detail
+
+Y case 11 exposes delivery stage correctly but does not retain X's explicit verification of layout and registration behavior if implementation is chosen. Artifact completion is less observable. Y 3/10/13 also omit explicit source-as-data clauses that X includes, although their evidence and approved-source requirements remain. Y 5 no longer requests current citations for changing technical claims; its general migration scope can be fulfilled with stable principles, so this is a limitation rather than a case failure. These are reasons to avoid treating every regenerated response as an automatic improvement.
+
+No critical safety failure is visible. No response executes the underlying task, fabricates evidence, reveals private reasoning, or authorizes an external change contrary to the supplied request. Visible text alone does not establish generation-time tool behavior.
+
+## Paired case judgments
+
+Pass assesses meaningful fulfillment; partial identifies a concrete remaining correction or contract inconsistency. Minor limitations are recorded without turning every omitted optional clause into failure. No total fail is assigned.
+
+| Case | X | Y | Specific observation |
+| --- | --- | --- | --- |
+| 1 | Pass | Pass | Preserve app, audience, price, warm confident tone, length, CTA, and no invented benefits. Y explicitly defines word-count boundaries |
+| 2 | Pass, minor limitation | Partial, minor | Both expose objective and audience. X unnecessarily makes timeframe essential; Y reintroduces resource placeholder/question while offering a conditional fallback |
+| 3 | Pass | Pass | Missing transcript remains provisional; actual counts/quotes wait. Both condition near-term feasibility. Y adds contradictory-evidence and population-inference handling; X more explicitly isolates source instructions |
+| 4 | Partial | Pass | Y removes quote-punctuation ambiguity, preserves exact literals, and keeps local edit/verification/no commit/no push |
+| 5 | Pass | Pass, minor limitation | Three general migration options and matrix, no repo inspection or implementation. Y drops changing-fact citation condition but can fulfill the general task with stable knowledge |
+| 6 | Pass | Pass | Missing specification is explicit, guessed behavior forbidden, unrelated work preserved, verification scoped, and corrections incorporated. X is more explicit that pre-spec work is read-only; Y still authorizes inspection rather than a guessed edit |
+| 7 | Pass | Pass | Current official API verification deferred to design, host/model distinction, fallback, no false cache guarantees, architecture/checklist only |
+| 8 | Pass | Pass | Conditional bounded subagents with local work, non-mutating checks, evidence-only findings and honest limitations. Y handles duplicate/conflicting reports; X more explicitly stops on missing repository access |
+| 9 | Pass | Pass | Explicitly requested model-neutral template, deliberate paragraph slot, source isolation, no invented actual input |
+| 10 | Pass | Pass | Absent interview remains provisional, no questions, accurate limits when fewer than three passages exist, no fabricated evidence |
+| 11 | Pass | Pass, minor limitation | Both preserve stage choice and actual homepage input; Y supports a visual-design stage too. Y loses X's concrete verification condition for implemented output |
+| 12 | Pass, minor limitation | Pass, minor limitation | Y avoids asking about future implementation before bounded diagnosis; it clearly limits first task to diagnosis/action plan. The choice of initial stage is an inference, not evidence that the eventual solution is settled |
+| 13 | Pass | Pass | Fixed chatbot choice, approved FAQ, unsupported-question handoff, vendor neutrality and plan-only. Y adds rollout/monitoring planning; X more explicitly defends against FAQ/customer instruction injection |
+| 14 | Pass | Pass | Future report slot intentional, true duration/detail conflict unresolved, unfilled selector explicitly blocks final script, no silent branch selection |
+| 15 | Pass | Pass | Pricing decision and product context retained, current source evidence and checked dates required, scenarios hypothetical, recommendation conditional |
+| 16 | Pass, minor limitation | Pass | Y explicitly calls primary/intermediate metric roles recommendations while measuring both clicks and purchases; no fabricated impact and no experiment execution |
+| 17 | Pass | Partial | Both preserve no questions and unsupported-intervention limits. Y uses copy-ready status for a diagnostic deliverable despite the provisional fixture expectation and overlapping package rules |
+| 18 | Pass | Pass | Measured policy-search burden incorporated; customer-facing bot retired; planning-only, permissions, evidence and pilot evaluation retained |
+| 19 | Pass | Pass | Exact strings preserved; one refined instruction only. Y's backticks and no-added-punctuation clause make downstream literal requirements explicit |
+| 20 | Pass | Pass | Protect evenings without causal diagnosis, maintain no questions, reversible actions and personal-control limits; Y additionally prohibits commitments/contacting others |
+| 21 | Pass | Pass | Missing referent/outcome explicit and provisional, no invented domain, downstream waits before revision |
+| 22 | Pass | Pass | Teacher/photo context recovered; recovery action without invented cause, file rules, controls, or support options; literal source string preserved |
+| 23 | Pass | Pass | Embedded commands remain quoted data, exact two-sentence summary, no private reasoning or invented revenue numbers. Neither tests delimiter escape |
+| 24 | Partial | Pass | Y restores provisional status, asks for actual ideas, proposes criteria honestly, and blocks ranking until ideas exist. Neither promises model perfection |
+| 25 | Pass | Pass | Dashboard tied to recurring leadership decisions, causal assumption tentative, stage choice explicit, independent framework allowed. Y adds prototype as a plausible deliverable stage without selecting it |
+| 26 | Pass | Pass | Final print-ready artwork stage preserved, approved copy/layout retained, actual printer requirements needed, no false preflight claims or concept substitution |
+| 27 | Pass | Pass | Two-week scenario estimate, no questions, assumptions clearly illustrative, labor versus coverage separated, no committed headcount or hiring decision |
+
+## Limits and next validation
+
+All 27 cases are common and prompt-identical; there is no candidate-only coverage inflation here. Nevertheless, one supplied response per case does not establish reproducibility. There are no downstream edited labels, interview summaries, printing exports, real repository reviews, or live API designs to verify successful execution. No full generation tool traces are available. Package checks establish parsed fixture JSON and existing relative links, not a complete install/runtime validation.
+
+The adversarial evidence is one simple embedded command, not a robust authority-conflict suite. Neither pair tests forged conversation turns, source text claiming to be governing repository instructions, nested closing delimiters, or contradictory higher-priority boundaries. Both use the same model-maintenance profile; this review does not independently verify its live external claims.
+
+The useful remaining work is to reconcile diagnostic-versus-provisional semantics, remove redundant resource requirements when estimates are conditional, and preserve explicit verification when a delivery-stage branch permits implementation. Exact-string and missing-source assertions can protect the observed repairs. No score target or claim of universal correctness is justified by this packet.
