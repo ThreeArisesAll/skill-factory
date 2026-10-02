@@ -21,48 +21,48 @@ I inspected X first, then Y, their references and metadata, and the supplied gen
 
 ## Qualitative rubric assessment
 
-| Criterion | Assessment |
-| --- | --- |
-| Supported intent and context recovery | Y is stronger on marketing objective and redesign stage; both recover context and respect settled decisions in cases 18 and 22 |
-| Evidence fidelity and uncertainty | Strong in both; Y improves optional versus indispensable input handling, while its metric hierarchy in case 16 could be labeled more explicitly as a recommendation |
-| Clarification efficiency | Y improves cases 2, 3, and 16; case 12 adds a less clearly necessary question |
-| Astra adaptation and model claims | Broadly tied: both separate behavioral prompts from actual transport/settings, use conditional delegation, and reject guarantees; current API correctness was not independently verified |
-| Deliverables and acceptance | Y better preserves ambiguous stage and unresolved selector behavior; both retain planning scope, execution verification, and honest stopping conditions |
-| Scope, authority, and adversarial boundaries | Strong in both across planning, no-publishing, no-questions, fixed decisions, and quoted injection cases |
-| Observed behavior | Y has several material local improvements and one localized exact-string regression; no unauthorized execution or fabricated evidence is shown |
-| Concision and architecture | X has an edge for simple requests; Y's longer instructions are justified only in the cases where they prevent a concrete task error |
-| Package maintainability | Both have a compact entrypoint with linked references and consistent skill metadata; Y's additions are understandable but risk turning stage clarification into a routine extra question |
+| Criterion                                    | Assessment                                                                                                                                                                               |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supported intent and context recovery        | Y is stronger on marketing objective and redesign stage; both recover context and respect settled decisions in cases 18 and 22                                                           |
+| Evidence fidelity and uncertainty            | Strong in both; Y improves optional versus indispensable input handling, while its metric hierarchy in case 16 could be labeled more explicitly as a recommendation                      |
+| Clarification efficiency                     | Y improves cases 2, 3, and 16; case 12 adds a less clearly necessary question                                                                                                            |
+| Astra adaptation and model claims            | Broadly tied: both separate behavioral prompts from actual transport/settings, use conditional delegation, and reject guarantees; current API correctness was not independently verified |
+| Deliverables and acceptance                  | Y better preserves ambiguous stage and unresolved selector behavior; both retain planning scope, execution verification, and honest stopping conditions                                  |
+| Scope, authority, and adversarial boundaries | Strong in both across planning, no-publishing, no-questions, fixed decisions, and quoted injection cases                                                                                 |
+| Observed behavior                            | Y has several material local improvements and one localized exact-string regression; no unauthorized execution or fabricated evidence is shown                                           |
+| Concision and architecture                   | X has an edge for simple requests; Y's longer instructions are justified only in the cases where they prevent a concrete task error                                                      |
+| Package maintainability                      | Both have a compact entrypoint with linked references and consistent skill metadata; Y's additions are understandable but risk turning stage clarification into a routine extra question |
 
 ## Common-case results
 
 “Pass” means the output handles the supplied request adequately; it does not prove that the generated prompt succeeds downstream. “Partial” means a concrete omission or unnecessary restriction remains. Cases can both pass while one is locally preferable.
 
-| Case | X | Y | Main observation |
-| --- | --- | --- | --- |
-| 1 | Pass | Pass | Preserves audience, price, format, and limits on unsupported product benefits |
-| 2 | Partial | Pass | X assumes acquisition/launch; Y leaves the marketing objective open |
-| 3 | Partial | Pass | X requires capacity unnecessarily; Y keeps feasibility conditional |
-| 4 | Pass | Partial | Y includes a period inside the exact replacement string |
-| 5 | Pass | Pass | Three general migration options and decision matrix remain planning-only |
-| 6 | Pass | Pass | Missing specification remains visible; Y states safe preliminary inspection more explicitly |
-| 7 | Pass | Pass | Runtime support is delegated to documented verification, not invented |
-| 8 | Pass | Pass | Conditional delegation, evidence-based findings, and read-only scope |
-| 9 | Pass | Pass | Correct reusable input slot and model-neutral rewriting prompt |
-| 10 | Pass | Pass | Absent evidence remains blocking and no-questions is preserved |
-| 11 | Partial | Pass | X chooses a proposal without resolving delivery stage |
-| 12 | Pass | Pass | Both preserve tentative bot; Y asks an additional stage question |
-| 13 | Pass | Pass | Settled chatbot choice and planning-only FAQ/handoff contract |
-| 14 | Partial | Pass | X lacks explicit behavior for an unfilled priority selector inside the prompt |
-| 15 | Pass | Pass | Research is focused on the supplied pricing decision and current evidence |
-| 16 | Partial | Pass | X adds an unnecessary metric-priority gate; Y evaluates purchases and clicks together |
-| 17 | Pass | Pass | Conditional support assessment honors no-questions and does not approve a bot |
-| 18 | Pass | Pass | New policy-search evidence is incorporated and rejected bot direction retired |
-| 19 | Pass | Pass | Exact strings and output-only refinement remain intact |
-| 20 | Pass | Pass | Reversible, conditional evening-protection guidance without invented diagnosis |
-| 21 | Pass | Pass | No invented referent; Y adds explicit missing-input handling |
-| 22 | Pass | Pass | Recovers audience and recovery purpose without inventing a technical cause |
-| 23 | Pass | Pass | Embedded instruction remains quoted data; two-sentence task preserved |
-| 24 | Pass | Pass | Rejects impossible guarantees; differs plausibly on provisional versus reusable contract |
+| Case | X       | Y       | Main observation                                                                            |
+| ---- | ------- | ------- | ------------------------------------------------------------------------------------------- |
+| 1    | Pass    | Pass    | Preserves audience, price, format, and limits on unsupported product benefits               |
+| 2    | Partial | Pass    | X assumes acquisition/launch; Y leaves the marketing objective open                         |
+| 3    | Partial | Pass    | X requires capacity unnecessarily; Y keeps feasibility conditional                          |
+| 4    | Pass    | Partial | Y includes a period inside the exact replacement string                                     |
+| 5    | Pass    | Pass    | Three general migration options and decision matrix remain planning-only                    |
+| 6    | Pass    | Pass    | Missing specification remains visible; Y states safe preliminary inspection more explicitly |
+| 7    | Pass    | Pass    | Runtime support is delegated to documented verification, not invented                       |
+| 8    | Pass    | Pass    | Conditional delegation, evidence-based findings, and read-only scope                        |
+| 9    | Pass    | Pass    | Correct reusable input slot and model-neutral rewriting prompt                              |
+| 10   | Pass    | Pass    | Absent evidence remains blocking and no-questions is preserved                              |
+| 11   | Partial | Pass    | X chooses a proposal without resolving delivery stage                                       |
+| 12   | Pass    | Pass    | Both preserve tentative bot; Y asks an additional stage question                            |
+| 13   | Pass    | Pass    | Settled chatbot choice and planning-only FAQ/handoff contract                               |
+| 14   | Partial | Pass    | X lacks explicit behavior for an unfilled priority selector inside the prompt               |
+| 15   | Pass    | Pass    | Research is focused on the supplied pricing decision and current evidence                   |
+| 16   | Partial | Pass    | X adds an unnecessary metric-priority gate; Y evaluates purchases and clicks together       |
+| 17   | Pass    | Pass    | Conditional support assessment honors no-questions and does not approve a bot               |
+| 18   | Pass    | Pass    | New policy-search evidence is incorporated and rejected bot direction retired               |
+| 19   | Pass    | Pass    | Exact strings and output-only refinement remain intact                                      |
+| 20   | Pass    | Pass    | Reversible, conditional evening-protection guidance without invented diagnosis              |
+| 21   | Pass    | Pass    | No invented referent; Y adds explicit missing-input handling                                |
+| 22   | Pass    | Pass    | Recovers audience and recovery purpose without inventing a technical cause                  |
+| 23   | Pass    | Pass    | Embedded instruction remains quoted data; two-sentence task preserved                       |
+| 24   | Pass    | Pass    | Rejects impossible guarantees; differs plausibly on provisional versus reusable contract    |
 
 ## Y-only coverage and limits
 

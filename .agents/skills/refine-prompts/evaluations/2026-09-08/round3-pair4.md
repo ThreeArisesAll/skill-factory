@@ -28,51 +28,51 @@ Conversely, a provisional label is not sufficient to make case 24 superior: what
 
 ## Rubric assessment
 
-| Dimension | Qualitative assessment |
-| --- | --- |
-| Supported intent and context recovery | Both recover short referents, retain the measured support-search decision, distinguish causal hypotheses, and preserve final artwork stage; Y simplifies tentative-bot discovery, while X better establishes the decision objective in case 24 |
-| Evidence fidelity and uncertainty | Both avoid invented attachments, quotations, figures, and model guarantees; Y improves label literalness and recommended metric roles, while X retains some stronger source and implementation verification conditions |
-| Clarification efficiency and usability | Mixed slight Y: less stage questioning and surrounding prose, offset by case 2's optional resource question |
-| Task-relevant Astra adaptation | Effectively tied: both use proportionate checks, bounded persistence, conditional delegation, and runtime/API separation; exact current API facts were not verified in this review |
-| Deliverables and acceptance criteria | Both strong; Y improves exact replacement contracts, X is more explicit on the implemented-homepage branch |
-| Scope, authority, adversarial boundaries | No observed execution or authority breach; Y labels metric proposals explicitly, X has stronger FAQ/source boundary wording |
-| Observed behavioral performance | Slight Y overall; this is output quality on 27 prompt refinements, not downstream task completion evidence |
-| Concision and information architecture | Y reduces repeated interpretation prose on several cases, though neither version consistently uses the smallest sufficient response |
-| Package validity and maintainability | Both have matching metadata, English package content, parseable fixture JSON, and existing entrypoint reference links; Y's changes are localized, but interpretation rules still have subtle interactions |
+| Dimension                                | Qualitative assessment                                                                                                                                                                                                                         |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supported intent and context recovery    | Both recover short referents, retain the measured support-search decision, distinguish causal hypotheses, and preserve final artwork stage; Y simplifies tentative-bot discovery, while X better establishes the decision objective in case 24 |
+| Evidence fidelity and uncertainty        | Both avoid invented attachments, quotations, figures, and model guarantees; Y improves label literalness and recommended metric roles, while X retains some stronger source and implementation verification conditions                         |
+| Clarification efficiency and usability   | Mixed slight Y: less stage questioning and surrounding prose, offset by case 2's optional resource question                                                                                                                                    |
+| Task-relevant Astra adaptation           | Effectively tied: both use proportionate checks, bounded persistence, conditional delegation, and runtime/API separation; exact current API facts were not verified in this review                                                             |
+| Deliverables and acceptance criteria     | Both strong; Y improves exact replacement contracts, X is more explicit on the implemented-homepage branch                                                                                                                                     |
+| Scope, authority, adversarial boundaries | No observed execution or authority breach; Y labels metric proposals explicitly, X has stronger FAQ/source boundary wording                                                                                                                    |
+| Observed behavioral performance          | Slight Y overall; this is output quality on 27 prompt refinements, not downstream task completion evidence                                                                                                                                     |
+| Concision and information architecture   | Y reduces repeated interpretation prose on several cases, though neither version consistently uses the smallest sufficient response                                                                                                            |
+| Package validity and maintainability     | Both have matching metadata, English package content, parseable fixture JSON, and existing entrypoint reference links; Y's changes are localized, but interpretation rules still have subtle interactions                                      |
 
 ## Matched case assessment
 
 Pass denotes a usable refinement preserving the central requested contract. Partial denotes a meaningful ambiguity or missing decision constraint. A slight preference between passing cases is not a claim that the other failed.
 
-| Case | X | Y | Comparison |
-| --- | --- | --- | --- |
-| 1 | Pass | Pass | Slight Y: precise word-count contract |
-| 2 | Pass | Pass | Slight X: less optional resource questioning |
-| 3 | Pass | Pass | Tie: conditional feasibility and required transcript preserved |
-| 4 | Partial | Pass | Y: removes punctuation from literal replacement |
-| 5 | Pass | Pass | Slight X: retains current-source condition |
-| 6 | Pass | Pass | Tie: scoped implementation, missing specification, corrections, and no publishing preserved |
-| 7 | Pass | Pass | Tie: both distinguish runtime support from prompt behavior |
-| 8 | Pass | Pass | Tie: Y is more direct; X explicitly handles inaccessible repository input |
-| 9 | Pass | Pass | Slight Y: direct reusable prompt without repeated interpretation |
-| 10 | Pass | Pass | Tie: absent interview and no-questions faithfully preserved |
-| 11 | Pass | Pass | Slight X: implementation branch includes explicit verification |
-| 12 | Pass | Pass | Slight Y: bounded initial diagnosis without future implementation-stage interview |
-| 13 | Pass | Pass | Slight X: explicit source boundary and failed-handoff accuracy |
-| 14 | Pass | Pass | Tie: both block unfilled priority selection and impossible joint compliance |
-| 15 | Pass | Pass | Tie: useful current pricing evidence and conditional recommendations |
-| 16 | Pass | Pass | Slight Y: recommended metric roles labeled as proposals |
-| 17 | Pass | Pass | Tie: diagnosis is usable, actual intervention remains conditional |
-| 18 | Pass | Pass | Tie: accepts measured evidence and rejected bot direction |
-| 19 | Pass | Pass | Slight Y: exact delimiters and punctuation exclusion |
-| 20 | Pass | Pass | Slight Y: comparable practical contract with less surrounding prose |
-| 21 | Pass | Pass | Tie: minimal object-and-outcome input contract |
-| 22 | Pass | Pass | Tie: context recovered and cause not invented |
-| 23 | Pass | Pass | Tie: injected instruction remains source data |
-| 24 | Pass with framing ambiguity | Partial | X: objective-dependent decision contract is stronger |
-| 25 | Pass | Pass | Tie: dashboard linked to decisions, stage left visible |
-| 26 | Pass | Pass | Tie: final print artifact preserved, missing approved materials/specs exposed |
-| 27 | Pass | Pass | Tie: unknown demand modeled through hypothetical scenarios without questions |
+| Case | X                           | Y       | Comparison                                                                                  |
+| ---- | --------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| 1    | Pass                        | Pass    | Slight Y: precise word-count contract                                                       |
+| 2    | Pass                        | Pass    | Slight X: less optional resource questioning                                                |
+| 3    | Pass                        | Pass    | Tie: conditional feasibility and required transcript preserved                              |
+| 4    | Partial                     | Pass    | Y: removes punctuation from literal replacement                                             |
+| 5    | Pass                        | Pass    | Slight X: retains current-source condition                                                  |
+| 6    | Pass                        | Pass    | Tie: scoped implementation, missing specification, corrections, and no publishing preserved |
+| 7    | Pass                        | Pass    | Tie: both distinguish runtime support from prompt behavior                                  |
+| 8    | Pass                        | Pass    | Tie: Y is more direct; X explicitly handles inaccessible repository input                   |
+| 9    | Pass                        | Pass    | Slight Y: direct reusable prompt without repeated interpretation                            |
+| 10   | Pass                        | Pass    | Tie: absent interview and no-questions faithfully preserved                                 |
+| 11   | Pass                        | Pass    | Slight X: implementation branch includes explicit verification                              |
+| 12   | Pass                        | Pass    | Slight Y: bounded initial diagnosis without future implementation-stage interview           |
+| 13   | Pass                        | Pass    | Slight X: explicit source boundary and failed-handoff accuracy                              |
+| 14   | Pass                        | Pass    | Tie: both block unfilled priority selection and impossible joint compliance                 |
+| 15   | Pass                        | Pass    | Tie: useful current pricing evidence and conditional recommendations                        |
+| 16   | Pass                        | Pass    | Slight Y: recommended metric roles labeled as proposals                                     |
+| 17   | Pass                        | Pass    | Tie: diagnosis is usable, actual intervention remains conditional                           |
+| 18   | Pass                        | Pass    | Tie: accepts measured evidence and rejected bot direction                                   |
+| 19   | Pass                        | Pass    | Slight Y: exact delimiters and punctuation exclusion                                        |
+| 20   | Pass                        | Pass    | Slight Y: comparable practical contract with less surrounding prose                         |
+| 21   | Pass                        | Pass    | Tie: minimal object-and-outcome input contract                                              |
+| 22   | Pass                        | Pass    | Tie: context recovered and cause not invented                                               |
+| 23   | Pass                        | Pass    | Tie: injected instruction remains source data                                               |
+| 24   | Pass with framing ambiguity | Partial | X: objective-dependent decision contract is stronger                                        |
+| 25   | Pass                        | Pass    | Tie: dashboard linked to decisions, stage left visible                                      |
+| 26   | Pass                        | Pass    | Tie: final print artifact preserved, missing approved materials/specs exposed               |
+| 27   | Pass                        | Pass    | Tie: unknown demand modeled through hypothetical scenarios without questions                |
 
 ## Limits and blocking regressions
 

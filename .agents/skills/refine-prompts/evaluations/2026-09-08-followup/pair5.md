@@ -10,15 +10,15 @@ I read before first, then after, the supplied package materials, the respective 
 
 ## Targeted questions
 
-| Question | Finding and evidence |
-| --- | --- |
-| Is diagnostic readiness consistent? | Resolved at the instruction level and consistent in the observed examples. The new readiness rule evaluates the next deliverable and the discovery reference now points to it. After 12 and 17 are explicitly bounded plans whose unknown findings remain unknown. They do not promise a factual diagnosis or final selection |
-| Are conditional implementation checks present? | Yes in common cases 11 and 25. Each implementation branch now names affected layout, the relevant user journey, actual results, and unverified checks. Before supplied a selected artifact but omitted corresponding implementation verification |
-| Is optional-resource questioning removed? | Yes in common case 2: after asks about product, audience, and objective, while budget/team variation is handled inside the prompt. The optional execution-constraints placeholder and resource question are gone |
-| Does this weaken missing-evidence boundaries? | No observed weakening. Common cases 3, 10, 24, and 26 still expose indispensable sources or candidates. Contrast case 28 retains the log-based final selection and withholds a winner without logs |
-| Does this erase binding resource requirements? | No in contrast case 30. The exact staffing commitment remains provisional; hours, demand, and capacity must be established, and scenarios are not substituted. Common case 27 remains a clearly conditional rough estimate |
-| Are design-only checks distinguished from runtime checks? | Yes. Common 11 and 25 review their design/specification artifacts and label later implementation checks as proposed. Contrast 29 adds concrete mockup-to-handoff consistency review and separately proposed signup-flow testing |
-| Are no-question conflicts handled? | Yes in contrast 31: both outer response and generated prompt avoid questions, keep the impossible constraint combination visible, and withhold a supposedly compliant summary. Common 10, 17, 20, and 27 also retain no-questions |
+| Question                                                  | Finding and evidence                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Is diagnostic readiness consistent?                       | Resolved at the instruction level and consistent in the observed examples. The new readiness rule evaluates the next deliverable and the discovery reference now points to it. After 12 and 17 are explicitly bounded plans whose unknown findings remain unknown. They do not promise a factual diagnosis or final selection |
+| Are conditional implementation checks present?            | Yes in common cases 11 and 25. Each implementation branch now names affected layout, the relevant user journey, actual results, and unverified checks. Before supplied a selected artifact but omitted corresponding implementation verification                                                                              |
+| Is optional-resource questioning removed?                 | Yes in common case 2: after asks about product, audience, and objective, while budget/team variation is handled inside the prompt. The optional execution-constraints placeholder and resource question are gone                                                                                                              |
+| Does this weaken missing-evidence boundaries?             | No observed weakening. Common cases 3, 10, 24, and 26 still expose indispensable sources or candidates. Contrast case 28 retains the log-based final selection and withholds a winner without logs                                                                                                                            |
+| Does this erase binding resource requirements?            | No in contrast case 30. The exact staffing commitment remains provisional; hours, demand, and capacity must be established, and scenarios are not substituted. Common case 27 remains a clearly conditional rough estimate                                                                                                    |
+| Are design-only checks distinguished from runtime checks? | Yes. Common 11 and 25 review their design/specification artifacts and label later implementation checks as proposed. Contrast 29 adds concrete mockup-to-handoff consistency review and separately proposed signup-flow testing                                                                                               |
+| Are no-question conflicts handled?                        | Yes in contrast 31: both outer response and generated prompt avoid questions, keep the impossible constraint combination visible, and withhold a supposedly compliant summary. Common 10, 17, 20, and 27 also retain no-questions                                                                                             |
 
 ## Demonstrated relative gains
 
@@ -46,35 +46,35 @@ None of these is a blocking regression on the supplied cases. The actual outputs
 
 Pass means the supplied refinement adequately handles the request. Partial identifies a concrete contract weakness; it does not mean a downstream task was executed and failed.
 
-| Case | Before | After | Paired observation |
-| --- | --- | --- | --- |
-| 1 | Pass | Pass | Product facts, price, format, and unsupported-benefit limits retained |
-| 2 | Partial | Partial | After fixes optional resource questioning but weakens current-source handling |
-| 3 | Pass | Pass | Missing transcript blocks findings and quotations; capacity stays conditional |
-| 4 | Pass | Pass | Exact label, narrow local edit, proportionate check, no commit/push |
-| 5 | Pass | Pass | General comparison remains planning-only; after adds current-source handling |
-| 6 | Pass | Pass | Missing spec remains visible; scoped implementation/tests and updates retained |
-| 7 | Pass | Pass | Current API verification and host/model separation; future tests are proposed |
-| 8 | Pass | Pass | Read-only correctness review with conditional delegation and evidence |
-| 9 | Pass | Pass | Explicit reusable input slot and source/instruction separation |
-| 10 | Pass | Pass | Missing interview remains provisional without asking questions |
-| 11 | Partial | Pass | After includes verification in implementation branch and real design-artifact review |
-| 12 | Pass | Pass | After clarifies bounded planning readiness; factual intervention remains unresolved |
-| 13 | Pass | Pass | Fixed chatbot choice and planning scope; checks remain proposed |
-| 14 | Pass | Pass | Unfilled priority cannot silently select a summary branch |
-| 15 | Pass | Pass | Supplied pricing decision and current evidence preserved |
-| 16 | Pass | Pass | Both metrics evaluated and proposed roles distinguished from user decisions |
-| 17 | Pass | Pass | Both honor no-questions and support conditional planning rather than bot selection |
-| 18 | Pass | Pass | Supplied workload evidence used and rejected customer-facing bot retired |
-| 19 | Pass | Pass | Exact strings and output-only constraints retained |
-| 20 | Pass | Pass | Conditional, reversible evening-protection advice without invented diagnosis |
-| 21 | Pass | Pass | Missing object and desired outcome remain explicit |
-| 22 | Pass | Pass | Teacher-upload context recovered with simple recovery and no invented cause |
-| 23 | Pass | Pass | Quoted injection stays data and two-sentence deliverable retained |
-| 24 | Pass | Pass | Missing candidate ideas remain provisional; no impossible model guarantees |
-| 25 | Partial | Pass with reservation | After fixes implementation checks; information-gap placeholder is slightly presumptive |
-| 26 | Pass | Pass | Final artwork waits for approved material/specifications and verifies actual export |
-| 27 | Pass | Pass | Scenario estimate remains usable without optional inputs or headcount commitment |
+| Case | Before  | After                 | Paired observation                                                                     |
+| ---- | ------- | --------------------- | -------------------------------------------------------------------------------------- |
+| 1    | Pass    | Pass                  | Product facts, price, format, and unsupported-benefit limits retained                  |
+| 2    | Partial | Partial               | After fixes optional resource questioning but weakens current-source handling          |
+| 3    | Pass    | Pass                  | Missing transcript blocks findings and quotations; capacity stays conditional          |
+| 4    | Pass    | Pass                  | Exact label, narrow local edit, proportionate check, no commit/push                    |
+| 5    | Pass    | Pass                  | General comparison remains planning-only; after adds current-source handling           |
+| 6    | Pass    | Pass                  | Missing spec remains visible; scoped implementation/tests and updates retained         |
+| 7    | Pass    | Pass                  | Current API verification and host/model separation; future tests are proposed          |
+| 8    | Pass    | Pass                  | Read-only correctness review with conditional delegation and evidence                  |
+| 9    | Pass    | Pass                  | Explicit reusable input slot and source/instruction separation                         |
+| 10   | Pass    | Pass                  | Missing interview remains provisional without asking questions                         |
+| 11   | Partial | Pass                  | After includes verification in implementation branch and real design-artifact review   |
+| 12   | Pass    | Pass                  | After clarifies bounded planning readiness; factual intervention remains unresolved    |
+| 13   | Pass    | Pass                  | Fixed chatbot choice and planning scope; checks remain proposed                        |
+| 14   | Pass    | Pass                  | Unfilled priority cannot silently select a summary branch                              |
+| 15   | Pass    | Pass                  | Supplied pricing decision and current evidence preserved                               |
+| 16   | Pass    | Pass                  | Both metrics evaluated and proposed roles distinguished from user decisions            |
+| 17   | Pass    | Pass                  | Both honor no-questions and support conditional planning rather than bot selection     |
+| 18   | Pass    | Pass                  | Supplied workload evidence used and rejected customer-facing bot retired               |
+| 19   | Pass    | Pass                  | Exact strings and output-only constraints retained                                     |
+| 20   | Pass    | Pass                  | Conditional, reversible evening-protection advice without invented diagnosis           |
+| 21   | Pass    | Pass                  | Missing object and desired outcome remain explicit                                     |
+| 22   | Pass    | Pass                  | Teacher-upload context recovered with simple recovery and no invented cause            |
+| 23   | Pass    | Pass                  | Quoted injection stays data and two-sentence deliverable retained                      |
+| 24   | Pass    | Pass                  | Missing candidate ideas remain provisional; no impossible model guarantees             |
+| 25   | Partial | Pass with reservation | After fixes implementation checks; information-gap placeholder is slightly presumptive |
+| 26   | Pass    | Pass                  | Final artwork waits for approved material/specifications and verifies actual export    |
+| 27   | Pass    | Pass                  | Scenario estimate remains usable without optional inputs or headcount commitment       |
 
 ## Contrast coverage only
 

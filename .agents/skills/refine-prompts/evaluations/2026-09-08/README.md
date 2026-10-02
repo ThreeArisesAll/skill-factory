@@ -36,25 +36,25 @@ Recompute scores from the individual dimension rows, respecting each report's X/
 
 ## Iteration results
 
-| Round | Judge 1 | Judge 2 | Judge 3 | Mean | Minimum | Decision |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 1 | 9.155 | 8.985 | 9.030 | 9.057 | 8.985 | Below threshold; correct unsupported goal/stage narrowing and redundant gaps |
-| 2 | 9.330 | 9.060 | 9.150 | 9.180 | 9.060 | Numeric threshold met; use final allowed round to fix exact-label ambiguity and incorrect template status |
-| 3 | 9.435 | 9.185 | 9.265 | 9.295 | 9.185 | Accept and stop; 5/5 slight paired preference, no blocking regression reported |
+| Round | Judge 1 | Judge 2 | Judge 3 |  Mean | Minimum | Decision                                                                                                  |
+| ----- | ------: | ------: | ------: | ----: | ------: | --------------------------------------------------------------------------------------------------------- |
+| 1     |   9.155 |   8.985 |   9.030 | 9.057 |   8.985 | Below threshold; correct unsupported goal/stage narrowing and redundant gaps                              |
+| 2     |   9.330 |   9.060 |   9.150 | 9.180 |   9.060 | Numeric threshold met; use final allowed round to fix exact-label ambiguity and incorrect template status |
+| 3     |   9.435 |   9.185 |   9.265 | 9.295 |   9.185 | Accept and stop; 5/5 slight paired preference, no blocking regression reported                            |
 
 ## Final dimensional scores
 
-| Dimension | Weight | Judge 1 | Judge 2 | Judge 3 |
-| --- | ---: | ---: | ---: | ---: |
-| Supported intent discovery and context recovery | 20 | 9.5 | 9.3 | 9.3 |
-| Evidence fidelity and uncertainty calibration | 15 | 9.6 | 9.4 | 9.4 |
-| Clarification efficiency and usability | 10 | 9.4 | 9.1 | 9.2 |
-| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.4 | 9.3 | 9.3 |
-| Actionable deliverables and acceptance criteria | 10 | 9.3 | 9.1 | 9.3 |
-| Scope, authority, and adversarial input boundaries | 10 | 9.5 | 9.2 | 9.5 |
-| Observed behavioral performance | 10 | 9.5 | 9.2 | 9.3 |
-| Concision and information architecture | 5 | 9.2 | 8.5 | 8.6 |
-| Package validity and maintainability | 5 | 9.1 | 8.7 | 8.8 |
+| Dimension                                               | Weight | Judge 1 | Judge 2 | Judge 3 |
+| ------------------------------------------------------- | -----: | ------: | ------: | ------: |
+| Supported intent discovery and context recovery         |     20 |     9.5 |     9.3 |     9.3 |
+| Evidence fidelity and uncertainty calibration           |     15 |     9.6 |     9.4 |     9.4 |
+| Clarification efficiency and usability                  |     10 |     9.4 |     9.1 |     9.2 |
+| Task-relevant Astra adaptation and model claim accuracy |     15 |     9.4 |     9.3 |     9.3 |
+| Actionable deliverables and acceptance criteria         |     10 |     9.3 |     9.1 |     9.3 |
+| Scope, authority, and adversarial input boundaries      |     10 |     9.5 |     9.2 |     9.5 |
+| Observed behavioral performance                         |     10 |     9.5 |     9.2 |     9.3 |
+| Concision and information architecture                  |      5 |     9.2 |     8.5 |     8.6 |
+| Package validity and maintainability                    |      5 |     9.1 |     8.7 |     8.8 |
 
 ## Observed improvements
 

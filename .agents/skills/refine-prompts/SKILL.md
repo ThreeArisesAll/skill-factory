@@ -49,9 +49,9 @@ Finish discovery when the next deliverable is supported by context or its unreso
 
 Label readiness for the next deliverable, not for every eventual decision:
 
-| Next deliverable | Label and boundary |
-| --- | --- |
-| A bounded diagnostic plan, general framework, or conditional assessment can be completed from the available context | Copy-ready. State what is unknown and what the result cannot establish; a future intervention need not be chosen yet |
+| Next deliverable                                                                                                                    | Label and boundary                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A bounded diagnostic plan, general framework, or conditional assessment can be completed from the available context                 | Copy-ready. State what is unknown and what the result cannot establish; a future intervention need not be chosen yet                                                 |
 | A source-dependent finding, final selection, implementation, or other requested result needs missing evidence or a binding decision | Provisional. Expose that prerequisite and the independent work that can proceed; do not replace the requested result with a diagnostic plan just to change the label |
 
 Apply this rule whether questions are allowed or forbidden. Missing interviews still block interview findings; uncertainty about why support is overloaded need not block an expressly bounded diagnostic plan. Ask only about a prerequisite of the next deliverable. Optional budget, staffing, timing, or preferences belong in conditional guidance inside the prompt, without a placeholder or follow-up question, unless required to meet a binding constraint.

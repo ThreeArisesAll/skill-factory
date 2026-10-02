@@ -9,18 +9,8 @@
           "before": "9.5",
           "after": "9.5"
         },
-        {
-          "dimension": "Evidence fidelity and uncertainty calibration",
-          "weight": 15,
-          "before": "9.6",
-          "after": "9.6"
-        },
-        {
-          "dimension": "Clarification efficiency and usability",
-          "weight": 10,
-          "before": "9.4",
-          "after": "9.6"
-        },
+        { "dimension": "Evidence fidelity and uncertainty calibration", "weight": 15, "before": "9.6", "after": "9.6" },
+        { "dimension": "Clarification efficiency and usability", "weight": 10, "before": "9.4", "after": "9.6" },
         {
           "dimension": "Task-relevant Astra adaptation and model claim accuracy",
           "weight": 15,
@@ -39,29 +29,11 @@
           "before": "9.5",
           "after": "9.6"
         },
-        {
-          "dimension": "Observed behavioral performance",
-          "weight": 10,
-          "before": "9.5",
-          "after": "9.6"
-        },
-        {
-          "dimension": "Concision and information architecture",
-          "weight": 5,
-          "before": "9.2",
-          "after": "8.9"
-        },
-        {
-          "dimension": "Package validity and maintainability",
-          "weight": 5,
-          "before": "9.1",
-          "after": "9.6"
-        }
+        { "dimension": "Observed behavioral performance", "weight": 10, "before": "9.5", "after": "9.6" },
+        { "dimension": "Concision and information architecture", "weight": 5, "before": "9.2", "after": "8.9" },
+        { "dimension": "Package validity and maintainability", "weight": 5, "before": "9.1", "after": "9.6" }
       ],
-      "totals": {
-        "before": "9.435",
-        "after": "9.53"
-      },
+      "totals": { "before": "9.435", "after": "9.53" },
       "preference": "after",
       "margin": "slight",
       "targeted_contracts": "resolved"
@@ -75,18 +47,8 @@
           "before": "9.3",
           "after": "9.5"
         },
-        {
-          "dimension": "Evidence fidelity and uncertainty calibration",
-          "weight": 15,
-          "before": "9.4",
-          "after": "9.5"
-        },
-        {
-          "dimension": "Clarification efficiency and usability",
-          "weight": 10,
-          "before": "9.1",
-          "after": "9.3"
-        },
+        { "dimension": "Evidence fidelity and uncertainty calibration", "weight": 15, "before": "9.4", "after": "9.5" },
+        { "dimension": "Clarification efficiency and usability", "weight": 10, "before": "9.1", "after": "9.3" },
         {
           "dimension": "Task-relevant Astra adaptation and model claim accuracy",
           "weight": 15,
@@ -105,29 +67,11 @@
           "before": "9.2",
           "after": "9.4"
         },
-        {
-          "dimension": "Observed behavioral performance",
-          "weight": 10,
-          "before": "9.2",
-          "after": "9.4"
-        },
-        {
-          "dimension": "Concision and information architecture",
-          "weight": 5,
-          "before": "8.5",
-          "after": "8.4"
-        },
-        {
-          "dimension": "Package validity and maintainability",
-          "weight": 5,
-          "before": "8.7",
-          "after": "9.0"
-        }
+        { "dimension": "Observed behavioral performance", "weight": 10, "before": "9.2", "after": "9.4" },
+        { "dimension": "Concision and information architecture", "weight": 5, "before": "8.5", "after": "8.4" },
+        { "dimension": "Package validity and maintainability", "weight": 5, "before": "8.7", "after": "9.0" }
       ],
-      "totals": {
-        "before": "9.185",
-        "after": "9.35"
-      },
+      "totals": { "before": "9.185", "after": "9.35" },
       "preference": "after",
       "margin": "slight",
       "targeted_contracts": "resolved"
@@ -141,18 +85,8 @@
           "before": "9.3",
           "after": "9.4"
         },
-        {
-          "dimension": "Evidence fidelity and uncertainty calibration",
-          "weight": 15,
-          "before": "9.4",
-          "after": "9.5"
-        },
-        {
-          "dimension": "Clarification efficiency and usability",
-          "weight": 10,
-          "before": "9.2",
-          "after": "9.4"
-        },
+        { "dimension": "Evidence fidelity and uncertainty calibration", "weight": 15, "before": "9.4", "after": "9.5" },
+        { "dimension": "Clarification efficiency and usability", "weight": 10, "before": "9.2", "after": "9.4" },
         {
           "dimension": "Task-relevant Astra adaptation and model claim accuracy",
           "weight": 15,
@@ -171,29 +105,11 @@
           "before": "9.5",
           "after": "9.6"
         },
-        {
-          "dimension": "Observed behavioral performance",
-          "weight": 10,
-          "before": "9.3",
-          "after": "9.4"
-        },
-        {
-          "dimension": "Concision and information architecture",
-          "weight": 5,
-          "before": "8.6",
-          "after": "8.3"
-        },
-        {
-          "dimension": "Package validity and maintainability",
-          "weight": 5,
-          "before": "8.8",
-          "after": "9.2"
-        }
+        { "dimension": "Observed behavioral performance", "weight": 10, "before": "9.3", "after": "9.4" },
+        { "dimension": "Concision and information architecture", "weight": 5, "before": "8.6", "after": "8.3" },
+        { "dimension": "Package validity and maintainability", "weight": 5, "before": "8.8", "after": "9.2" }
       ],
-      "totals": {
-        "before": "9.265",
-        "after": "9.375"
-      },
+      "totals": { "before": "9.265", "after": "9.375" },
       "preference": "after",
       "margin": "slight",
       "targeted_contracts": "resolved"
@@ -205,23 +121,13 @@
   "original_known_issues_resolved": true,
   "final_english_output_count": 31,
   "prior_common_input_count": 27,
-  "additional_contrast_cases": [
-    28,
-    29,
-    30,
-    31
-  ],
+  "additional_contrast_cases": [28, 29, 30, 31],
   "chinese_smoke_count": 3,
   "notes": [
     "Expected fields are semantic review criteria, not executable assertions",
     "No downstream task or API performance benchmark was executed"
   ],
-  "paired_votes": {
-    "after": 5,
-    "before": 0,
-    "tie": 0,
-    "margin": "slight"
-  },
+  "paired_votes": { "after": 5, "before": 0, "tie": 0, "margin": "slight" },
   "unresolved_blocking_regressions": 0,
   "acceptance": "passed"
 }

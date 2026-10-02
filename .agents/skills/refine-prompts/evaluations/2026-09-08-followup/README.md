@@ -8,12 +8,12 @@ These are sampled agent judgments, not a calibrated measurement of model capabil
 
 ## Resolved issues and counterexamples
 
-| Issue | Source correction | Observed evidence |
-| --- | --- | --- |
-| Diagnostic-ready versus provisional contradiction | Define readiness once against prerequisites of the next deliverable; reference that rule from discovery and align fixtures | Cases 12/17 produce bounded diagnostic prompts without pretending to establish causes; 28 remains provisional for missing-log final selection and preserves the ban on diagnostic substitution |
-| Missing verification in conditional implementation | Require changed artifact/behavior, relevant check and actual-result reporting inside each execution branch | Cases 11/25/29 include affected-layout and user-journey checks; design branches check their own artifacts and describe future implementation tests as proposed |
-| Optional resources turned into prerequisites | Keep optional budget, staffing and timing in conditional guidance without placeholders/questions; preserve binding-input requirements | Case 2 asks for product, audience and outcome without resources; 27 permits an explicitly rough scenario estimate; 30 blocks an exact staffing commitment without confirmed schedule, workload and capacity |
-| Retained unconditional question examples | Condition support and constraint-priority examples on whether evidence is required and questions are permitted | Case 31 preserves the exhaustive-report/ten-second conflict without questions or unauthorized constraint relaxation; Chinese contrast checks reproduce this boundary |
+| Issue                                              | Source correction                                                                                                                     | Observed evidence                                                                                                                                                                                           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Diagnostic-ready versus provisional contradiction  | Define readiness once against prerequisites of the next deliverable; reference that rule from discovery and align fixtures            | Cases 12/17 produce bounded diagnostic prompts without pretending to establish causes; 28 remains provisional for missing-log final selection and preserves the ban on diagnostic substitution              |
+| Missing verification in conditional implementation | Require changed artifact/behavior, relevant check and actual-result reporting inside each execution branch                            | Cases 11/25/29 include affected-layout and user-journey checks; design branches check their own artifacts and describe future implementation tests as proposed                                              |
+| Optional resources turned into prerequisites       | Keep optional budget, staffing and timing in conditional guidance without placeholders/questions; preserve binding-input requirements | Case 2 asks for product, audience and outcome without resources; 27 permits an explicitly rough scenario estimate; 30 blocks an exact staffing commitment without confirmed schedule, workload and capacity |
+| Retained unconditional question examples           | Condition support and constraint-priority examples on whether evidence is required and questions are permitted                        | Case 31 preserves the exhaustive-report/ten-second conflict without questions or unauthorized constraint relaxation; Chinese contrast checks reproduce this boundary                                        |
 
 The earlier case 17 output was already useful; the fix is the governing-rule/fixture inconsistency, not a claim of newly improved behavior on an already-correct response.
 
@@ -31,18 +31,18 @@ The earlier case 17 output was already useful; the fix is the governing-rule/fix
 
 ## Final scores
 
-| Dimension | Weight | Judge 1 | Judge 2 | Judge 3 |
-| --- | ---: | ---: | ---: | ---: |
-| Supported intent discovery and context recovery | 20 | 9.5 | 9.5 | 9.4 |
-| Evidence fidelity and uncertainty calibration | 15 | 9.6 | 9.5 | 9.5 |
-| Clarification efficiency and usability | 10 | 9.6 | 9.3 | 9.4 |
-| Task-relevant Astra adaptation and model claim accuracy | 15 | 9.5 | 9.3 | 9.3 |
-| Actionable deliverables and acceptance criteria | 10 | 9.6 | 9.5 | 9.6 |
-| Scope, authority, and adversarial input boundaries | 10 | 9.6 | 9.4 | 9.6 |
-| Observed behavioral performance | 10 | 9.6 | 9.4 | 9.4 |
-| Concision and information architecture | 5 | 8.9 | 8.4 | 8.3 |
-| Package validity and maintainability | 5 | 9.6 | 9.0 | 9.2 |
-| Weighted total | 100 | 9.530 | 9.350 | 9.375 |
+| Dimension                                               | Weight | Judge 1 | Judge 2 | Judge 3 |
+| ------------------------------------------------------- | -----: | ------: | ------: | ------: |
+| Supported intent discovery and context recovery         |     20 |     9.5 |     9.5 |     9.4 |
+| Evidence fidelity and uncertainty calibration           |     15 |     9.6 |     9.5 |     9.5 |
+| Clarification efficiency and usability                  |     10 |     9.6 |     9.3 |     9.4 |
+| Task-relevant Astra adaptation and model claim accuracy |     15 |     9.5 |     9.3 |     9.3 |
+| Actionable deliverables and acceptance criteria         |     10 |     9.6 |     9.5 |     9.6 |
+| Scope, authority, and adversarial input boundaries      |     10 |     9.6 |     9.4 |     9.6 |
+| Observed behavioral performance                         |     10 |     9.6 |     9.4 |     9.4 |
+| Concision and information architecture                  |      5 |     8.9 |     8.4 |     8.3 |
+| Package validity and maintainability                    |      5 |     9.6 |     9.0 |     9.2 |
+| Weighted total                                          |    100 |   9.530 |   9.350 |   9.375 |
 
 Read [scores.json](scores.json) for exact arithmetic inputs, totals, coverage and acceptance. The numerical gate passes for every primary reviewer, all three original contracts are resolved in the sampled cases, and paired review reports no blocking regression. The slight margins do not establish statistical significance.
 
